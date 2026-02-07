@@ -13,18 +13,161 @@ license: mit
 
 <div align="center">
 
-# Code Review Agent
+# 🛡️ Code Review Agent
 
-**AI-Powered Security Analysis with Judgment-Aware Verdicts**
+### **Catch Security Flaws Before They Ship**
 
-*Multi-pass code review with **Blast Radius Analysis** + **Decision Accountability** for production-grade security.*
+*AI-Powered Multi-Pass Code Review with **OWASP/CWE Mapping**, **Blast Radius Analysis**, and **Audit-Ready Verdicts***
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Gradio](https://img.shields.io/badge/gradio-5.x-orange.svg)](https://gradio.app/)
-[![Live Demo](https://img.shields.io/badge/demo-Hugging%20Face-yellow.svg)](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
+[![Live Demo](https://img.shields.io/badge/🚀_Try_Live_Demo-Hugging%20Face-yellow.svg)](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
+
+**[🎯 Try It Now](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)** · **[📖 Documentation](docs/)** · **[🛣️ Roadmap](ROADMAP.md)** · **[🤝 Contribute](CONTRIBUTING.md)**
 
 </div>
+
+---
+
+## 🔥 Why This Exists
+
+### The Problem
+
+Every day, developers push code with hidden vulnerabilities:
+
+- **SQL injection** slips through when Claude writes `f"SELECT * FROM users WHERE id={user_id}"`
+- **API keys** get hardcoded because "I'll fix it later"
+- **GDPR violations** sneak in when logging PII "for debugging"
+- **Prompt injection** appears in LLM apps without proper input sanitization
+
+Traditional linters catch syntax errors. **They miss the security issues that cost companies millions.**
+
+### The Solution
+
+**Code Review Agent** is your AI-powered security gate:
+
+```
+Your Code → Multi-Pass Analysis → Actionable Findings → Audit-Ready Verdict
+             ├── Security (OWASP)
+             ├── Compliance (GDPR/CCPA)
+             ├── LLM Safety (Prompt Injection)
+             └── Best Practices
+```
+
+**One paste. Instant findings. No security expertise required.**
+
+### The Story Behind It
+
+This project started when I watched a junior developer accidentally push database credentials to a public GitHub repo. By the time we noticed, the credentials had been scraped by bots. We rotated everything, but the question lingered: *Why did our code review process miss this?*
+
+Existing tools either:
+- Required expertise to interpret (Semgrep rules, SonarQube dashboards)
+- Gave vague advice without actionable fixes
+- Missed LLM-specific vulnerabilities entirely
+
+**Code Review Agent bridges that gap** — professional-grade security analysis, accessible to everyone.
+
+---
+
+## 👀 See It In Action
+
+### Live Demo
+
+**[🚀 Try the Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)**
+
+*No signup required. Paste code, get results in seconds.*
+
+### Sample Review
+
+<details>
+<summary>📸 Click to see example output</summary>
+
+**Input Code:**
+```python
+def get_user(user_id):
+    return db.execute(f"SELECT * FROM users WHERE id={user_id}")
+```
+
+**Agent Output:**
+```
+🚫 VERDICT: BLOCK
+
+CRITICAL FINDINGS:
+┌─────────────────────────────────────────────────────────────┐
+│ 🔴 SQL Injection via String Formatting                      │
+│                                                             │
+│ Location: get_user():1                                      │
+│ Confidence: 100%                                            │
+│ CWE-89 | OWASP A03:2021                                     │
+│                                                             │
+│ Why It Matters:                                             │
+│ • Allows arbitrary SQL execution                            │
+│ • Could expose entire users table                           │
+│ • Common attack vector                                      │
+│                                                             │
+│ Fix:                                                        │
+│ return db.execute("SELECT * FROM users WHERE id=?", (id,))  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+</details>
+
+---
+
+## 🎯 Use Cases
+
+| Scenario | How Code Review Agent Helps |
+|----------|----------------------------|
+| **Daily Development** | Paste AI-generated code, get instant security feedback |
+| **CI/CD Pipeline** | Fail builds with critical vulnerabilities before production |
+| **Code Review Prep** | Pre-scan your PR before requesting human review |
+| **Compliance Audits** | Generate audit-ready JSON with CWE/OWASP mappings |
+| **Learning Security** | Educational findings explain *why* issues matter |
+| **LLM App Development** | Detect prompt injection vulnerabilities in AI apps |
+
+---
+
+## ⚡ Quick Start
+
+### Option 1: Use the Live Demo (Recommended)
+
+**[🚀 Try Now on Hugging Face](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)** — no installation required!
+
+### Option 2: Run Locally
+
+```bash
+# Clone the repo
+git clone https://github.com/adarian-dewberry/code-review-agent.git
+cd code-review-agent
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set your API key
+export ANTHROPIC_API_KEY=your_key_here
+
+# Launch the app
+python app.py
+```
+
+Open `http://localhost:7860` and start reviewing!
+
+### Try Sample Vulnerable Code
+
+Test the agent with our intentionally vulnerable examples:
+
+```bash
+# Copy any file from examples/ and paste into the app
+cat examples/sql_injection.py
+```
+
+See [examples/README.md](examples/README.md) for all sample files.
 
 ---
 
@@ -42,8 +185,7 @@ Every review generates an **audit-ready decision record**:
     "policy_version": "v1",
     "block_rules": [
       {"rule_id": "BR-001", "description": "Block if any CRITICAL with confidence >= 0.8", "triggered": true}
-    ],
-    "review_rules": []
+    ]
   },
   "decision_drivers": [
     {
@@ -51,433 +193,182 @@ Every review generates an **audit-ready decision record**:
       "title": "SQL Injection via String Formatting",
       "severity": "CRITICAL",
       "confidence": 1.0,
-      "location": "get_user():2",
-      "why_it_matters": [
-        "Allows arbitrary SQL execution",
-        "Could expose entire users table",
-        "Common attack vector (OWASP A03:2021)"
-      ]
+      "cwe": "CWE-89",
+      "owasp": "A03:2021",
+      "location": "get_user():2"
     }
-  ],
-  "override": {
-    "allowed": true,
-    "status": "none",
-    "approver": null,
-    "justification": null
-  }
+  ]
 }
 ```
 
-**Why this matters:** Enterprises need to answer *"Why did the AI block this?"* — this audit trail provides that answer.
+---
+
+## 🆚 How This Is Different
+
+| Capability | Code Review Agent | ChatGPT/Claude | SonarQube | Semgrep |
+|------------|:----------------:|:--------------:|:---------:|:-------:|
+| **LLM Prompt Injection Detection** | ✅ | ❌ | ❌ | ❌ |
+| **GDPR/CCPA Compliance Mapping** | ✅ | ❌ | ❌ | ❌ |
+| **Confidence Scoring (0-100%)** | ✅ | ❌ | ❌ | ❌ |
+| **Blast Radius Analysis** | ✅ | ❌ | ❌ | ❌ |
+| **Audit-Ready JSON Export** | ✅ | ❌ | ✅ | ✅ |
+| **CWE/OWASP Tagging** | ✅ | ⚠️ | ✅ | ✅ |
+| **Natural Language Rules** | ✅ | ✅ | ❌ | ❌ |
+| **No Installation Required** | ✅ | ✅ | ❌ | ❌ |
+| **Actionable Code Fixes** | ✅ | ⚠️ | ✅ | ⚠️ |
+
+### Benchmark Results
+
+We tested 10 intentional vulnerabilities (OWASP Top 10 patterns):
+
+| Tool | Detection Rate | False Positives | Scan Time |
+|------|:-------------:|:---------------:|:---------:|
+| **Code Review Agent** | **100% (10/10)** | 0 | ~15s |
+| Semgrep | 40% (4/10) | 0 | ~2s |
+| ChatGPT | ~70% | High | ~30s |
+
+**What only Code Review Agent caught:**
+- ✅ Hardcoded credentials in config objects
+- ✅ Path traversal with weak filtering
+- ✅ Prompt injection in LLM chains
+- ✅ GDPR violations (missing consent, excessive logging)
+
+**Full benchmark details:** [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
+
+---
+
+## �️ What Gets Detected
+
+### Security Vulnerabilities (OWASP Top 10)
+| Category | Examples |
+|----------|----------|
+| **A01: Broken Access Control** | Missing auth checks, privilege escalation |
+| **A02: Cryptographic Failures** | Weak hashing, hardcoded keys, insecure random |
+| **A03: Injection** | SQL, command, XPath, LDAP, prompt injection |
+| **A07: Auth Failures** | Weak passwords, session issues |
+| **A09: Logging Failures** | Missing audit trails, sensitive data in logs |
+
+### Compliance Issues
+| Framework | Examples |
+|-----------|----------|
+| **GDPR** | Missing consent, excessive data collection, no retention policy |
+| **CCPA** | Missing privacy notices, no opt-out mechanism |
+| **HIPAA** | Unencrypted PHI, missing audit logs |
+| **PCI-DSS** | Plaintext card data, weak encryption |
+
+### LLM-Specific Risks
+| Risk | Examples |
+|------|----------|
+| **LLM01: Prompt Injection** | User input directly in prompts |
+| **LLM02: Insecure Output** | Unvalidated model responses |
+| **LLM06: Sensitive Data** | PII in training data, logs |
+
+---
+
+## 🗺️ Roadmap
+
+| Phase | Features | Status |
+|-------|----------|--------|
+| **v0.2** (Current) | Gradio UI, HF Spaces, Blast Radius, Audit JSON | ✅ Released |
+| **v0.3** | Multi-language (TypeScript, Go, Rust) | 🚧 Q1 2026 |
+| **v0.4** | VS Code Extension, GitHub Action | 📋 Q2 2026 |
+| **v0.5** | Custom Rules, Team Dashboards | 📋 Q3 2026 |
+| **v1.0** | Enterprise API, SSO, SIEM Integration | 📋 2026 |
+
+**Full roadmap:** [ROADMAP.md](ROADMAP.md)
 
 ---
 
 ## 📡 API Reference
 
-### POST `/api/review`
+### Review Endpoint
 
-Review code for security and compliance issues.
-
-**Request:**
 ```bash
 curl -X POST "https://adarian-dewberry-code-review-agent.hf.space/api/review" \
   -H "Content-Type: application/json" \
-  -d '{
-    "data": ["def get_user(id): return db.execute(f\"SELECT * FROM users WHERE id={id}\")", true, true, false, false, "app.py"]
-  }'
+  -d '{"data": ["def get_user(id): return db.execute(f\"SELECT * FROM users WHERE id={id}\")", true, true, false, false, "app.py"]}'
 ```
 
-**Response:**
-```json
-{
-  "data": [
-    "",
-    "<div>...verdict HTML...</div>",
-    "## What we found\n\n**SQL Injection**..."
-  ]
-}
-```
-
-### GET `/api/health`
-
-Health check endpoint for monitoring.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "version": "0.2.2",
-  "schema_version": "1.0",
-  "timestamp": "2026-02-07T05:47:50.922Z",
-  "components": {
-    "api_key": "configured",
-    "cache": {"status": "healthy", "hit_rate": "45.2%", "size": 12},
-    "rate_limiter": {"status": "healthy", "limit": "10/60s"}
-  }
-}
-```
-
-### Rate Limits
-
-| Tier | Limit | Window |
-|------|-------|--------|
-| Default | 10 requests | 60 seconds |
-
-Configure via environment variables:
-- `RATE_LIMIT_REQUESTS` - Max requests per window
-- `RATE_LIMIT_WINDOW` - Window duration in seconds
-
----
-
-> ⚠️ **Important**: Read the [DISCLAIMER.md](DISCLAIMER.md) before use. This tool does NOT replace professional security audits or legal compliance reviews.
-
-## Vibe Securely (60-Second Flow)
-
-**Paste AI code → Get fixes → Ship confidently**
-
-1. Paste AI-generated code into the tool
-2. Get **OWASP + CWE mapped** findings with risk levels
-3. Apply fixes before the code reaches production
-
-- [docs/vibe_checklist.txt](docs/vibe_checklist.txt)
-
-**Secure prompt templates:**
-- [docs/prompt_library.txt](docs/prompt_library.txt)
-
----
-
-## Live Demo (Hugging Face Spaces)
-Run a local demo (no deployment required):
+### Health Check
 
 ```bash
-pip install -e ".[dev]"
-python app.py
+curl "https://adarian-dewberry-code-review-agent.hf.space/api/health"
 ```
 
-**Demo mode** lets you explore output without sending code to an LLM.
-
-We tested 10 intentional vulnerabilities (OWASP Top 10) against industry-standard Semgrep:
-
-| Metric | Semgrep | Code Review Agent |
-|--------|---------|-------------------|
-| **Detection Rate** | 40% (4/10) | **100% (10/10)** |
-| **False Positives** | 0 | 0 |
-| **Scan Time** | ~2s | ~15s |
-| **Custom Rules** | ❌ Requires YAML | ✅ Natural language |
-
-**Code Review Agent detected:**
-- ✅ All SQL injection patterns (f-strings, concatenation)
-- ✅ Hardcoded credentials (Semgrep missed)
-- ✅ Path traversal vulnerabilities (Semgrep missed)
-- ✅ Weak crypto for security contexts (Semgrep missed)
-
-**Full benchmark results:** [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
+**Rate Limits:** 10 requests per 60 seconds (configurable via `RATE_LIMIT_REQUESTS`, `RATE_LIMIT_WINDOW`)
 
 ---
 
-## Why Better Than Claude/Sonar
+## 🔮 Advanced Features
 
-| Capability | Code Review Agent | Claude/ChatGPT | SonarQube |
-|------------|-------------------|----------------|-----------|
-| **Prompt Injection Detection** | ✅ LLM-aware patterns | ❌ Generic advice | ❌ No LLM support |
-| **GDPR/CCPA Controls** | ✅ Mapped to controls | ❌ Generic mentions | ❌ No compliance |
-| **Actionable Fixes** | ✅ Code + Regulation | ❌ Vague suggestions | ✅ Code only |
-| **Confidence Scoring** | ✅ 0-100% per finding | ❌ No scoring | ❌ Severity only |
-| **Evidence (Line + Snippet)** | ✅ Always included | ❌ Sometimes | ✅ Yes |
-| **Deduplication** | ✅ Root cause → tags | ❌ Repeats issues | ✅ Some |
-| **LLM-Specific Fixes** | ✅ Delimiters, schemas | ❌ Generic | ❌ Not applicable |
-| **Blast Radius Analysis** | ✅ Tech/Data/Org scope | ❌ None | ❌ None |
-| **Decision Accountability** | ✅ Audit-ready JSON | ❌ None | ❌ None |
+### Blast Radius Analysis
 
----
+Every finding estimates how far impact can propagate:
 
-## 🔮 Future-Facing Features (2026+)
+| Dimension | Values |
+|-----------|--------|
+| **Technical Scope** | function → module → service → cross-service |
+| **Data Scope** | none → internal → customer → pii → regulated |
+| **Organizational Scope** | single-team → multi-team → external → regulators |
 
-### 💥 Risk Propagation & Blast Radius Analysis
+### SDL Multi-Agent Security Squad
 
-Instead of treating findings as isolated issues, the agent estimates **how far impact can propagate**:
-
-| Dimension | Values | Example |
-|-----------|--------|---------|
-| **Technical Scope** | function → module → service → cross-service | SQL injection in data layer → "service" |
-| **Data Scope** | none → internal → customer → pii → regulated | SELECT * FROM users → "pii" |
-| **Organizational Scope** | single-team → multi-team → external-customers → regulators | Auth bypass → "external-customers" |
-
-**Why this matters:** Security leaders ask *"What's the blast radius if this goes wrong?"* — this agent answers that question.
-
-### 📋 Decision Accountability & Audit-Ready Justifications
-
-Every **BLOCK** or **REVIEW REQUIRED** decision comes with a machine-generated justification record:
-
-```json
-{
-  "decision_id": "D-20260207-0001",
-  "verdict": "BLOCK",
-  "policy": { "version": "v1", "block_rules": [...], "review_rules": [...] },
-  "decision_drivers": [
-    { "finding_id": "F-001", "title": "SQL Injection", "severity": "CRITICAL", "confidence": 1.0, "why_it_matters": [...] }
-  ],
-  "override": { "allowed": true, "status": "none" }
-}
-```
-
-**Why this matters:** Enterprises need to answer *"Why did the AI block this?"* and *"Who approved this override?"* — this agent provides that audit trail.
-
----
-
-## 🛡️ SDL Multi-Agent Security Squad
-
-Enable STRIDE/DREAD threat modeling, SDL phase gates (A1–A5), and Security Champion checklists:
-
-- **SAST Agent:** Semgrep/Bandit + STRIDE mapping
-- **DAST Agent:** Fuzz testing simulation + OWASP ZAP patterns
-- **SCA Agent:** Dependency CVE analysis
-- **SDL Champion:** DREAD scoring + phase gate enforcement
-
-**Docs:** [docs/SDL_MULTI_AGENT.md](docs/SDL_MULTI_AGENT.md)
-
-**CLI:**
-
-```bash
-code-review review --sdl-mode path/to/code.py
-```
-
-**CLI demo script:**
+Enable enterprise-grade threat modeling:
 
 ```bash
 python security_squad.py --file app.py --sdl-full
 ```
 
----
-
-Modern development teams face a critical challenge:
-- **AI-generated code is fast but unsafe** - GitHub Copilot, ChatGPT, and Claude excel at generating code quickly, but lack security context
-**Code Review Agent** solves this by **shifting security left** - catching issues at the point of code creation, before they reach production.
-
-## Why This Tool Matters: The ROI Conversation
-- ⚖️ **Regulatory compliance evidence** - Demonstrates due diligence for GDPR, CCPA, SOC 2 audits
-- ✅ **Categorizes risks by OWASP Top 10 & CWE** - speaks the language of auditors
-- ✅ **Flags regulatory violations early** - GDPR, CCPA, EU AI Act, HIPAA, PCI-DSS
-
-
-- EU AI Act: High-risk AI system documentation
-- Off-by-one errors, infinite loops
-- Race conditions, unhandled edge cases
-
-**Performance Review**: Identifies scalability risks
-- N+1 query problems, database inefficiencies
-- Memory leaks, unbounded loops
-- Missing caching strategies
+**Docs:** [docs/SDL_MULTI_AGENT.md](docs/SDL_MULTI_AGENT.md)
 
 ---
 
-## Quick Start
+## 🚀 Deployment Options
 
-### Installation
-```bash
-# Clone repo
-git clone https://github.com/adarian-dewberry/code-review-agent.git
-cd code-review-agent
-python3 -m venv .venv
-source .venv/bin/activate  # macOS/Linux
-# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
+### Hugging Face Spaces (Recommended)
 
-# Install with dev dependencies
-pip install -e ".[dev]"
+1. Fork this repo to your GitHub
+2. Create a new Space at [huggingface.co/spaces](https://huggingface.co/spaces)
+3. Choose **Gradio** SDK, connect your repo
+4. Add `ANTHROPIC_API_KEY` in Settings → Secrets
+5. Deploy!
 
-# Set up pre-commit hooks
-pre-commit install
-
-# Set API key
-export ANTHROPIC_API_KEY=your_key_here
-```
-
----
-
----
-
-## 🚀 Hugging Face Spaces Deployment
-### Option 1: Deploy to Hugging Face Spaces (Free)
-
-1. **Fork this repository** to your GitHub account
-2. Go to [https://huggingface.co/spaces](https://huggingface.co/spaces)
-3. Click "Create new Space"
-4. Choose SDK: **Gradio**
-5. Connect GitHub repo: `your-username/code-review-agent`
-6. Set app file: `app.py`
-7. Add secret: `ANTHROPIC_API_KEY` in **Settings → Secrets**
-8. Click "Create Space"
-
-Your app will be live at: `https://huggingface.co/spaces/your-username/space-name`
-
-**Public demo URL (placeholder):** `https://huggingface.co/spaces/your-username/space-name`
-
-### Prep Checklist (GitHub Push + Hugging Face Spaces)
-
-- Add `CODECOV_TOKEN` in GitHub Secrets for dynamic coverage badges
-- Enable GitHub Pages (Settings → Pages → Deploy from branch)
-- Add `ANTHROPIC_API_KEY` in Hugging Face Secrets for live demo
-
-### Option 2: Local Deployment
+### Docker
 
 ```bash
-# Install dependencies
-pip install -e ".[dev]"
-
-# Run locally
-python app.py
-```
-
-## Demo: Tool in Action
-
-> **Note**: Visual demo (GIF/screenshot) coming soon - showing the tool detecting SQL injection, missing audit trails, and N+1 queries in VS Code.
-
-**What it looks like:**
-1. Developer writes code with security issues
-   - Risk level (CRITICAL)
-**Example output format:**
-```
-## CRITICAL
-  Risk Level: CRITICAL
-  Fix: Use parameterized queries...
+docker build -t code-review-agent .
+docker run -e ANTHROPIC_API_KEY=your_key -p 7860:7860 code-review-agent
 ```
 
 ---
 
-### Basic Usage
-code-review review path/to/code.py
+## ⚠️ Important Disclaimers
 
-# Review git changes
-git diff main | code-review review --stdin
+> **This tool does NOT replace professional security audits or legal compliance reviews.**
 
-# CI/CD mode (fails if critical issues found)
-code-review review --ci-mode path/to/code.py
+- AI models may produce false positives/negatives
+- Your code is sent to Anthropic's Claude API
+- No guarantee of regulatory compliance
+- Always validate findings manually
 
-# SDL Multi-Agent Security Squad mode
-code-review review --sdl-mode path/to/code.py
-```
-```markdown
-# Code Review Report
-
-**File:** `vendor_risk_scorer.py`
-
-## Summary
-
-- **Recommendation:** `DO_NOT_MERGE`
-- **Critical Issues:** 2
-- **Medium Issues:** 3
-
-### Top Issues
-- [SECURITY] SQL injection vulnerability (line 45)
-- [COMPLIANCE] PII accessed without audit trail (line 78)
-- [SECURITY] Missing rate limiting (line 102)
-
-## Security Review
-
-**SQL injection vulnerability (line 45)**
-- Risk: Attacker can extract entire database by manipulating vendor_name parameter
-  result = db.execute(query, (vendor_name,))
-- Risk: API endpoint can be abused to exhaust Claude token budget
-```
-```python
-  audit_log.record(
-      data_accessed="vendor_contact_email",
-      purpose="risk_scoring"
-  )
-```
-| **Pre-Commit (This Tool)** | $1,000 | 87% | **$43,500** |
-| **Code Review (Manual)** | $5,000 | 40% | $100,000 |
-
-**Why the multiplier exists:**
-
-**With Code Review Agent:**
-- 📊 **Instant audit documentation** - Every commit has security attestation
-- 🛡️ **Reduced cyber insurance premiums** - Demonstrable proactive security posture
-- 💼 **Avoided regulatory fines** - GDPR violations start at €20M
+**Read full disclaimer:** [DISCLAIMER.md](DISCLAIMER.md)
 
 ---
 
-## Features
+## 🔧 Configuration
 
-- **Multi-pass Review**: Security, compliance, logic, and performance checks
-- **OWASP & CWE Mapping**: Professional risk classification for audit trails
-- **CLI Interface**: Easy-to-use command-line tool (2-second reviews)
-- **CI/CD Integration**: Fail builds with critical issues automatically
-- **GitHub Actions CI**: Lint, type-check, and tests on every PR
-- **Structured Output**: Markdown reports and JSON data (with risk levels)
-- **File Exclusion**: Skip node_modules, .env, and other safe patterns automatically
-- **Data Privacy**: Explicit warning before sending code to Claude API
-- **Configurable**: Custom categories, risk thresholds, and exclusions
-
-### Custom Rules (Experimental)
-
-Start with a template for organizational policies:
-- [config/custom_rules.yaml](config/custom_rules.yaml)
-
----
-
-## Security Methodology
-
-This tool follows industry-standard security classification frameworks:
-
-### OWASP Top 10 (2021) Coverage
-The tool detects all categories from the OWASP Top 10:
-- **A01:2021** – Broken Access Control
-- **A02:2021** – Cryptographic Failures
-- **A03:2021** – Injection
-- **A04:2021** – Insecure Design
-- **A05:2021** – Security Misconfiguration
-- **A06:2021** – Vulnerable and Outdated Components
-- **A07:2021** – Authentication & Session Management Flaws
-- **A08:2021** – Software & Data Integrity Failures
-- **A09:2021** – Logging & Monitoring Failures
-- **A10:2021** – Server-Side Request Forgery (SSRF)
-
-### CWE-Based Classification
-Each finding is tagged with its CWE (Common Weakness Enumeration):
-- Example: **CWE-89** (SQL Injection), **CWE-502** (Deserialization of Untrusted Data)
-- Enables correlation with known exploits and vulnerability databases
-
-### Risk Levels
-All findings are categorized by business impact:
-- **CRITICAL**: Exploitable immediately, regulatory violation
-- **HIGH**: Significant security impact, compliance gap
-- **MEDIUM**: Defense-in-depth concern, best practices
-- **LOW**: Theoretical risk, hardening recommendation
-
-### Quantum-Safe Crypto (2026 Edge)
-Plan migration toward post-quantum cryptography (e.g., Kyber/Dilithium) for long-lived secrets and high-sensitivity data.
-
-### Compliance Frameworks
-- **GDPR**: Article 32 (Security measures), Article 30 (Records of processing)
-- **CCPA**: Consumer rights (access, deletion), privacy notices
-- **EU AI Act**: High-risk AI documentation, transparency
-- **HIPAA**: PHI protection, audit trails
-- **PCI-DSS**: Secure coding, testing requirements
-
----
-
-## Features
-
-- **File Exclusion**: Skip node_modules, .env, and other safe patterns
-- **Data Privacy**: Explicit warning before sending code to Claude API
-- **Configurable**: Custom categories, risk thresholds, and exclusions
-
-## Configuration
-
-Create a `.env` file based on `.env.example`:
+Create a `.env` file:
 
 ```bash
 ANTHROPIC_API_KEY=your_api_key_here
 ```
 
-Override settings in `config.yaml`:
+Optional `config.yaml`:
 
 ```yaml
 model:
   name: "claude-sonnet-4-20250514"
   max_tokens: 4000
-  temperature: 0.0
 
 review:
   enabled_categories:
@@ -486,42 +377,63 @@ review:
     - performance
     - compliance
   fail_on_critical: true
-  fail_on_high: false
-  
-  # Exclude patterns (glob-style)
-  exclude_patterns:
-    - "*.min.js"
-    - "node_modules/**"
-    - ".env"
-  
-  # Data privacy: warn before sending code
-  warn_before_sending: true
 ```
 
-## Project Structure
+---
+
+## 🔒 Security Methodology
+
+### OWASP Top 10 (2021) Coverage
+
+All categories detected:
+- **A01** – Broken Access Control
+- **A02** – Cryptographic Failures  
+- **A03** – Injection
+- **A04** – Insecure Design
+- **A05** – Security Misconfiguration
+- **A06** – Vulnerable Components
+- **A07** – Auth Failures
+- **A08** – Software Integrity Failures
+- **A09** – Logging Failures
+- **A10** – SSRF
+
+### Risk Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Exploitable immediately, regulatory violation |
+| **HIGH** | Significant security impact, compliance gap |
+| **MEDIUM** | Defense-in-depth concern, best practices |
+| **LOW** | Theoretical risk, hardening recommendation |
+
+---
+
+## 📁 Project Structure
 
 ```
 code-review-agent/
-├── code_review_agent/
-│   ├── agent.py              # Core review orchestration
-│   ├── cli.py                # CLI interface
-│   ├── config.py             # Configuration management
-│   ├── models.py             # Data models (Pydantic)
-│   ├── parsers.py            # Claude response parsing
-│   ├── prompts/              # Review prompts by category
-│   ├── utils/                # Helper utilities
-│   └── tests/                # Test suite
+├── app.py                    # Gradio web UI
+├── examples/                 # Sample vulnerable code
+│   ├── sql_injection.py
+│   ├── prompt_injection.py
+│   ├── gdpr_violation.py
+│   ├── hardcoded_secrets.py
+│   └── path_traversal.py
+├── docs/                     # Documentation
 ├── config.yaml               # Default configuration
-├── setup.py                  # Package setup
-├── requirements.txt          # Production dependencies
-├── requirements-dev.txt      # Development dependencies
-└── README.md                 # Documentation
+├── requirements.txt          # Dependencies
+├── POLICIES.md               # GRC policy framework
+├── ROADMAP.md                # Feature roadmap
+├── CONTRIBUTING.md           # Contribution guide
+└── LICENSE                   # MIT license
 ```
 
-## Development
+---
+
+## 🛠️ Development
 
 ```bash
-# Install development dependencies
+# Install dev dependencies
 pip install -e ".[dev]"
 
 # Run tests
@@ -531,30 +443,39 @@ pytest
 pytest --cov=code_review_agent
 
 # Format code
-black code_review_agent tests
-
-# Check linting
-flake8 code_review_agent tests
+black .
 
 # Type checking
-mypy code_review_agent
+mypy .
 ```
 
-## License & Disclaimer
+---
 
-**License**: [MIT License](LICENSE) - Free to use, modify, and distribute with attribution.
+## 🤝 Contributing
 
-**Disclaimer**: This tool is provided "AS IS" without warranties. It does NOT replace professional security audits, legal compliance reviews, or manual code review. 
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-⚠️ **Read the full [DISCLAIMER.md](DISCLAIMER.md) before use.**
+**Quick start:**
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `pytest`
+5. Submit a PR
 
-**Key Points:**
-- AI models may produce false positives/negatives
-- Your code is sent to Anthropic's Claude API
-- No guarantee of regulatory compliance (GDPR, HIPAA, etc.)
-- Not a substitute for professional security assessments
-- Users are responsible for validating all findings
+---
 
-## Contributing
+## 📜 License
 
-See CONTRIBUTING.md for guidelines
+**MIT License** — Free to use, modify, and distribute with attribution.
+
+See [LICENSE](LICENSE) for full text.
+
+---
+
+<div align="center">
+
+**Built with 🛡️ by developers, for developers**
+
+**[🚀 Try Live Demo](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)** · **[⭐ Star on GitHub](https://github.com/adarian-dewberry/code-review-agent)** · **[🐛 Report Bug](https://github.com/adarian-dewberry/code-review-agent/issues)**
+
+</div>
