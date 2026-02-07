@@ -8,10 +8,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare deploy folder (exclude docs, images, etc.)
+      - name: Prepare deploy folder (exclude binaries/docs)
         run: |
           mkdir -p hf_deploy
           rsync -av --delete \
@@ -25,13 +25,11 @@ jobs:
             --exclude "**/*.pdf" \
             ./ hf_deploy/
 
-      - name: Verify required HF files exist
+      - name: Sanity checks (README/app.py/requirements.txt)
         run: |
-          echo "Checking for required Hugging Face files..."
-          test -f hf_deploy/README.md && echo "✓ README.md found" || (echo "✗ README.md missing!"; exit 1)
-          test -f hf_deploy/app.py && echo "✓ app.py found" || (echo "✗ app.py missing!"; exit 1)
-          test -f hf_deploy/requirements.txt && echo "✓ requirements.txt found" || (echo "✗ requirements.txt missing!"; exit 1)
-          echo "All required files present!"
+          test -f hf_deploy/README.md
+          test -f hf_deploy/app.py
+          test -f hf_deploy/requirements.txt
 
       - name: Push to Hugging Face Space
         env:
@@ -42,7 +40,4 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add .
-          git commit -m "Deploy to HF Space"
-
-          git remote add hf https://adarian-dewberry:${HF_TOKEN}@huggingface.co/spaces/adarian-dewberry/code-review-agent
-          git push hf HEAD:main --force
+          git commit -m "Deploy to HF Space" || true
