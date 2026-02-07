@@ -2,7 +2,7 @@ name: Deploy to Hugging Face Space
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
@@ -10,18 +10,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: Prepare deploy folder (exclude docs, images, etc.)
+        run: |
+          mkdir -p hf_deploy
+          rsync -av --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "docs" \
+            --exclude "**/*.png" \
+            --exclude "**/*.jpg" \
+            --exclude "**/*.jpeg" \
+            --exclude "**/*.gif" \
+            --exclude "**/*.pdf" \
+            ./ hf_deploy/
 
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          cd hf_deploy
+          git init
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Deploy to HF Space"
 
-          # Hugging Face Space git remote (authenticated via token)
-          git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/adarian-dewberry/code-review-agent
-
-          # Push your GitHub main branch to the Space
-          git push hf main --force
+          git remote add hf https://adarian-dewberry:${HF_TOKEN}@huggingface.co/spaces/adarian-dewberry/code-review-agent
+          git push hf HEAD:main --force
