@@ -1388,25 +1388,42 @@ body[data-theme="noir"] #mode_toggle .wrap {
 #customize_acc .wrap {
   padding: 4px 16px 18px 16px !important;
 }
+
+/* Beginner tip - high contrast for accessibility */
+.beginner_tip {
+  background: rgba(205,143,122,0.15);
+  border: 1px solid rgba(205,143,122,0.3);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  color: #FAF8F4;
+  font-size: 1.05em;
+  line-height: 1.5;
+}
+.beginner_tip strong {
+  color: var(--accent);
+}
+
 .config_section_title {
-  color: rgba(250,248,244,0.85);
-  font-weight: 600;
-  font-size: 0.95em;
-  margin-bottom: 12px;
+  color: #FAF8F4;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-bottom: 14px;
 }
 #customize_acc label {
-  color: rgba(250,248,244,0.85) !important;
-  font-size: 1em !important;
-  font-weight: 500 !important;
+  color: #FAF8F4 !important;
+  font-size: 1.05em !important;
+  font-weight: 600 !important;
 }
 #customize_acc input[type="checkbox"] {
   accent-color: var(--accent) !important;
-  width: 18px !important;
-  height: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
 }
 #customize_acc .info {
-  font-size: 0.85em !important;
-  color: rgba(250,248,244,0.55) !important;
+  font-size: 0.95em !important;
+  color: rgba(250,248,244,0.7) !important;
+  margin-top: 4px !important;
 }
 
 /* RIGHT: Light results panel */
@@ -1912,7 +1929,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 "⚙️ Advanced Settings (Optional)", open=False, elem_id="customize_acc"
             ):
                 gr.HTML(
-                    '<p style="color: rgba(250,248,244,0.75); font-size: 0.95em; margin-bottom: 14px; line-height: 1.5;">🎯 <strong>New to code review?</strong> Leave these as-is — the defaults work great for most code.</p>'
+                    '<div class="beginner_tip">🎯 <strong>New to code review?</strong> Leave these as-is — the defaults work great for most code.</div>'
                 )
                 gr.HTML(
                     '<div class="config_section_title">What should Frankie look for?</div>'
