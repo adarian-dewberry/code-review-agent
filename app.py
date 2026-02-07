@@ -1761,6 +1761,48 @@ def get_user(user_id):
     return db.execute(query)
 '''
 
+# Example vulnerable code snippets for gr.Examples
+EXAMPLE_SNIPPETS = [
+    # SQL Injection
+    [
+        """def get_user(user_id):
+    query = f"SELECT * FROM users WHERE id = {user_id}"
+    return db.execute(query)""",
+        "user_service.py",
+    ],
+    # Prompt Injection
+    [
+        """def chat(user_input):
+    prompt = f"You are helpful. User says: {user_input}"
+    return llm.generate(prompt)""",
+        "chatbot.py",
+    ],
+    # Hardcoded Secrets
+    [
+        """API_KEY = "sk-abc123secret"
+DATABASE_URL = "postgres://admin:password@db:5432/prod"
+
+def connect():
+    return db.connect(DATABASE_URL)""",
+        "config.py",
+    ],
+    # Path Traversal
+    [
+        """def download(filename):
+    path = f"/uploads/{filename}"
+    return open(path, "rb").read()""",
+        "file_handler.py",
+    ],
+    # GDPR Violation
+    [
+        """def register(name, email, ssn, credit_card):
+    user = {"name": name, "email": email, "ssn": ssn,
+            "credit_card": credit_card}
+    db.insert(user)  # No consent, no encryption""",
+        "user_registration.py",
+    ],
+]
+
 
 def load_sample():
     """Load sample vulnerable code for demo."""
@@ -1923,6 +1965,14 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 placeholder="Example: app.py, server.js, main.go",
                 lines=1,
                 elem_id="filename_box",
+            )
+
+            # Quick examples for testing - clickable samples
+            gr.Examples(
+                examples=EXAMPLE_SNIPPETS,
+                inputs=[code, ctx],
+                label="🎯 Quick Examples (click to load)",
+                examples_per_page=5,
             )
 
             with gr.Accordion(
