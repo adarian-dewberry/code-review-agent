@@ -132,10 +132,16 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
             "",
         )
 
-    except Exception as e:
-        # Don't expose traceback in production
+    except anthropic.BadRequestError as e:
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred. Please try again.</p><p><small>Error type: {type(e).__name__}</small></p></div>",
+            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Bad Request</h3><p>The API rejected the request.</p><p><small>Details: {str(e)}</small></p></div>",
+            "",
+        )
+
+    except Exception as e:
+        # Show more details to help debug
+        return (
+            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred.</p><p><small>Error type: {type(e).__name__}: {str(e)}</small></p></div>",
             "",
         )
 
