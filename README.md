@@ -89,6 +89,42 @@ We tested 10 intentional vulnerabilities (OWASP Top 10) against industry-standar
 | **Evidence (Line + Snippet)** | ✅ Always included | ❌ Sometimes | ✅ Yes |
 | **Deduplication** | ✅ Root cause → tags | ❌ Repeats issues | ✅ Some |
 | **LLM-Specific Fixes** | ✅ Delimiters, schemas | ❌ Generic | ❌ Not applicable |
+| **Blast Radius Analysis** | ✅ Tech/Data/Org scope | ❌ None | ❌ None |
+| **Decision Accountability** | ✅ Audit-ready JSON | ❌ None | ❌ None |
+
+---
+
+## 🔮 Future-Facing Features (2026+)
+
+### 💥 Risk Propagation & Blast Radius Analysis
+
+Instead of treating findings as isolated issues, the agent estimates **how far impact can propagate**:
+
+| Dimension | Values | Example |
+|-----------|--------|---------|
+| **Technical Scope** | function → module → service → cross-service | SQL injection in data layer → "service" |
+| **Data Scope** | none → internal → customer → pii → regulated | SELECT * FROM users → "pii" |
+| **Organizational Scope** | single-team → multi-team → external-customers → regulators | Auth bypass → "external-customers" |
+
+**Why this matters:** Security leaders ask *"What's the blast radius if this goes wrong?"* — this agent answers that question.
+
+### 📋 Decision Accountability & Audit-Ready Justifications
+
+Every **BLOCK** or **REVIEW REQUIRED** decision comes with a machine-generated justification record:
+
+```json
+{
+  "decision_id": "D-20260207-0001",
+  "verdict": "BLOCK",
+  "policy": { "version": "v1", "block_rules": [...], "review_rules": [...] },
+  "decision_drivers": [
+    { "finding_id": "F-001", "title": "SQL Injection", "severity": "CRITICAL", "confidence": 1.0, "why_it_matters": [...] }
+  ],
+  "override": { "allowed": true, "status": "none" }
+}
+```
+
+**Why this matters:** Enterprises need to answer *"Why did the AI block this?"* and *"Who approved this override?"* — this agent provides that audit trail.
 
 ---
 
