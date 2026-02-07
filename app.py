@@ -40,7 +40,9 @@ Copy lint rules:
 =============================================================================
 """
 
+import html
 import json
+import logging
 import os
 import re
 import uuid
@@ -51,9 +53,14 @@ import anthropic
 import gradio as gr
 import httpx
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
 # Strip whitespace from API key (common issue with copy/paste in HF secrets)
 ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
-MODEL = "claude-sonnet-4-20250514"
+
+# Allow model override via environment variable
+MODEL = os.getenv("CODE_REVIEW_MODEL", "claude-sonnet-4-20250514")
 SCHEMA_VERSION = "1.0"
 TOOL_VERSION = "0.2.1"
 
@@ -323,17 +330,17 @@ Use DATABASE-SPECIFIC language (sqlite vs postgres vs mysql).""",
 }
 
 
-def generate_run_id():
+def generate_run_id() -> str:
     """Generate unique run ID."""
     return f"RUN-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6]}"
 
 
-def generate_decision_id():
+def generate_decision_id() -> str:
     """Generate unique decision ID."""
     return f"D-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:4]}"
 
 
-def parse_findings(text):
+def parse_findings(text: str) -> dict:
     """Extract JSON findings from LLM response."""
     json_match = re.search(r'\{[\s\S]*"findings"[\s\S]*\}', text)
     if json_match:
@@ -354,7 +361,7 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
 
     if len(code) > 50000:
         return (
-            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Please limit to 50,000 characters.</p></div>",
+            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Limit to 50,000 characters.</p></div>",
             "",
         )
 
@@ -380,6 +387,7 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
     if perf:
         cats.append("performance")
 
+    http_client = None
     try:
         http_client = httpx.Client(
             timeout=httpx.Timeout(90.0, connect=30.0),
@@ -583,15 +591,16 @@ This code follows safe patterns based on the signals we checked.
                 sev = f.get("severity", "MEDIUM")
                 border_color = {"CRITICAL": "#CD8F7A", "HIGH": "#A89F91", "MEDIUM": "#D8C5B2", "LOW": "#E7DCCE"}.get(sev, "#D8C5B2")
                 
-                # Plain language explanation
-                plain_desc = f.get("description", "An issue was detected.")
-                plain_impact = f.get("impact", "This could affect how the code behaves.")
-                plain_rec = f.get("recommendation", "Review and address this issue.")
+                # Plain language explanation - escape to prevent XSS
+                plain_title = html.escape(f.get("title", "Issue"))
+                plain_desc = html.escape(f.get("description", "An issue was detected."))
+                plain_impact = html.escape(f.get("impact", "This could affect how the code behaves."))
+                plain_rec = html.escape(f.get("recommendation", "Review and address this issue."))
                 
                 details += f"""
 <div style="border-left: 3px solid {border_color}; padding-left: 16px; margin-bottom: 20px;">
 
-**{f.get('title', 'Issue')}**
+**{plain_title}**
 
 {plain_desc}
 
@@ -619,40 +628,48 @@ This code follows safe patterns based on the signals we checked.
             for root_cause, items in root_causes.items():
                 items = sorted(items, key=lambda x: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(x.get("severity", "LOW"), 4), -x.get("confidence", 0)))
                 
-                top_sev = items[0].get("severity", "MEDIUM")
-                
-                details += f"### Root Cause: {root_cause}\n\n"
+                # Escape root cause for XSS prevention
+                safe_root_cause = html.escape(root_cause)
+                details += f"### Root Cause: {safe_root_cause}\n\n"
                 
                 for f in items:
                     sev = f.get("severity", "UNKNOWN")
                     conf = f.get("confidence", 0)
                     conf_text = "High confidence" if conf >= 0.8 else "Medium confidence" if conf >= 0.5 else "Low confidence"
                     
-                    details += f"**{f.get('title', 'Issue')}** · {sev} · {conf_text}\n\n"
+                    # Escape dynamic content for XSS prevention
+                    safe_title = html.escape(f.get("title", "Issue"))
+                    details += f"**{safe_title}** · {sev} · {conf_text}\n\n"
                     
                     location = f.get("location") or (f"Line {f.get('line')}" if f.get("line") else None)
                     if location:
-                        details += f"Location: `{location}`\n\n"
+                        safe_location = html.escape(str(location))
+                        details += f"Location: `{safe_location}`\n\n"
                     
                     if f.get("evidence"):
-                        details += f"```\n{f.get('evidence')}\n```\n\n"
+                        # Evidence in code block - escape for safety
+                        safe_evidence = html.escape(f.get("evidence"))
+                        details += f"```\n{safe_evidence}\n```\n\n"
                     elif f.get("snippet"):
-                        details += f"```python\n{f.get('snippet')}\n```\n\n"
+                        safe_snippet = html.escape(f.get("snippet"))
+                        details += f"```python\n{safe_snippet}\n```\n\n"
                     
                     if f.get("tags"):
-                        details += f"Tags: {', '.join(f.get('tags', []))}\n\n"
+                        safe_tags = ", ".join(html.escape(t) for t in f.get("tags", []))
+                        details += f"Tags: {safe_tags}\n\n"
                     
                     # Blast radius for HIGH/CRITICAL
                     br = f.get("blast_radius")
                     if br and sev in ["CRITICAL", "HIGH"]:
                         details += "<details>\n<summary>Blast Radius Estimate</summary>\n\n"
-                        details += f"- **Technical:** {br.get('technical_scope', 'unknown')}\n"
-                        details += f"- **Data:** {br.get('data_scope', 'unknown')}\n"
-                        details += f"- **Organizational:** {br.get('org_scope', 'unknown')}\n\n"
+                        details += f"- **Technical:** {html.escape(br.get('technical_scope', 'unknown'))}\n"
+                        details += f"- **Data:** {html.escape(br.get('data_scope', 'unknown'))}\n"
+                        details += f"- **Organizational:** {html.escape(br.get('org_scope', 'unknown'))}\n\n"
                         details += "</details>\n\n"
                     
                     if f.get("escalation") and sev in ["HIGH", "MEDIUM"]:
-                        details += f"*Escalates to CRITICAL if: {f.get('escalation')}*\n\n"
+                        safe_escalation = html.escape(f.get("escalation"))
+                        details += f"*Escalates to CRITICAL if: {safe_escalation}*\n\n"
                 
                 details += "---\n\n"
         
@@ -675,20 +692,23 @@ This code follows safe patterns based on the signals we checked.
         return summary, details
 
     except anthropic.AuthenticationError as e:
+        logger.error(f"Authentication error: {e}")
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Authentication Error</h3><p>Invalid API key. Check ANTHROPIC_API_KEY in Settings → Secrets.</p><p>Details: {str(e)}</p></div>",
+            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Authentication Error</h3><p>Invalid API key. Check ANTHROPIC_API_KEY in Settings → Secrets.</p></div>",
             "",
         )
 
     except anthropic.NotFoundError as e:
+        logger.error(f"Model not found: {e}")
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>Model {MODEL} not available. Details: {str(e)}</p></div>",
+            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>The model is not available. Try again later.</p></div>",
             "",
         )
 
     except anthropic.APIConnectionError as e:
-        # Provide more detailed connection error info
+        # Log full error server-side
         error_detail = str(e)
+        logger.error(f"API connection error: {error_detail}")
         if "SSL" in error_detail or "certificate" in error_detail.lower():
             hint = (
                 "SSL/TLS certificate issue. The server may need updated certificates."
@@ -698,22 +718,29 @@ This code follows safe patterns based on the signals we checked.
         else:
             hint = "Network connectivity issue. The Anthropic API may be temporarily unreachable."
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>{hint}</p><p><small>Details: {error_detail}</small></p></div>",
+            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>{hint}</p></div>",
             "",
         )
 
     except anthropic.BadRequestError as e:
+        logger.error(f"Bad request error: {e}")
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Bad Request</h3><p>The API rejected the request.</p><p><small>Details: {str(e)}</small></p></div>",
+            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Request Error</h3><p>The request could not be processed. Try simplifying your code.</p></div>",
             "",
         )
 
     except Exception as e:
-        # Show more details to help debug
+        # Log full exception server-side, show generic message to users
+        logger.exception("Unexpected error during code review")
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred.</p><p><small>Error type: {type(e).__name__}: {str(e)}</small></p></div>",
+            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred. Try again or contact support if the issue persists.</p></div>",
             "",
         )
+
+    finally:
+        # Ensure HTTP client is always closed
+        if http_client:
+            http_client.close()
 
 
 # Theme configuration for Gradio
@@ -1275,7 +1302,6 @@ def get_frankie_loader(run_id: str = "") -> str:
     <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Ball (terracotta, bouncing) -->
       <circle class="ball" cx="125" cy="75" r="10" fill="#CD8F7A"/>
-      <ellipse class="ball" cx="125" cy="75" rx="10" ry="10" fill="#CD8F7A"/>
       <path class="ball" d="M120 72 Q125 68 130 72 M120 78 Q125 82 130 78" stroke="#B87A65" stroke-width="1.5" fill="none"/>
       
       <!-- Body (horizontal for trotting) -->
