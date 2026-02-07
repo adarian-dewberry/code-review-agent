@@ -78,6 +78,20 @@ We tested 10 intentional vulnerabilities (OWASP Top 10) against industry-standar
 
 ---
 
+## Why Better Than Claude/Sonar
+
+| Capability | Code Review Agent | Claude/ChatGPT | SonarQube |
+|------------|-------------------|----------------|-----------|
+| **Prompt Injection Detection** | ✅ LLM-aware patterns | ❌ Generic advice | ❌ No LLM support |
+| **GDPR/CCPA Controls** | ✅ Mapped to controls | ❌ Generic mentions | ❌ No compliance |
+| **Actionable Fixes** | ✅ Code + Regulation | ❌ Vague suggestions | ✅ Code only |
+| **Confidence Scoring** | ✅ 0-100% per finding | ❌ No scoring | ❌ Severity only |
+| **Evidence (Line + Snippet)** | ✅ Always included | ❌ Sometimes | ✅ Yes |
+| **Deduplication** | ✅ Root cause → tags | ❌ Repeats issues | ✅ Some |
+| **LLM-Specific Fixes** | ✅ Delimiters, schemas | ❌ Generic | ❌ Not applicable |
+
+---
+
 ## 🛡️ SDL Multi-Agent Security Squad
 
 Enable STRIDE/DREAD threat modeling, SDL phase gates (A1–A5), and Security Champion checklists:
