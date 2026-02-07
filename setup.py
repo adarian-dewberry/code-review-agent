@@ -12,8 +12,8 @@ long_description = readme.read_text() if readme.exists() else ""
 setup(
     name="code-review-agent",
     version="0.1.0",
-    author="AD Dewberry",
-    author_email="contact@adariandewberry.ai",
+    author="Adarian Dewberry",
+    author_email="hello@adariandewberry.ai",
     description="Automated code review agent for AI-powered development",
     long_description=long_description,
     long_description_content_type="text/markdown",

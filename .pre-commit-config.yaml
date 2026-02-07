@@ -1,0 +1,15 @@
+# Pre-commit hook for local code review
+# Install with: pre-commit install
+
+repos:
+  - repo: local
+    hooks:
+      - id: code-review-agent
+        name: Code Review Agent
+        entry: code-review review
+        language: system
+        types: [python]
+        stages: [commit]
+        pass_filenames: true
+        require_serial: true
+        verbose: true

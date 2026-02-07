@@ -1,0 +1,34 @@
+# GitLab CI Configuration
+
+stages:
+  - review
+
+code_review:
+  stage: review
+  image: python:3.11
+  before_script:
+    - pip install -e .
+  script:
+    # Get changed files between base branch and current branch
+    - |
+      git diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..HEAD --name-only --diff-filter=d | grep '\.py$' > /tmp/changed_files.txt || true
+    
+    - |
+      if [ ! -s /tmp/changed_files.txt ]; then
+        echo "✅ No Python files changed"
+        exit 0
+      fi
+    
+    - |
+      while IFS= read -r file; do
+        if [ -f "$file" ]; then
+          echo "🔍 Reviewing: $file"
+          code-review review "$file" --ci-mode || exit 1
+        fi
+      done < /tmp/changed_files.txt
+  
+  only:
+    - merge_requests
+  
+  variables:
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY

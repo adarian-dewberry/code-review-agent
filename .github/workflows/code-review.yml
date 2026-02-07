@@ -1,0 +1,103 @@
+name: Code Review
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    name: Automated Code Review
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      
+      - name: Review code changes
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Get the diff between base and head
+          git diff origin/${{ github.base_ref }}..HEAD --name-only --diff-filter=d | grep '\.py$' > /tmp/changed_files.txt || true
+          
+          if [ ! -s /tmp/changed_files.txt ]; then
+            echo "✅ No Python files changed in this PR"
+            exit 0
+          fi
+          
+          echo "📋 Python files changed:"
+          cat /tmp/changed_files.txt
+          
+          # Run review on all changed files
+          > /tmp/review_results.md
+          echo "## Code Review Results" >> /tmp/review_results.md
+          echo "" >> /tmp/review_results.md
+          
+          failed=0
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "### 📄 Reviewing: \`$file\`" >> /tmp/review_results.md
+              echo "" >> /tmp/review_results.md
+              
+              if code-review review "$file" --format markdown >> /tmp/review_results.md 2>&1; then
+                echo "✅ Passed" >> /tmp/review_results.md
+              else
+                echo "❌ Critical issues found" >> /tmp/review_results.md
+                failed=1
+              fi
+              echo "" >> /tmp/review_results.md
+            fi
+          done < /tmp/changed_files.txt
+          
+          cat /tmp/review_results.md
+          exit $failed
+      
+      - name: Comment PR with results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '/tmp/review_results.md';
+            
+            if (fs.existsSync(path)) {
+              const body = fs.readFileSync(path, 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body || '✅ Code review completed successfully!'
+              });
+            }
+      
+      - name: Fail if critical issues
+        if: failure()
+        run: |
+          echo "❌ Code review found critical issues"
+          exit 1
+
