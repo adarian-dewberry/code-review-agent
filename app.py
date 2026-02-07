@@ -6,8 +6,10 @@ import os
 import re
 import gradio as gr
 import anthropic
+import httpx
 
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+# Strip whitespace from API key (common issue with copy/paste in HF secrets)
+ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 MODEL = "claude-3-5-sonnet-20241022"
 
 PROMPTS = {
@@ -60,7 +62,15 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
         cats.append("performance")
 
     try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        # Create client with explicit timeout and HTTP/2 disabled (fixes some HF connectivity issues)
+        http_client = httpx.Client(
+            timeout=httpx.Timeout(60.0, connect=30.0),
+            http2=False,
+        )
+        client = anthropic.Anthropic(
+            api_key=ANTHROPIC_API_KEY,
+            http_client=http_client,
+        )
         results = []
         total_crit, total_high = 0, 0
 
