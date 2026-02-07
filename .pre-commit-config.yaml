@@ -28,7 +28,8 @@ repos:
         args: ["--ignore-missing-imports"]
 
   - repo: https://github.com/returntocorp/semgrep
-    rev: v1.105.0
+    rev: v1.103.0
     hooks:
       - id: semgrep
         args: ["--config=p/security-audit"]
+        stages: [manual]

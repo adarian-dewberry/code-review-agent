@@ -70,13 +70,13 @@
 
 ---
 
-### 5. Streamlit Cloud Deployment Guide
+### 5. Hugging Face Spaces Deployment Guide
 **Added to README:** Deployment instructions for public demo
 
 **Options Provided:**
-1. **Streamlit Community Cloud** (free hosting)
+1. **Hugging Face Spaces** (free hosting)
    - Step-by-step fork/deploy instructions
-   - URL format: `https://your-app-name.streamlit.app`
+   - URL format: `https://huggingface.co/spaces/your-username/space-name`
 2. **Local deployment** (development/testing)
    - `streamlit run demo/streamlit_app.py`
 
@@ -110,7 +110,7 @@
 ✅ **Public credibility** (Shields badges demonstrate rigor)
 
 ### For Peers (Developers)
-✅ **Live demo** (Streamlit deployment instructions)  
+✅ **Live demo** (Hugging Face Spaces deployment instructions)  
 ✅ **Vibe-coder friendly** (60-second checklist + prompt library)  
 ✅ **Easy contribution** (pre-commit hooks, clear test structure)
 
@@ -141,8 +141,8 @@
 
 ### Not Implemented (User Decision)
 1. **GIF/video demo** - README placeholder exists, awaiting recording
-2. **Streamlit Cloud live URL** - Requires user's Streamlit account
-3. **codecov.io integration** - Could replace static coverage badge with dynamic one
+2. **Hugging Face Spaces live URL** - Requires user's HF account
+3. **codecov.io integration** - Requires CODECOV_TOKEN in GitHub Secrets
 
 ### Future Enhancements
 - Add `pytest-xdist` for parallel test execution
@@ -172,7 +172,7 @@
 - ✅ Documentation updated
 
 ### Optional (User-Driven)
-- [ ] Deploy to Streamlit Cloud (requires account)
+- [ ] Deploy to Hugging Face Spaces (requires account)
 - [ ] Record demo GIF/video for README
 - [ ] Add `codecov.io` token for dynamic badges
 
@@ -186,7 +186,7 @@ All **7 objectives** from user feedback completed:
 3. ✅ Dependabot SCA configuration
 4. ✅ Shields.io badges (7 total)
 5. ✅ Semgrep benchmark (100% vs 40% detection)
-6. ✅ Streamlit deployment guide
+6. ✅ Hugging Face Spaces deployment guide
 7. ✅ Professional polish for portfolio
 
 **Result:** Project now meets hiring manager requirements for CAIO/cybersecurity roles with demonstrated rigor, industry benchmarking, and production-ready tooling.

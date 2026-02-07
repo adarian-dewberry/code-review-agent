@@ -31,7 +31,6 @@
 2. Get **OWASP + CWE mapped** findings with risk levels
 3. Apply fixes before the code reaches production
 
-*AI-powered code review that reduces remediation costs by 95% and demonstrates due diligence in regulatory audits.*
 - [docs/vibe_checklist.txt](docs/vibe_checklist.txt)
 
 **Secure prompt templates:**
@@ -39,7 +38,7 @@
 
 ---
 
-## Live Demo (Streamlit)
+## Live Demo (Hugging Face Spaces)
 Run a local demo (no deployment required):
 
 ```bash
@@ -47,6 +46,7 @@ pip install -e ".[dev]"
 streamlit run demo/streamlit_app.py
 ```
 
+**Demo mode** lets you explore output without sending code to an LLM.
 
 We tested 10 intentional vulnerabilities (OWASP Top 10) against industry-standard Semgrep:
 
@@ -138,40 +138,37 @@ export ANTHROPIC_API_KEY=your_key_here
 
 ---
 
-## 🚀 Streamlit Cloud Deployment
-### Option 1: Deploy to Streamlit Community Cloud (Free)
+## 🚀 Hugging Face Spaces Deployment
+### Option 1: Deploy to Hugging Face Spaces (Free)
 
 1. **Fork this repository** to your GitHub account
-2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Click "New app" and connect your GitHub
-4. Set repository: `your-username/code-review-agent`
-5. Set main file path: `demo/streamlit_app.py`
-6. (Optional) Add secret: `ANTHROPIC_API_KEY` in Advanced Settings
-7. Click "Deploy"
+2. Go to [https://huggingface.co/spaces](https://huggingface.co/spaces)
+3. Click "Create new Space"
+4. Choose SDK: **Streamlit**
+5. Connect GitHub repo: `your-username/code-review-agent`
+6. Set app file: `demo/streamlit_app.py`
+7. Add secret: `ANTHROPIC_API_KEY` in **Settings → Secrets**
+8. Click "Create Space"
 
-Your app will be live at: `https://your-app-name.streamlit.app`
+Your app will be live at: `https://huggingface.co/spaces/your-username/space-name`
 
-**Public demo URL (placeholder):** `https://your-app-name.streamlit.app`
+**Public demo URL (placeholder):** `https://huggingface.co/spaces/your-username/space-name`
 
-### Prep Checklist (GitHub Push + Streamlit Cloud)
+### Prep Checklist (GitHub Push + Hugging Face Spaces)
 
 - Add `CODECOV_TOKEN` in GitHub Secrets for dynamic coverage badges
 - Enable GitHub Pages (Settings → Pages → Deploy from branch)
-- Add `ANTHROPIC_API_KEY` in Streamlit Secrets for live demo
+- Add `ANTHROPIC_API_KEY` in Hugging Face Secrets for live demo
 
 ### Option 2: Local Deployment
 
+```bash
 # Install dependencies
 pip install -e ".[dev]"
 
 # Run locally
-
-# Access at http://localhost:8501
+streamlit run demo/streamlit_app.py
 ```
-
-**Demo Mode:** Use the checkbox in the sidebar to explore output without API calls.
-
----
 
 ## Demo: Tool in Action
 
