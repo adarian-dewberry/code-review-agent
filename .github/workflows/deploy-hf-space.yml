@@ -10,34 +10,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Prepare deploy folder (exclude binaries/docs)
-        run: |
-          mkdir -p hf_deploy
-          rsync -av --delete \
-            --exclude ".git" \
-            --exclude ".github" \
-            --exclude "docs" \
-            --exclude "**/*.png" \
-            --exclude "**/*.jpg" \
-            --exclude "**/*.jpeg" \
-            --exclude "**/*.gif" \
-            --exclude "**/*.pdf" \
-            ./ hf_deploy/
-
-      - name: Sanity checks (README/app.py/requirements.txt)
-        run: |
-          test -f hf_deploy/README.md
-          test -f hf_deploy/app.py
-          test -f hf_deploy/requirements.txt
+        with:
+          fetch-depth: 0
 
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          cd hf_deploy
-          git init
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add .
-          git commit -m "Deploy to HF Space" || true
+          git remote add hf https://adarian-dewberry:$HF_TOKEN@huggingface.co/spaces/adarian-dewberry/code-review-agent || true
+          git push hf main --force
