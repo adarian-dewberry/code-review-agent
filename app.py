@@ -340,7 +340,6 @@ with gr.Blocks(title="Code Review Agent", theme=gr.themes.Soft()) as demo:
                 label="📝 Code to Review",
                 language="python",
                 lines=15,
-                placeholder='Paste your Python code here...\n\nExample:\ndef get_user(username):\n    query = f"SELECT * FROM users WHERE name = \'{username}\'"\n    return db.execute(query)',
             )
 
             file_context = gr.Textbox(
