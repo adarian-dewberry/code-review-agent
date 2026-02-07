@@ -33,6 +33,7 @@ jobs:
           test -f hf_deploy/requirements.txt && echo "✓ requirements.txt found" || (echo "✗ requirements.txt missing!"; exit 1)
           echo "All required files present!"
 
+      - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
