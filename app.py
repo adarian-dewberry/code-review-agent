@@ -26,11 +26,12 @@ SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. R
       "severity": "CRITICAL|HIGH|MEDIUM|LOW",
       "confidence": 0.0-1.0,
       "tags": ["security", "compliance", "logic", "performance"],
-      "location": "file.py:123",
+      "location": "function_name():line or file.py:line",
       "evidence": "exact vulnerable code with ^ caret pointing to issue",
       "description": "What the issue is",
-      "impact": "Why it matters (context-specific, e.g., sqlite vs postgres)",
-      "recommendation": "Multi-step fix: 1) validate input 2) parameterize 3) handle errors"
+      "impact": "Why it matters (context-specific)",
+      "escalation": "When severity increases (e.g., 'CRITICAL if LLM has tool access')",
+      "recommendation": "Multi-step fix with specific techniques"
     }
   ]
 }
@@ -38,38 +39,47 @@ SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. R
 
 <rules>
 1. DEDUPE: One finding per ROOT CAUSE. Use tags array for cross-cutting concerns.
-   Group related issues (e.g., "Untrusted input" covers SQLi + overexposure).
 
 2. EVIDENCE: Show exact line with caret (^) pointing to the vulnerability:
    query = f"SELECT * FROM users WHERE id = {user_id}"
                                           ^ untrusted input in SQL string
 
-3. COMPLIANCE: Use CONDITIONAL language for PII:
+3. LOCATION: Use descriptive format - "chat():2" or "get_user():5", not "unknown:2"
+
+4. COMPLIANCE: Use CONDITIONAL language for PII:
    "If the users table contains PII, SELECT * increases exposure surface"
-   NOT "GDPR Article 5 violated"
 
-4. CONTEXT-SPECIFIC IMPACT:
-   - SQLite: "file locks, open handle limits, concurrency issues" (not "pool exhaustion")
+5. CONTEXT-SPECIFIC IMPACT:
+   - SQLite: "file locks, open handle limits, concurrency issues"
    - PostgreSQL/MySQL: "connection pool exhaustion, server resource drain"
+   - LLM: "behavior manipulation, prompt override, information disclosure"
 
-5. MULTI-STEP RECOMMENDATIONS:
-   For SQL injection: "1) Validate type: user_id = int(user_id) 2) Parameterize: cursor.execute('...WHERE id = ?', (user_id,)) 3) Handle errors: catch sqlite3.Error, log safely, return controlled error"
+6. PROMPT INJECTION RULES:
+   - Never claim pattern detection "stops" injection (it's heuristic only)
+   - Use: "flag suspicious instruction-like input for review (heuristic)"
+   - Recommend "instruction hierarchy" (system > developer > user)
+   - Include escalation: "CRITICAL if LLM has tool/file/secret access or output drives decisions"
 
-6. EXCEPTION HANDLING: Always mention "don't leak internals to client"
+7. MULTI-STEP RECOMMENDATIONS:
+   - SQL: "1) Validate type 2) Parameterize 3) Handle errors safely"
+   - LLM: "1) Structured prompting with instruction hierarchy 2) Input flagging (heuristic) 3) Output validation 4) Least-privilege model access"
 
-7. CONFIDENCE: 1.0 only for definite vulnerabilities. 0.7-0.9 for context-dependent issues.
+8. ESCALATION FIELD: Always include "When this becomes CRITICAL" for HIGH/MEDIUM findings.
+
+9. CONFIDENCE: 1.0 only for definite vulnerabilities. 0.7-0.9 for context-dependent issues.
 </rules>"""
 
 CATEGORY_PROMPTS = {
     "security": """Focus on: SQL injection, command injection, XSS, SSRF, path traversal, 
 auth bypass, secrets exposure, insecure deserialization, prompt injection.
-For injection: recommend input validation + parameterization + error handling.""",
+For prompt injection: use "instruction hierarchy" concept, flag heuristically, include escalation conditions.
+For SQL injection: validate type + parameterize + handle errors.""",
     "compliance": """Focus on: PII exposure, missing consent, audit trail gaps, data retention,
 encryption at rest/transit. Use CONDITIONAL language: "If table contains PII..."
-Suggest CONTROLS not violations.""",
+Suggest CONTROLS not violations. Include escalation for when it becomes CRITICAL.""",
     "logic": """Focus on: Null/undefined handling, race conditions, off-by-one errors,
 unhandled exceptions, infinite loops, resource leaks.
-For errors: mention "don't leak internals" and "log safely without secrets".""",
+For errors: "don't leak internals" and "log safely without secrets".""",
     "performance": """Focus on: N+1 queries, unbounded loops, memory leaks, blocking I/O,
 missing indexes, inefficient algorithms, cache misses.
 Use DATABASE-SPECIFIC language (sqlite vs postgres vs mysql).""",
@@ -232,6 +242,11 @@ Analyze the code and return findings as JSON per the schema. Include line number
                     
                     details += f"**Issue:** {f.get('description', 'N/A')}\n\n"
                     details += f"**Impact:** {f.get('impact', 'N/A')}\n\n"
+                    
+                    # Escalation conditions (when severity increases)
+                    if f.get("escalation") and sev in ["HIGH", "MEDIUM"]:
+                        details += f"**⚠️ Escalates to CRITICAL if:** {f.get('escalation')}\n\n"
+                    
                     details += f"**Recommendation:**\n{f.get('recommendation', 'N/A')}\n\n"
                 
                 details += "---\n\n"
