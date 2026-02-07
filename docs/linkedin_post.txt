@@ -15,6 +15,6 @@ Why it matters:
 - Clear risk prioritization with DREAD
 - Automated gating for CI/CD security compliance
 
-Next: live Streamlit demo + public benchmarks.
+Next: live Hugging Face Spaces demo + public benchmarks.
 
 #Security #SDL #AppSec #DevSecOps #SAST #DAST #SCA #STRIDE #DREAD #BSIMM #CI/CD
