@@ -6,186 +6,180 @@ Orchestrates:
 2. SDL Multi-Agent Security Squad (SAST, DAST, SCA, SDL Champion)
 """
 
-from pathlib import Path
 from typing import Optional
+
 import anthropic
 
 from .config import Config
-from .models import ReviewResult, ReviewCategory, ReviewSummary, ReviewRecommendation, Severity
-from .parsers import ReviewParser
 from .custom_rules import CustomRulesEngine
+from .models import (
+    ReviewCategory,
+    ReviewRecommendation,
+    ReviewResult,
+    ReviewSummary,
+    Severity,
+)
+from .parsers import ReviewParser
 from .security_squad import SecuritySquad
 
 
 class CodeReviewAgent:
     """
     Multi-pass code review agent.
-    
+
     Performs four review passes:
     1. Security (prompt injection, data leaks, auth bypass)
     2. Logic (edge cases, error handling, race conditions)
     3. Performance (scalability, efficiency, resource usage)
     4. Compliance (GDPR, audit trails, data minimization)
     """
-    
+
     def __init__(self, config: Optional[Config] = None, enable_security_squad: bool = True):
         """Initialize agent with configuration."""
-        
+
         self.config = config or Config.load()
         self.config.validate_api_key()
-        
+
         self.client = anthropic.Anthropic(api_key=self.config.anthropic_api_key)
         self.parser = ReviewParser()
         self.custom_rules = CustomRulesEngine()  # Load custom organizational rules
-        
+
         # Multi-agent security squad (optional)
         self.enable_security_squad = enable_security_squad
         if enable_security_squad:
             self.security_squad = SecuritySquad(self.config.anthropic_api_key)
-    
+
     def review(self, code: str, file_path: Optional[str] = None) -> ReviewResult:
         """
         Run complete multi-pass review on code.
-        
+
         Args:
             code: Source code to review
             file_path: Optional file path for context
-        
+
         Returns:
             ReviewResult with findings from all categories
         """
-        
+
         categories = {}
-        
+
         # First, check custom organizational rules
         custom_violations = self.custom_rules.check_code(code, file_path)
-        
+
         # Run enabled review passes
         for category in self.config.review.enabled_categories:
             if category == "security":
                 categories["security"] = self._security_review(code, file_path)
-            
+
             elif category == "logic":
                 categories["logic"] = self._logic_review(code, file_path)
-            
+
             elif category == "performance":
                 categories["performance"] = self._performance_review(code, file_path)
-            
+
             elif category == "compliance":
                 categories["compliance"] = self._compliance_review(code, file_path)
-        
+
         # Inject custom rule violations into compliance category
         if custom_violations:
             if "compliance" not in categories:
                 categories["compliance"] = ReviewCategory(category="compliance")
-            
+
             # Prepend custom violations to compliance issues
             categories["compliance"].issues = custom_violations + categories["compliance"].issues
-        
+
         # Generate summary
         summary = self._generate_summary(categories)
-        
+
         # Run Security Squad analysis (if enabled)
         squad_analysis = None
         if self.enable_security_squad:
             squad_analysis = self.security_squad.analyze(code, file_path)
-        
+
         result = ReviewResult(
             file_path=file_path,
             security=categories.get("security", ReviewCategory(category="security")),
             logic=categories.get("logic", ReviewCategory(category="logic")),
             performance=categories.get("performance", ReviewCategory(category="performance")),
             compliance=categories.get("compliance", ReviewCategory(category="compliance")),
-            summary=summary
+            summary=summary,
         )
-        
+
         # Attach SDL analysis as metadata if available
         if squad_analysis:
             result.sdl_metadata = squad_analysis
-        
+
         return result
-    
+
     def _security_review(self, code: str, file_path: Optional[str]) -> ReviewCategory:
         """Perform security-focused review pass."""
-        
+
         prompt = self._load_prompt("security")
         response = self._call_claude(prompt, code, file_path)
         return self.parser.parse(response, "security")
-    
+
     def _logic_review(self, code: str, file_path: Optional[str]) -> ReviewCategory:
         """Perform logic/correctness review pass."""
-        
+
         prompt = self._load_prompt("logic")
         response = self._call_claude(prompt, code, file_path)
         return self.parser.parse(response, "logic")
-    
+
     def _performance_review(self, code: str, file_path: Optional[str]) -> ReviewCategory:
         """Perform performance/scalability review pass."""
-        
+
         prompt = self._load_prompt("performance")
         response = self._call_claude(prompt, code, file_path)
         return self.parser.parse(response, "performance")
-    
+
     def _compliance_review(self, code: str, file_path: Optional[str]) -> ReviewCategory:
         """Perform compliance review pass (GDPR, CCPA, EU AI Act)."""
-        
+
         prompt = self._load_prompt("compliance")
         response = self._call_claude(prompt, code, file_path)
         return self.parser.parse(response, "compliance")
-    
+
     def _load_prompt(self, category: str) -> str:
         """Load prompt template for category."""
-        
+
         prompt_path = self.config.prompt_dir / f"{category}.md"
-        
+
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt not found: {prompt_path}")
-        
+
         return prompt_path.read_text()
-    
+
     def _call_claude(self, prompt: str, code: str, file_path: Optional[str]) -> str:
         """Call Claude API with prompt and code."""
-        
+
         # Add file context if provided
         context = ""
         if file_path:
             context = f"File: {file_path}\n\n"
-        
+
         full_prompt = f"{prompt}\n\n{context}# Code to Review\n```python\n{code}\n```"
-        
+
         response = self.client.messages.create(
             model=self.config.model.name,
             max_tokens=self.config.model.max_tokens,
             temperature=self.config.model.temperature,
-            messages=[{
-                "role": "user",
-                "content": full_prompt
-            }]
+            messages=[{"role": "user", "content": full_prompt}],
         )
-        
+
         return response.content[0].text
-    
+
     def _generate_summary(self, categories: dict[str, ReviewCategory]) -> ReviewSummary:
         """Generate executive summary from all review categories."""
-        
+
         critical_count = sum(cat.critical_count for cat in categories.values())
         high_count = sum(cat.high_count for cat in categories.values())
-        
-        medium_count = sum(
-            len([i for i in cat.issues if i.severity == Severity.MEDIUM])
-            for cat in categories.values()
-        )
-        
-        low_count = sum(
-            len([i for i in cat.issues if i.severity == Severity.LOW])
-            for cat in categories.values()
-        )
-        
-        info_count = sum(
-            len([i for i in cat.issues if i.severity == Severity.INFO])
-            for cat in categories.values()
-        )
-        
+
+        medium_count = sum(len([i for i in cat.issues if i.severity == Severity.MEDIUM]) for cat in categories.values())
+
+        low_count = sum(len([i for i in cat.issues if i.severity == Severity.LOW]) for cat in categories.values())
+
+        info_count = sum(len([i for i in cat.issues if i.severity == Severity.INFO]) for cat in categories.values())
+
         # Determine recommendation
         if critical_count > 0:
             recommendation = ReviewRecommendation.DO_NOT_MERGE
@@ -193,23 +187,23 @@ class CodeReviewAgent:
             recommendation = ReviewRecommendation.MERGE_WITH_CAUTION
         else:
             recommendation = ReviewRecommendation.APPROVED
-        
+
         # Extract top issues (all critical + top 3 high)
         top_issues = []
-        
+
         for cat in categories.values():
             for issue in cat.issues:
                 if issue.severity == Severity.CRITICAL:
                     top_issues.append(f"[{cat.category.upper()}] {issue.description}")
-        
+
         high_issues = []
         for cat in categories.values():
             for issue in cat.issues:
                 if issue.severity == Severity.HIGH:
                     high_issues.append(f"[{cat.category.upper()}] {issue.description}")
-        
+
         top_issues.extend(high_issues[:3])
-        
+
         return ReviewSummary(
             critical_count=critical_count,
             high_count=high_count,
@@ -217,5 +211,5 @@ class CodeReviewAgent:
             low_count=low_count,
             info_count=info_count,
             recommendation=recommendation,
-            top_issues=top_issues
+            top_issues=top_issues,
         )

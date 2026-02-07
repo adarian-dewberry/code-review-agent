@@ -1,9 +1,7 @@
 """Tests for response parsers."""
 
-import pytest
-
-from code_review_agent.parsers import parse_issues
 from code_review_agent.models import Issue
+from code_review_agent.parsers import parse_issues
 
 
 class TestParsers:

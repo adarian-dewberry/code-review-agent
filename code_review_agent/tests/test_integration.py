@@ -1,7 +1,5 @@
 """End-to-end integration tests."""
 
-import pytest
-
 
 class TestIntegration:
     """Integration test suite."""

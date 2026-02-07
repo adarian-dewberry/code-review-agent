@@ -1,7 +1,7 @@
 """Structured logging utilities."""
 
-import logging
 import json
+import logging
 from typing import Any, Dict
 
 
