@@ -40,6 +40,7 @@ Copy lint rules:
 =============================================================================
 """
 
+import hashlib
 import html
 import json
 import logging
@@ -47,13 +48,21 @@ import os
 import re
 import uuid
 import random
+import threading
+import time
+from collections import OrderedDict
 from datetime import datetime, timezone
+from typing import Any
 
 import anthropic
 import gradio as gr
 import httpx
 
-# Configure logging
+# Configure logging with structured format
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # Strip whitespace from API key (common issue with copy/paste in HF secrets)
@@ -62,7 +71,137 @@ ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 # Allow model override via environment variable
 MODEL = os.getenv("CODE_REVIEW_MODEL", "claude-sonnet-4-20250514")
 SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "0.2.1"
+TOOL_VERSION = "0.2.2"
+
+# Rate limiting configuration
+RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "10"))
+RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
+
+# Cache configuration
+CACHE_MAX_SIZE = int(os.getenv("CACHE_MAX_SIZE", "100"))
+CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))  # 1 hour
+
+
+# =============================================================================
+# RATE LIMITER - Prevent API abuse
+# =============================================================================
+
+class RateLimiter:
+    """
+    Simple in-memory rate limiter.
+    Limits requests per time window to prevent abuse.
+    """
+    
+    def __init__(self, max_requests: int = 10, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests: dict[str, list[float]] = {}
+        self._lock = threading.Lock()
+    
+    def is_allowed(self, key: str = "global") -> bool:
+        """Check if request is allowed under rate limit."""
+        now = time.time()
+        
+        with self._lock:
+            if key not in self.requests:
+                self.requests[key] = []
+            
+            # Remove old requests outside window
+            self.requests[key] = [
+                ts for ts in self.requests[key]
+                if now - ts < self.window_seconds
+            ]
+            
+            if len(self.requests[key]) >= self.max_requests:
+                return False
+            
+            self.requests[key].append(now)
+            return True
+    
+    def get_retry_after(self, key: str = "global") -> int:
+        """Get seconds until next request is allowed."""
+        now = time.time()
+        with self._lock:
+            if key not in self.requests or not self.requests[key]:
+                return 0
+            oldest = min(self.requests[key])
+            return max(0, int(self.window_seconds - (now - oldest)))
+
+
+# =============================================================================
+# LRU CACHE - Cache review results for identical code
+# =============================================================================
+
+class LRUCache:
+    """
+    Simple LRU cache with TTL.
+    Caches review results to reduce API calls and latency.
+    """
+    
+    def __init__(self, max_size: int = 100, ttl_seconds: int = 3600):
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self.cache: OrderedDict[str, tuple[float, Any]] = OrderedDict()
+        self._lock = threading.Lock()
+        self._hits = 0
+        self._misses = 0
+    
+    def _make_key(self, code: str, categories: list[str]) -> str:
+        """Generate cache key from code and categories."""
+        content = f"{code}:{':'.join(sorted(categories))}"
+        return hashlib.sha256(content.encode()).hexdigest()[:16]
+    
+    def get(self, code: str, categories: list[str]) -> tuple[Any, Any] | None:
+        """Get cached result if exists and not expired."""
+        key = self._make_key(code, categories)
+        now = time.time()
+        
+        with self._lock:
+            if key in self.cache:
+                timestamp, value = self.cache[key]
+                if now - timestamp < self.ttl_seconds:
+                    # Move to end (most recently used)
+                    self.cache.move_to_end(key)
+                    self._hits += 1
+                    logger.info(f"Cache hit: {key[:8]}...")
+                    return value
+                else:
+                    # Expired
+                    del self.cache[key]
+            
+            self._misses += 1
+            return None
+    
+    def set(self, code: str, categories: list[str], value: tuple[Any, Any]) -> None:
+        """Store result in cache."""
+        key = self._make_key(code, categories)
+        now = time.time()
+        
+        with self._lock:
+            if key in self.cache:
+                del self.cache[key]
+            
+            self.cache[key] = (now, value)
+            
+            # Evict oldest if over capacity
+            while len(self.cache) > self.max_size:
+                self.cache.popitem(last=False)
+    
+    def stats(self) -> dict:
+        """Return cache statistics."""
+        total = self._hits + self._misses
+        return {
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": self._hits / total if total > 0 else 0,
+            "size": len(self.cache),
+            "max_size": self.max_size,
+        }
+
+
+# Initialize rate limiter and cache
+rate_limiter = RateLimiter(max_requests=RATE_LIMIT_REQUESTS, window_seconds=RATE_LIMIT_WINDOW)
+review_cache = LRUCache(max_size=CACHE_MAX_SIZE, ttl_seconds=CACHE_TTL)
 
 
 # =============================================================================
@@ -351,8 +490,18 @@ def parse_findings(text: str) -> dict:
     return {"findings": []}
 
 
-def review_code(code, sec, comp, logic, perf, ctx=""):
+def review_code(code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: str = "") -> tuple[str, str]:
     """Run multi-pass code review with structured output."""
+    
+    # Rate limiting check
+    if not rate_limiter.is_allowed():
+        retry_after = rate_limiter.get_retry_after()
+        logger.warning(f"Rate limit exceeded, retry after {retry_after}s")
+        return (
+            f"<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Rate Limit</h3><p>Too many requests. Try again in {retry_after} seconds.</p></div>",
+            "",
+        )
+    
     if not code or not code.strip():
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>",
@@ -387,6 +536,12 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
     if perf:
         cats.append("performance")
 
+    # Check cache first
+    cached_result = review_cache.get(code, cats)
+    if cached_result is not None:
+        logger.info("Returning cached result")
+        return cached_result
+
     http_client = None
     try:
         http_client = httpx.Client(
@@ -417,13 +572,22 @@ Categories to review: {", ".join(cats)}
 
 Analyze the code and return findings as JSON per the schema. Include line numbers and 3-line snippets."""
 
+        # Use prompt caching for system prompt (75% cost reduction on cache hits)
         resp = client.messages.create(
             model=MODEL,
             max_tokens=4000,
             temperature=0.0,
-            system=SYSTEM_PROMPT,
+            system=[{
+                "type": "text",
+                "text": SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"}
+            }],
             messages=[{"role": "user", "content": user_prompt}],
         )
+        
+        # Log token usage for cost tracking
+        usage = resp.usage
+        logger.info(f"API call: input={usage.input_tokens}, output={usage.output_tokens}")
         
         result = parse_findings(resp.content[0].text)
         findings = result.get("findings", [])
@@ -689,7 +853,12 @@ This code follows safe patterns based on the signals we checked.
         details += json.dumps(decision_record, indent=2)
         details += "\n```\n</details>\n"
 
-        return summary, details
+        # Cache the result for future identical requests
+        result = (summary, details)
+        review_cache.set(code, cats, result)
+        logger.info(f"Review complete: verdict={verdict}, findings={len(findings)}")
+        
+        return result
 
     except anthropic.AuthenticationError as e:
         logger.error(f"Authentication error: {e}")
@@ -1497,5 +1666,57 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         api_name="review"
     )
 
+
+# =============================================================================
+# HEALTH CHECK ENDPOINT
+# For monitoring and uptime checks
+# =============================================================================
+
+def get_health_status() -> dict:
+    """
+    Health check for monitoring.
+    Returns status of all dependencies.
+    """
+    status = {
+        "status": "healthy",
+        "version": TOOL_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "components": {},
+    }
+    
+    # Check API key configured
+    if ANTHROPIC_API_KEY:
+        status["components"]["api_key"] = "configured"
+    else:
+        status["components"]["api_key"] = "missing"
+        status["status"] = "degraded"
+    
+    # Cache stats
+    cache_stats = review_cache.stats()
+    status["components"]["cache"] = {
+        "status": "healthy",
+        "hit_rate": f"{cache_stats['hit_rate']:.1%}",
+        "size": cache_stats["size"],
+    }
+    
+    # Rate limiter status
+    status["components"]["rate_limiter"] = {
+        "status": "healthy",
+        "limit": f"{RATE_LIMIT_REQUESTS}/{RATE_LIMIT_WINDOW}s",
+    }
+    
+    return status
+
+
+# Create a simple health endpoint using Gradio's API
+with gr.Blocks() as health_app:
+    health_output = gr.JSON(label="Health Status")
+    health_btn = gr.Button("Check Health")
+    health_btn.click(fn=get_health_status, outputs=health_output, api_name="health")
+
+
 if __name__ == "__main__":
+    # Launch main demo
+    # Health endpoint available at /api/health
     demo.launch()

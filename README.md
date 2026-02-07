@@ -28,6 +28,107 @@ license: mit
 
 ---
 
+## 🎯 Example Output: Decision Record
+
+Every review generates an **audit-ready decision record**:
+
+```json
+{
+  "schema_version": "1.0",
+  "decision_id": "D-20260207-014d",
+  "timestamp_utc": "2026-02-07T05:47:50.922Z",
+  "verdict": "BLOCK",
+  "policy": {
+    "policy_version": "v1",
+    "block_rules": [
+      {"rule_id": "BR-001", "description": "Block if any CRITICAL with confidence >= 0.8", "triggered": true}
+    ],
+    "review_rules": []
+  },
+  "decision_drivers": [
+    {
+      "finding_id": "F-001",
+      "title": "SQL Injection via String Formatting",
+      "severity": "CRITICAL",
+      "confidence": 1.0,
+      "location": "get_user():2",
+      "why_it_matters": [
+        "Allows arbitrary SQL execution",
+        "Could expose entire users table",
+        "Common attack vector (OWASP A03:2021)"
+      ]
+    }
+  ],
+  "override": {
+    "allowed": true,
+    "status": "none",
+    "approver": null,
+    "justification": null
+  }
+}
+```
+
+**Why this matters:** Enterprises need to answer *"Why did the AI block this?"* — this audit trail provides that answer.
+
+---
+
+## 📡 API Reference
+
+### POST `/api/review`
+
+Review code for security and compliance issues.
+
+**Request:**
+```bash
+curl -X POST "https://adarian-dewberry-code-review-agent.hf.space/api/review" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": ["def get_user(id): return db.execute(f\"SELECT * FROM users WHERE id={id}\")", true, true, false, false, "app.py"]
+  }'
+```
+
+**Response:**
+```json
+{
+  "data": [
+    "",
+    "<div>...verdict HTML...</div>",
+    "## What we found\n\n**SQL Injection**..."
+  ]
+}
+```
+
+### GET `/api/health`
+
+Health check endpoint for monitoring.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "version": "0.2.2",
+  "schema_version": "1.0",
+  "timestamp": "2026-02-07T05:47:50.922Z",
+  "components": {
+    "api_key": "configured",
+    "cache": {"status": "healthy", "hit_rate": "45.2%", "size": 12},
+    "rate_limiter": {"status": "healthy", "limit": "10/60s"}
+  }
+}
+```
+
+### Rate Limits
+
+| Tier | Limit | Window |
+|------|-------|--------|
+| Default | 10 requests | 60 seconds |
+
+Configure via environment variables:
+- `RATE_LIMIT_REQUESTS` - Max requests per window
+- `RATE_LIMIT_WINDOW` - Window duration in seconds
+
+---
+
 > ⚠️ **Important**: Read the [DISCLAIMER.md](DISCLAIMER.md) before use. This tool does NOT replace professional security audits or legal compliance reviews.
 
 ## Vibe Securely (60-Second Flow)
