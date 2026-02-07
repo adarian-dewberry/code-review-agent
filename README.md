@@ -1,3 +1,15 @@
+---
+title: Code Review Agent
+emoji: 🛡️
+colorFrom: ivory
+colorTo: beige
+sdk: streamlit
+sdk_version: "1.34.0"
+python_version: "3.10"
+app_file: app.py
+pinned: false
+---
+
 <div align="center">
 
 ![Code Review Agent Header](docs/images/header.png)
