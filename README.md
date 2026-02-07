@@ -15,18 +15,14 @@ license: mit
 
 # Code Review Agent
 
-**Shift-Left Security: Catch Vulnerabilities Before Production**
+**AI-Powered Security Analysis with Judgment-Aware Verdicts**
 
-*AI-powered code review with **SDL Multi-Agent Security Squad** (SAST+DAST+SCA) + STRIDE/DREAD threat modeling for production security.*
+*Multi-pass code review with **Blast Radius Analysis** + **Decision Accountability** for production-grade security.*
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![CI](https://github.com/adarian-dewberry/code-review-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/adarian-dewberry/code-review-agent/actions)
-[![codecov](https://codecov.io/gh/adarian-dewberry/code-review-agent/branch/main/graph/badge.svg)](https://codecov.io/gh/adarian-dewberry/code-review-agent)
-[![GitHub Pages](https://img.shields.io/website?url=https%3A%2F%2Fadarian-dewberry.github.io%2Fcode-review-agent&label=GitHub%20Pages)](https://adarian-dewberry.github.io/code-review-agent)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Dependencies: Dependabot](https://img.shields.io/badge/dependencies-Dependabot-025E8C.svg?logo=dependabot)](https://github.com/adarian-dewberry/code-review-agent/security/dependabot)
-[![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)](https://github.com/adarian-dewberry/code-review-agent)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Gradio](https://img.shields.io/badge/gradio-5.x-orange.svg)](https://gradio.app/)
+[![Live Demo](https://img.shields.io/badge/demo-Hugging%20Face-yellow.svg)](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
 
 </div>
 

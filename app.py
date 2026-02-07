@@ -681,16 +681,16 @@ This code follows safe patterns based on the signals we checked.
         )
 
 
-with gr.Blocks(
-    title="Code Review Agent",
-    theme=gr.themes.Base(
-        primary_hue=gr.themes.colors.orange,
-        secondary_hue=gr.themes.colors.stone,
-        neutral_hue=gr.themes.colors.stone,
-        font=gr.themes.GoogleFont("Inter"),
-        font_mono=gr.themes.GoogleFont("JetBrains Mono"),
-    ),
-    css="""
+# Theme configuration for Gradio
+APP_THEME = gr.themes.Base(
+    primary_hue=gr.themes.colors.orange,
+    secondary_hue=gr.themes.colors.stone,
+    neutral_hue=gr.themes.colors.stone,
+    font=gr.themes.GoogleFont("Inter"),
+    font_mono=gr.themes.GoogleFont("JetBrains Mono"),
+)
+
+APP_CSS = """
     /* =================================================================
        MODERN AI UX - Left to Right Flow
        Rule: Every screen answers one question at a time.
@@ -859,7 +859,8 @@ with gr.Blocks(
         color: #A89F91 !important;
     }
     """
-) as demo:
+
+with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     
     # Minimal header - not competing with content
     gr.HTML("""
@@ -880,12 +881,12 @@ with gr.Blocks(
         with gr.Column(scale=1):
             
             # Code input - THE main thing
+            gr.HTML("<p style='font-size: 0.85em; color: #A89F91; margin-bottom: 8px;'>Paste your code here. We'll take a careful look before anything ships.</p>")
             code = gr.Code(
                 label="",
                 language="python",
                 lines=18,
                 show_label=False,
-                placeholder="Paste your code here\n\nWe'll take a careful look before anything ships.",
                 elem_classes=["code-input"]
             )
             
