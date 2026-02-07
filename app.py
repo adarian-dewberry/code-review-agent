@@ -691,13 +691,29 @@ with gr.Blocks(
         font_mono=gr.themes.GoogleFont("JetBrains Mono"),
     ),
     css="""
-    /* Luxury Design System - Warm Ivory Base */
+    /* =================================================================
+       MODERN AI UX - Left to Right Flow
+       Rule: Every screen answers one question at a time.
+       Rule: Whitespace is direction, not emptiness.
+       Rule: AI tools should feel like transformation, not configuration.
+       ================================================================= */
+    
+    /* Base - Warm Ivory canvas */
     .gradio-container {
         background: #FAF8F4 !important;
         font-family: 'Inter', sans-serif !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
     }
     
-    /* Typography - Headings */
+    /* Kill the "everything is a card" problem */
+    .panel, .block, .form {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Typography - Playfair for headings only */
     h1, h2, h3 {
         font-family: 'Playfair Display', Georgia, serif !important;
         color: #2A2926 !important;
@@ -705,181 +721,240 @@ with gr.Blocks(
         font-weight: 500 !important;
     }
     
-    /* Body text */
+    /* Body text - quiet, readable */
     p, span, label, .prose {
-        color: #1B1A18 !important;
+        color: #6B6560 !important;
         line-height: 1.6 !important;
+        font-size: 0.95em !important;
     }
     
-    /* Cards and panels */
-    .panel, .block, .form {
-        background: #E7DCCE !important;
-        border: none !important;
+    /* Code input - THE dominant element on left */
+    .code-input textarea {
+        background: #F5F1EA !important;
+        border: 2px solid #E7DCCE !important;
         border-radius: 12px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.9em !important;
+        padding: 16px !important;
+        min-height: 320px !important;
+    }
+    .code-input textarea:focus {
+        border-color: #CD8F7A !important;
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(205, 143, 122, 0.15) !important;
     }
     
-    /* Code blocks - editorial feel */
-    pre, code, .code-block {
-        background: rgba(216, 197, 178, 0.5) !important;
-        border: 1px solid #E7DCCE !important;
-        border-radius: 8px !important;
-    }
-    
-    /* Primary button - Terracotta Rose */
-    .primary {
+    /* Primary button - THE only strong color on left */
+    .primary-btn {
         background: #CD8F7A !important;
         color: #FAF8F4 !important;
         border: none !important;
         border-radius: 10px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
+        font-size: 1em !important;
+        padding: 14px 28px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        width: 100% !important;
     }
-    .primary:hover {
+    .primary-btn:hover {
         background: #B87D6A !important;
+        transform: translateY(-1px) !important;
     }
     
-    /* Secondary button */
-    .secondary {
-        background: transparent !important;
-        color: #2A2926 !important;
-        border: 1px solid #A89F91 !important;
-        border-radius: 10px !important;
+    /* Options toggle - collapsed by default feel */
+    .options-toggle {
+        color: #A89F91 !important;
+        font-size: 0.85em !important;
+        cursor: pointer !important;
+        padding: 8px 0 !important;
+        border: none !important;
+        background: none !important;
+    }
+    .options-toggle:hover {
+        color: #CD8F7A !important;
     }
     
-    /* Verdict cards */
-    .verdict-pass {
-        background: linear-gradient(135deg, #f0fff4 0%, #E7DCCE 100%) !important;
-        border-left: 4px solid #28a745 !important;
+    /* Checkboxes - minimal */
+    .checkbox-group label {
+        font-size: 0.85em !important;
+        color: #6B6560 !important;
     }
-    .verdict-review {
-        background: linear-gradient(135deg, #fffde6 0%, #E7DCCE 100%) !important;
-        border-left: 4px solid #CD8F7A !important;
+    input[type="checkbox"] {
+        accent-color: #CD8F7A !important;
+    }
+    
+    /* Right side - empty on purpose before results */
+    .results-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+        color: #A89F91;
+        text-align: center;
+    }
+    
+    /* Results - transform the layout when they appear */
+    .results-container {
+        background: #FAF8F4 !important;
+        padding: 0 !important;
+    }
+    
+    /* Verdict card - big, clear, first thing you see */
+    .verdict-card {
+        padding: 28px 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
     }
     .verdict-block {
-        background: linear-gradient(135deg, #fff5f5 0%, #E7DCCE 100%) !important;
-        border-left: 4px solid #dc3545 !important;
+        background: linear-gradient(135deg, #FFF5F5 0%, #FAF8F4 100%);
+        border-left: 5px solid #dc3545;
+    }
+    .verdict-review {
+        background: linear-gradient(135deg, #FFFBF0 0%, #FAF8F4 100%);
+        border-left: 5px solid #CD8F7A;
+    }
+    .verdict-pass {
+        background: linear-gradient(135deg, #F0FFF4 0%, #FAF8F4 100%);
+        border-left: 5px solid #28a745;
     }
     
-    /* Severity indicators - subtle left borders */
-    .severity-critical { border-left: 3px solid #CD8F7A !important; }
-    .severity-high { border-left: 3px solid #A89F91 !important; }
-    .severity-medium { border-left: 3px solid #D8C5B2 !important; }
-    
-    /* Pills */
-    .pill {
-        background: rgba(220, 204, 179, 0.7) !important;
-        color: #2A2926 !important;
-        border-radius: 999px !important;
-        padding: 4px 12px !important;
-        font-size: 0.85em !important;
+    /* Findings - clean list, not cards */
+    .finding-item {
+        padding: 16px 0;
+        border-bottom: 1px solid #E7DCCE;
+    }
+    .finding-item:last-child {
+        border-bottom: none;
     }
     
-    /* Subtle details */
+    /* Collapsible details - hidden until asked */
+    details {
+        margin-top: 16px;
+    }
     details summary {
-        color: #2A2926 !important;
+        color: #A89F91 !important;
         cursor: pointer !important;
+        font-size: 0.85em !important;
         padding: 8px 0 !important;
     }
     details summary:hover {
         color: #CD8F7A !important;
     }
     
-    /* Input fields */
-    textarea, input[type="text"] {
-        background: #FAF8F4 !important;
-        border: 1px solid #D8C5B2 !important;
-        border-radius: 8px !important;
+    /* Footer - quiet */
+    .footer {
+        text-align: center;
+        padding: 32px 0;
+        margin-top: 48px;
+        border-top: 1px solid #E7DCCE;
     }
-    
-    /* Checkboxes */
-    input[type="checkbox"] {
-        accent-color: #CD8F7A !important;
+    .footer a {
+        color: #CD8F7A;
+        text-decoration: none;
     }
-    
-    /* Mode selector */
-    .mode-selector {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-    .mode-btn {
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.85em;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .mode-btn.active {
-        background: #CD8F7A;
-        color: #FAF8F4;
+    .footer p {
+        font-size: 0.8em !important;
+        color: #A89F91 !important;
     }
     """
 ) as demo:
-    # Header - Editorial style
+    
+    # Minimal header - not competing with content
     gr.HTML("""
-    <div style="text-align: center; padding: 24px 0 16px 0; border-bottom: 1px solid #E7DCCE; margin-bottom: 24px;">
-        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 2.2em; font-weight: 500; color: #2A2926; margin: 0; letter-spacing: -0.02em;">
+    <div style="padding: 20px 0 32px 0; text-align: center;">
+        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.8em; font-weight: 500; color: #2A2926; margin: 0;">
             Code Review Agent
         </h1>
-        <p style="font-family: 'Inter', sans-serif; color: #6B6560; font-size: 1em; margin-top: 8px;">
-            Judgment-aware security analysis for AI-enabled systems
-        </p>
     </div>
     """)
 
-    with gr.Row():
-        # Left column - Input
-        with gr.Column(scale=1):
-            gr.HTML("<h3 style='font-family: Playfair Display, serif; margin-bottom: 12px;'>Code to Review</h3>")
-            code = gr.Code(label="", language="python", lines=14, show_label=False)
-            ctx = gr.Textbox(label="Filename (optional)", placeholder="e.g., app.py", lines=1)
-            
-            gr.HTML("<p style='font-size: 0.9em; color: #6B6560; margin: 16px 0 8px 0;'>Analysis categories</p>")
-            with gr.Row():
-                sec = gr.Checkbox(label="Security", value=True)
-                comp = gr.Checkbox(label="Compliance", value=True)
-            with gr.Row():
-                logic = gr.Checkbox(label="Logic", value=False)
-                perf = gr.Checkbox(label="Performance", value=False)
-            
-            btn = gr.Button("Review Code", variant="primary", size="lg")
-            
-            # Mode selector
-            mode = gr.Radio(
-                choices=["Beginner", "Intermediate", "Advanced"],
-                value="Intermediate",
-                label="Detail level",
-                info="Beginner: Plain language | Intermediate: Technical context | Advanced: Full audit"
-            )
+    with gr.Row(equal_height=False):
         
-        # Right column - Results
+        # =====================================================
+        # LEFT SIDE = "Give me something"
+        # Rule: One obvious starting point
+        # Rule: Code input is visually dominant
+        # =====================================================
         with gr.Column(scale=1):
-            gr.HTML("<h3 style='font-family: Playfair Display, serif; margin-bottom: 12px;'>Analysis Results</h3>")
-            summ = gr.HTML(value="""
-            <div style="padding: 32px; background: #E7DCCE; border-radius: 12px; text-align: center;">
-                <p style="color: #6B6560; font-size: 0.95em; margin: 0;">
-                    Paste code and click <strong>Review Code</strong> to begin analysis
-                </p>
-            </div>
-            """)
             
-            with gr.Tabs():
-                with gr.Tab("Overview"):
-                    det = gr.Markdown()
-                with gr.Tab("Fixes"):
-                    fixes = gr.Markdown(value="*Suggested fixes will appear here after review*")
-                with gr.Tab("Advanced"):
-                    advanced = gr.Markdown(value="*Decision records and audit data will appear here*")
+            # Code input - THE main thing
+            code = gr.Code(
+                label="",
+                language="python",
+                lines=18,
+                show_label=False,
+                placeholder="Paste your code here\n\nWe'll take a careful look before anything ships.",
+                elem_classes=["code-input"]
+            )
+            
+            # THE button - unmissable, directly under code
+            btn = gr.Button(
+                "Review this code",
+                variant="primary",
+                size="lg",
+                elem_classes=["primary-btn"]
+            )
+            
+            # Options - collapsed/hidden until needed
+            with gr.Accordion("Customize review", open=False):
+                ctx = gr.Textbox(
+                    label="Filename",
+                    placeholder="e.g., app.py",
+                    lines=1,
+                    show_label=True
+                )
+                gr.HTML("<p style='font-size: 0.8em; color: #A89F91; margin: 12px 0 8px 0;'>What to check</p>")
+                with gr.Row():
+                    sec = gr.Checkbox(label="Security", value=True)
+                    comp = gr.Checkbox(label="Compliance", value=True)
+                with gr.Row():
+                    logic = gr.Checkbox(label="Logic", value=False)
+                    perf = gr.Checkbox(label="Performance", value=False)
+        
+        # =====================================================
+        # RIGHT SIDE = "Here's what I found"
+        # Rule: Empty on purpose before analysis
+        # Rule: Layout transforms when results appear
+        # =====================================================
+        with gr.Column(scale=1):
+            
+            # Summary - verdict first, big and clear
+            summ = gr.HTML(
+                value="""
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 380px; color: #A89F91; text-align: center; padding: 40px;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D8C5B2" stroke-width="1.5" style="margin-bottom: 16px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <p style="font-size: 1em; color: #6B6560; margin: 0 0 8px 0;">
+                        Paste code on the left
+                    </p>
+                    <p style="font-size: 0.85em; color: #A89F91; margin: 0;">
+                        Click "Review this code" to begin
+                    </p>
+                </div>
+                """,
+                elem_classes=["results-container"]
+            )
+            
+            # Details - appears after results, in order:
+            # 1. Verdict (in summ above)
+            # 2. Explanation + Findings (det below)
+            # 3. Advanced (collapsed in det)
+            det = gr.Markdown(elem_classes=["results-container"])
 
-    # Footer
+    # Footer - quiet, doesn't compete
     gr.HTML("""
-    <div style="text-align: center; padding: 24px 0; margin-top: 24px; border-top: 1px solid #E7DCCE;">
-        <p style="font-size: 0.85em; color: #6B6560; margin: 0;">
-            <a href="https://github.com/adarian-dewberry/code-review-agent" style="color: #CD8F7A; text-decoration: none;">GitHub</a>
-            &nbsp;·&nbsp;
-            Policy v1 &nbsp;·&nbsp; Schema v1.0
-        </p>
-        <p style="font-size: 0.75em; color: #A89F91; margin-top: 8px;">
-            This tool provides heuristic analysis. Human review is always recommended.
+    <div class="footer">
+        <p style="margin: 0;">
+            <a href="https://github.com/adarian-dewberry/code-review-agent">GitHub</a>
+            <span style="color: #D8C5B2; margin: 0 12px;">·</span>
+            Human review always recommended
         </p>
     </div>
     """)
