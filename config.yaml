@@ -1,0 +1,19 @@
+# Code Review Agent Configuration
+
+# Model configuration
+model: claude-3-5-sonnet-20241022
+max_tokens: 2048
+
+# Review categories
+review_categories:
+  - security
+  - performance
+  - logic
+  - compliance
+
+# Output configuration
+output_format: json
+verbose: false
+
+# Prompts
+prompts_dir: code_review_agent/prompts
