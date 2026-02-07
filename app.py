@@ -10,7 +10,7 @@ import httpx
 
 # Strip whitespace from API key (common issue with copy/paste in HF secrets)
 ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
-MODEL = "claude-3-5-sonnet-20241022"
+MODEL = "claude-sonnet-4-20250514"
 
 PROMPTS = {
     "security": """You are a security engineer. Review for SQL injection, prompt injection, data leaks, auth bypass.
