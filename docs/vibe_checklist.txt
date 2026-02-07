@@ -1,0 +1,42 @@
+VIBE-CODER SECURITY CHECKLIST
+
+Use this checklist after you paste AI-generated code:
+
+[ ] INPUT VALIDATION
+    - Validate types, lengths, and allowed characters
+    - Avoid trusting JSON/XML payloads blindly
+
+[ ] SECRETS & TOKENS
+    - No hardcoded API keys, secrets, or credentials
+    - Use environment variables or secret managers
+
+[ ] DATABASE SAFETY
+    - Parameterized queries only
+    - Avoid string interpolation in SQL
+
+[ ] AUTH & ACCESS
+    - Require authentication for sensitive actions
+    - Verify authorization/permissions
+
+[ ] LOGGING & ERROR HANDLING
+    - Avoid logging PII or secrets
+    - Return user-friendly errors (no stack traces)
+
+[ ] DEPENDENCY SAFETY
+    - Check if packages are trusted
+    - Pin versions in requirements
+
+[ ] DATA PRIVACY
+    - Don't send PII to external APIs without consent
+    - Add audit logs for sensitive access
+
+[ ] AI PROMPT SAFETY
+    - Separate system instructions from user input
+    - Apply prompt injection defense patterns
+
+[ ] PERFORMANCE
+    - Avoid N+1 queries
+    - Add caching for expensive operations
+
+[ ] TESTING
+    - Add tests for edge cases and bad inputs
