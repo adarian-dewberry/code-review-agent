@@ -1,22 +1,187 @@
 """
 Code Review Agent - Multi-pass AI code review with structured findings
 Risk Propagation & Blast Radius + Decision Accountability (V1+V2 ready)
+
+=============================================================================
+UI COPY AND EASTER EGG GUIDELINES
+
+Voice:
+- Sounds like a smart, friendly coworker you trust
+- Young, confident, feminine, and professional
+- Light inside-joke energy for people who work in tech
+- Calm and reassuring, never sarcastic or mean
+
+Humor rules:
+- Allowed: subtle, knowing, shared-experience humor
+- Not allowed: jokes during errors, failures, or BLOCK verdicts
+- Never mock the user or the code
+- Never joke about breaches, outages, or harm
+
+Style rules:
+- Short, conversational sentences
+- Plain language over buzzwords
+- No em dashes
+- No corporate training tone
+- No chatbot filler like "As an AI" or "Please note"
+
+Easter eggs:
+- UI-only and ephemeral
+- Max one per run
+- Only shown when explicitly triggered
+- Never included in logs, CI output, or exports
+
+If unsure, prefer clarity over cleverness.
+
+Copy lint rules:
+- Avoid "please", "kindly", "note that"
+- Avoid corporate phrases like "best practice" unless necessary
+- Avoid emojis outside verdict icons
+- Avoid exclamation marks
+=============================================================================
 """
 
 import json
 import os
 import re
 import uuid
+import random
 from datetime import datetime, timezone
-import gradio as gr
+
 import anthropic
+import gradio as gr
 import httpx
 
 # Strip whitespace from API key (common issue with copy/paste in HF secrets)
 ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 MODEL = "claude-sonnet-4-20250514"
 SCHEMA_VERSION = "1.0"
-TOOL_VERSION = "0.2.0"
+TOOL_VERSION = "0.2.1"
+
+
+# =============================================================================
+# CURATED UI COPY - Do not generate new copy here
+# IMPORTANT: Only select from predefined copy. Humor and tone are intentional.
+# =============================================================================
+
+EASTER_EGGS = {
+    "quiet_win": {
+        "id": "quiet_win",
+        "copy": "Nothing scary here. We love to see it.",
+        "allowed_verdicts": ["PASS"],
+        "audience": ["beginner", "intermediate", "advanced"],
+        "max_per_session": 1,
+        "probability": 0.3,
+    },
+    "clean_slate": {
+        "id": "clean_slate",
+        "copy": "A clean review. Someone's been reading the docs.",
+        "allowed_verdicts": ["PASS"],
+        "audience": ["intermediate", "advanced"],
+        "max_per_session": 1,
+        "probability": 0.2,
+    },
+    "review_pause": {
+        "id": "review_pause",
+        "copy": "Not a fail. Just a pause.",
+        "allowed_verdicts": ["REVIEW_REQUIRED"],
+        "audience": ["beginner"],
+        "max_per_session": 1,
+        "probability": 0.25,
+    },
+    "worth_a_look": {
+        "id": "worth_a_look",
+        "copy": "Worth a second look before you ship.",
+        "allowed_verdicts": ["REVIEW_REQUIRED"],
+        "audience": ["intermediate", "advanced"],
+        "max_per_session": 1,
+        "probability": 0.2,
+    },
+    "security_pattern": {
+        "id": "security_pattern",
+        "copy": "Yeah... this is one of those patterns.",
+        "allowed_verdicts": ["REVIEW_REQUIRED"],
+        "audience": ["intermediate", "advanced"],
+        "min_confidence": 0.85,
+        "max_per_session": 1,
+        "probability": 0.15,
+    },
+}
+
+
+def select_easter_egg(verdict: str, confidence: float, audience: str) -> str | None:
+    """
+    Selects an optional easter egg based on run context.
+
+    Selection rules:
+    - Never select if verdict is BLOCK
+    - Never select more than one per run
+    - Respect audience mode (beginner, intermediate, advanced)
+    - Prefer no message over a forced one
+
+    Tone check:
+    - Would this feel okay if a senior engineer said it in a PR review?
+    - Would a junior feel supported, not embarrassed?
+    - Would a manager be fine seeing this in a screenshot?
+
+    If any answer is no, do not show the message.
+    """
+    # Never show easter eggs on BLOCK - this is serious
+    if verdict == "BLOCK":
+        return None
+
+    audience_lower = audience.lower()
+    candidates = []
+
+    for egg in EASTER_EGGS.values():
+        # Check verdict match
+        if verdict not in egg.get("allowed_verdicts", []):
+            continue
+
+        # Check audience match
+        if audience_lower not in egg.get("audience", []):
+            continue
+
+        # Check confidence threshold if specified
+        min_conf = egg.get("min_confidence", 0.0)
+        if confidence < min_conf:
+            continue
+
+        candidates.append(egg)
+
+    if not candidates:
+        return None
+
+    # Probabilistic selection - prefer no message over forced humor
+    for egg in candidates:
+        if random.random() < egg.get("probability", 0.2):
+            return egg["copy"]
+
+    return None
+
+
+# Verdict UI copy - calm, human-readable, no jokes on BLOCK
+# IMPORTANT: Do not generate new UI copy here.
+# Only select from predefined copy in EASTER_EGGS or UI_COPY.
+UI_COPY = {
+    "BLOCK": {
+        "headline": "Unsafe to merge or deploy",
+        "subtext": "This code contains high-risk patterns that are commonly exploited.",
+        "confidence_text": "High confidence",
+        "alt_subtext": None,  # No jokes allowed
+    },
+    "REVIEW_REQUIRED": {
+        "headline": "Human review recommended",
+        "subtext": "Some patterns could become risky depending on how this code is used.",
+        "confidence_text": "Medium-High confidence",
+        "alt_subtext": None,  # Easter egg can replace this
+    },
+    "PASS": {
+        "headline": "No issues found",
+        "subtext": "This code follows safe patterns based on the signals we checked.",
+        "confidence_text": "High confidence",
+        "alt_subtext": None,  # Easter egg can replace this
+    },
+}
 
 # Policy rules for decision accountability
 POLICY = {
@@ -314,50 +479,48 @@ Analyze the code and return findings as JSON per the schema. Include line number
         )
         blast_indicator = " · High Blast Radius" if has_high_blast else ""
         
-        # Verdict copy - human-readable, calm
-        verdict_copy = {
-            "BLOCK": {
-                "headline": "Unsafe to merge or deploy",
-                "subtext": "This code contains high-risk patterns that are commonly exploited.",
-                "confidence_text": "High confidence",
-                "css_class": "verdict-block",
-                "dot_color": "#dc3545"
-            },
-            "REVIEW_REQUIRED": {
-                "headline": "Human review recommended", 
-                "subtext": "Some patterns could become risky depending on how this code is used.",
-                "confidence_text": "Medium-High confidence",
-                "css_class": "verdict-review",
-                "dot_color": "#CD8F7A"
-            },
-            "PASS": {
-                "headline": "No issues found",
-                "subtext": "This code follows safe patterns based on the signals we checked.",
-                "confidence_text": "High confidence",
-                "css_class": "verdict-pass",
-                "dot_color": "#28a745"
-            }
+        # Get top confidence for easter egg selection
+        top_confidence = max((f.get("confidence", 0) for f in findings), default=0)
+        
+        # Default audience mode (will be passed from UI in future)
+        audience_mode = "intermediate"
+        
+        # Try to select an easter egg (respects voice guidelines)
+        easter_egg = select_easter_egg(verdict, top_confidence, audience_mode)
+        
+        # Build verdict copy from curated UI_COPY
+        # IMPORTANT: Do not generate new UI copy here.
+        base_copy = UI_COPY.get(verdict, UI_COPY["PASS"])
+        
+        # Use easter egg for subtext if available (never on BLOCK)
+        subtext = easter_egg if easter_egg else base_copy["subtext"]
+        
+        # Verdict display config
+        verdict_display = {
+            "BLOCK": {"css_class": "verdict-block", "dot_color": "#dc3545"},
+            "REVIEW_REQUIRED": {"css_class": "verdict-review", "dot_color": "#CD8F7A"},
+            "PASS": {"css_class": "verdict-pass", "dot_color": "#28a745"},
         }
         
-        vc = verdict_copy.get(verdict, verdict_copy["PASS"])
+        vd = verdict_display.get(verdict, verdict_display["PASS"])
         
         # Luxury summary card
         summary = f"""
-<div style="padding: 24px; background: linear-gradient(135deg, #FAF8F4 0%, #E7DCCE 100%); border-left: 4px solid {vc['dot_color']}; border-radius: 12px; margin-bottom: 16px;">
+<div style="padding: 24px; background: linear-gradient(135deg, #FAF8F4 0%, #E7DCCE 100%); border-left: 4px solid {vd['dot_color']}; border-radius: 12px; margin-bottom: 16px;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-        <span style="width: 12px; height: 12px; background: {vc['dot_color']}; border-radius: 50%;"></span>
+        <span style="width: 12px; height: 12px; background: {vd['dot_color']}; border-radius: 50%;"></span>
         <span style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85em; color: #2A2926; text-transform: uppercase; letter-spacing: 0.05em;">
             {verdict.replace('_', ' ')}
         </span>
     </div>
     <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.5em; color: #2A2926; margin: 0 0 8px 0; font-weight: 500;">
-        {vc['headline']}
+        {base_copy['headline']}
     </h2>
     <p style="font-family: 'Inter', sans-serif; color: #6B6560; font-size: 0.95em; margin: 0 0 16px 0; line-height: 1.5;">
-        {vc['subtext']}
+        {subtext}
     </p>
     <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85em; color: #6B6560;">
-        <span style="background: rgba(220, 204, 179, 0.7); padding: 4px 12px; border-radius: 999px;">{vc['confidence_text']}</span>
+        <span style="background: rgba(220, 204, 179, 0.7); padding: 4px 12px; border-radius: 999px;">{base_copy['confidence_text']}</span>
         <span>{len(findings)} finding{'s' if len(findings) != 1 else ''}{blast_indicator}</span>
     </div>
 </div>
