@@ -78,7 +78,7 @@
    - Step-by-step fork/deploy instructions
    - URL format: `https://huggingface.co/spaces/your-username/space-name`
 2. **Local deployment** (development/testing)
-   - `streamlit run demo/streamlit_app.py`
+   - `python app.py`
 
 **Note:** Demo mode checkbox allows exploration without API key (already implemented)
 

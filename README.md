@@ -54,7 +54,7 @@ Run a local demo (no deployment required):
 
 ```bash
 pip install -e ".[dev]"
-streamlit run demo/streamlit_app.py
+python app.py
 ```
 
 **Demo mode** lets you explore output without sending code to an LLM.
@@ -155,9 +155,9 @@ export ANTHROPIC_API_KEY=your_key_here
 1. **Fork this repository** to your GitHub account
 2. Go to [https://huggingface.co/spaces](https://huggingface.co/spaces)
 3. Click "Create new Space"
-4. Choose SDK: **Streamlit**
+4. Choose SDK: **Gradio**
 5. Connect GitHub repo: `your-username/code-review-agent`
-6. Set app file: `demo/streamlit_app.py`
+6. Set app file: `app.py`
 7. Add secret: `ANTHROPIC_API_KEY` in **Settings → Secrets**
 8. Click "Create Space"
 
@@ -178,7 +178,7 @@ Your app will be live at: `https://huggingface.co/spaces/your-username/space-nam
 pip install -e ".[dev]"
 
 # Run locally
-streamlit run demo/streamlit_app.py
+python app.py
 ```
 
 ## Demo: Tool in Action
