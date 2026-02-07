@@ -117,7 +117,9 @@ class ReviewParser:
         
         # Remove line number and OWASP/CWE from description
         description = re.sub(r"\(line \d+\)", "", description)
-        description = re.sub(r"\|\s*OWASP[^,\n]+(?:,\s*CWE-\d+)?", "", description)
+        # Remove | OWASP... or | CWE-... patterns
+        description = re.sub(r"\|\s*OWASP[^,\n|]+(?:,\s*CWE-\d+)?", "", description)
+        description = re.sub(r"\|\s*CWE-\d+", "", description)
         description = description.strip()
         
         # Extract other fields
