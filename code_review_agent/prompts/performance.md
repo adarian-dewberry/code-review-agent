@@ -6,27 +6,27 @@ Focus on issues that could cause:
 - Database or API bottlenecks
 - Poor scaling characteristics
 
-Review the code below for performance issues:
+Review the code below for performance issues and map them to CWE classifications:
 
 ## CRITICAL (Will fail under production load)
-- **N+1 query problems**: Database queries inside loops (should batch)
-- **Memory leaks**: Objects not garbage collected, growing unbounded
-- **Blocking operations**: Synchronous calls to slow external services in hot paths
-- **Missing pagination**: Loading entire datasets into memory
-- **Unindexed database queries**: Queries on unindexed columns with large tables
+- **N+1 query problems**: Database queries inside loops (should batch) (CWE-1073)
+- **Memory leaks**: Objects not garbage collected, growing unbounded (CWE-401)
+- **Blocking operations**: Synchronous calls to slow external services in hot paths (CWE-405)
+- **Missing pagination**: Loading entire datasets into memory (CWE-400)
+- **Unindexed database queries**: Queries on unindexed columns with large tables (CWE-1042)
 
 ## HIGH (Will cause slowdowns)
-- **Inefficient algorithms**: O(n²) where O(n log n) is possible
-- **Redundant computations**: Recalculating same values instead of caching
-- **Large file operations**: Reading entire files into memory instead of streaming
-- **Missing connection pooling**: Creating new database connections per request
-- **Synchronous where async needed**: Blocking on I/O that could be parallelized
+- **Inefficient algorithms**: O(n²) where O(n log n) is possible (CWE-407)
+- **Redundant computations**: Recalculating same values instead of caching (CWE-1050)
+- **Large file operations**: Reading entire files into memory instead of streaming (CWE-400)
+- **Missing connection pooling**: Creating new database connections per request (CWE-404)
+- **Synchronous where async needed**: Blocking on I/O that could be parallelized (CWE-405)
 
 ## MEDIUM (Could be optimized)
-- **Missing caching**: Repeated expensive computations that could be cached
-- **Inefficient data structures**: Using list where set would be O(1) lookups
-- **String concatenation in loops**: Building strings with += instead of join()
-- **Deep object copies**: Copying entire objects when shallow copy sufficient
+- **Missing caching**: Repeated expensive computations that could be cached (CWE-1050)
+- **Inefficient data structures**: Using list where set would be O(1) lookups (CWE-407)
+- **String concatenation in loops**: Building strings with += instead of join() (CWE-1050)
+- **Deep object copies**: Copying entire objects when shallow copy sufficient (CWE-1050)
 
 ## LOW (Minor optimizations)
 - **Missing lazy loading**: Eager loading data that may not be used
@@ -35,15 +35,15 @@ Review the code below for performance issues:
 
 For each issue:
 
-1. **Describe the performance problem** with line number
+1. **Describe the performance problem** with line number and CWE ID
 2. **Quantify the impact**: How much slower? How much memory? At what scale does it break?
 3. **Show optimized version**: Faster implementation with explanation
 
 Format:
 
 ## CRITICAL
-- [Performance issue] (line X)
-  Impact: With 10K records, this will execute 10K queries (~30 seconds). Database will be overwhelmed.
+- [Performance issue] (line X) | CWE-1073
+  Risk: With 10K records, this will execute 10K queries (~30 seconds). Database will be overwhelmed.
   Fix: ```python
   # Batch query instead of N+1
   vendor_ids = [contract.vendor_id for contract in contracts]

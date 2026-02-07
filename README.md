@@ -74,6 +74,33 @@ pre-commit install
 export ANTHROPIC_API_KEY=your_key_here
 ```
 
+---
+
+## Demo: Tool in Action
+
+> **Note**: Visual demo (GIF/screenshot) coming soon - showing the tool detecting SQL injection, missing audit trails, and N+1 queries in VS Code.
+
+**What it looks like:**
+1. Developer writes code with security issues
+2. Run `code-review review file.py` in terminal
+3. Get instant feedback with:
+   - OWASP category (A03:2021 - Injection)
+   - CWE ID (CWE-89)
+   - Risk level (CRITICAL)
+   - Line number and code snippet
+   - Specific fix recommendation
+
+**Example output format:**
+```
+## CRITICAL
+- SQL injection vulnerability (line 45) | OWASP A03:2021 - Injection, CWE-89
+  Risk: Attacker can extract entire database by manipulating vendor_name parameter
+  Risk Level: CRITICAL
+  Fix: Use parameterized queries...
+```
+
+---
+
 ### Basic Usage
 ```bash
 # Review a file
