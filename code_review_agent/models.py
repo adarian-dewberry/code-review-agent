@@ -17,8 +17,16 @@ class Severity(str, Enum):
     INFO = "INFO"
 
 
+class RiskLevel(str, Enum):
+    """Risk level for GRC analysis."""
+    CRITICAL = "CRITICAL"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
 class Issue(BaseModel):
-    """Individual code issue."""
+    """Individual code issue with security context."""
     
     severity: Severity
     description: str
@@ -26,6 +34,12 @@ class Issue(BaseModel):
     code_snippet: Optional[str] = None
     fix_suggestion: Optional[str] = None
     regulation_reference: Optional[str] = None  # For compliance issues
+    
+    # Security-specific fields
+    owasp_id: Optional[str] = None  # e.g., "A03:2021 - Injection"
+    cwe_id: Optional[str] = None  # e.g., "CWE-89"
+    risk_level: RiskLevel = Field(default=RiskLevel.MEDIUM)
+    impact: Optional[str] = None  # Business impact explanation
     
     class Config:
         use_enum_values = True

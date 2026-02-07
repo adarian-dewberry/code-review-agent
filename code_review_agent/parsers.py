@@ -1,12 +1,12 @@
 """
 Parse LLM responses into structured Issue objects.
 
-Handles various response formats and extracts severity, description, fixes.
+Handles various response formats and extracts severity, description, fixes, OWASP/CWE mappings.
 """
 
 import re
 from typing import List, Optional
-from .models import Issue, Severity, ReviewCategory
+from .models import Issue, Severity, ReviewCategory, RiskLevel
 
 
 class ReviewParser:
@@ -108,24 +108,37 @@ class ReviewParser:
         if not lines:
             return None
         
-        # First line is description (may include line number)
+        # First line is description (may include line number, OWASP, CWE)
+        # Format: "Issue description (line X) | OWASP A03:2021, CWE-89"
         description = lines[0]
         line_number = self._extract_line_number(description)
+        owasp_id = self._extract_owasp_id(description)
+        cwe_id = self._extract_cwe_id(description)
         
-        # Remove line number from description
-        description = re.sub(r"\(line \d+\)", "", description).strip()
+        # Remove line number and OWASP/CWE from description
+        description = re.sub(r"\(line \d+\)", "", description)
+        # Remove | OWASP... or | CWE-... patterns
+        description = re.sub(r"\|\s*OWASP[^,\n|]+(?:,\s*CWE-\d+)?", "", description)
+        description = re.sub(r"\|\s*CWE-\d+", "", description)
+        description = description.strip()
         
         # Extract other fields
         fix_suggestion = None
         regulation_reference = None
         code_snippet = None
+        impact = None
+        risk_level = self._severity_to_risk_level(severity)
         
         in_code_block = False
         code_lines = []
         
         for line in lines[1:]:
+            # Check for risk/impact
+            if line.strip().startswith("Risk:"):
+                impact = line.split(":", 1)[1].strip()
+            
             # Check for fix suggestion
-            if line.strip().startswith("Fix:"):
+            elif line.strip().startswith("Fix:"):
                 # Next code block is the fix
                 in_code_block = "fix"
             
@@ -134,17 +147,22 @@ class ReviewParser:
                 regulation_reference = line.split(":", 1)[1].strip()
             
             # Check for code blocks
-            elif "```python" in line:
-                in_code_block = True
-                code_lines = []
-            
-            elif "```" in line and in_code_block:
-                if in_code_block == "fix":
-                    fix_suggestion = "\n".join(code_lines)
-                else:
-                    code_snippet = "\n".join(code_lines)
-                in_code_block = False
-                code_lines = []
+            elif "```python" in line or "```" in line:
+                if "```python" in line or (in_code_block and "```" in line):
+                    if in_code_block == "fix":
+                        # Closing fix block
+                        fix_suggestion = "\n".join(code_lines)
+                        in_code_block = False
+                        code_lines = []
+                    elif "```" in line and in_code_block:
+                        # Closing other block
+                        code_snippet = "\n".join(code_lines)
+                        in_code_block = False
+                        code_lines = []
+                    else:
+                        # Opening new block
+                        in_code_block = True
+                        code_lines = []
             
             elif in_code_block:
                 code_lines.append(line)
@@ -155,7 +173,11 @@ class ReviewParser:
             line_number=line_number,
             code_snippet=code_snippet,
             fix_suggestion=fix_suggestion,
-            regulation_reference=regulation_reference
+            regulation_reference=regulation_reference,
+            owasp_id=owasp_id,
+            cwe_id=cwe_id,
+            risk_level=risk_level,
+            impact=impact
         )
     
     def _extract_line_number(self, text: str) -> Optional[int]:
@@ -165,3 +187,31 @@ class ReviewParser:
         if match:
             return int(match.group(1))
         return None
+    
+    def _extract_owasp_id(self, text: str) -> Optional[str]:
+        """Extract OWASP ID from text like 'OWASP A03:2021 - Injection'."""
+        
+        match = re.search(r"OWASP\s+(A\d{2}:\d{4}(?:\s*-\s*[^,|\n]+)?)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return None
+    
+    def _extract_cwe_id(self, text: str) -> Optional[str]:
+        """Extract CWE ID from text like 'CWE-89'."""
+        
+        match = re.search(r"CWE-(\d+)", text, re.IGNORECASE)
+        if match:
+            return f"CWE-{match.group(1)}"
+        return None
+    
+    def _severity_to_risk_level(self, severity: Severity) -> RiskLevel:
+        """Map severity to risk level."""
+        
+        mapping = {
+            Severity.CRITICAL: RiskLevel.CRITICAL,
+            Severity.HIGH: RiskLevel.HIGH,
+            Severity.MEDIUM: RiskLevel.MEDIUM,
+            Severity.LOW: RiskLevel.LOW,
+            Severity.INFO: RiskLevel.LOW,
+        }
+        return mapping.get(severity, RiskLevel.MEDIUM)
