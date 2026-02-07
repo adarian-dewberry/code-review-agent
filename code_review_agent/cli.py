@@ -96,6 +96,20 @@ Examples:
         parser.print_help()
         sys.exit(1)
     
+    # Data privacy warning
+    if config.review.warn_before_sending and not args.ci_mode:
+        print(
+            "⚠️  DATA PRIVACY WARNING ⚠️\n"
+            "Your code will be sent to Anthropic's Claude API for analysis.\n"
+            "Ensure your code does not contain:\n"
+            "  • Hardcoded secrets or API keys\n"
+            "  • PII (personally identifiable information)\n"
+            "  • Proprietary business logic you cannot share\n"
+            "  • Other sensitive data\n"
+            "\nFor more information, visit: https://www.anthropic.com/privacy\n",
+            file=sys.stderr
+        )
+    
     # Run review
     agent = CodeReviewAgent(config)
     result = agent.review(code, str(file_path) if file_path else None)

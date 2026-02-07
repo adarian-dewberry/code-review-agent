@@ -27,6 +27,27 @@ class ReviewConfig(BaseModel):
     fail_on_critical: bool = Field(default=True)
     fail_on_high: bool = Field(default=False)
     max_issues_per_category: int = Field(default=20)
+    
+    # File exclusion patterns (glob-style)
+    exclude_patterns: list[str] = Field(
+        default_factory=lambda: [
+            "*.min.js",
+            "*.min.css",
+            ".env",
+            ".env.*",
+            "node_modules/**",
+            "venv/**",
+            ".venv/**",
+            "__pycache__/**",
+            "dist/**",
+            "build/**",
+            ".git/**",
+            "*.pyc",
+        ]
+    )
+    
+    # Warn before sending code to LLM
+    warn_before_sending: bool = Field(default=True)
 
 
 class Config(BaseModel):
