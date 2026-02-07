@@ -1,19 +1,26 @@
 # Code Review Agent Configuration
 
-# Model configuration
-model: claude-3-5-sonnet-20241022
-max_tokens: 2048
+# LLM Model Settings
+model:
+  name: "claude-sonnet-4-20250514"
+  max_tokens: 4000
+  temperature: 0.0  # Deterministic for code review
 
-# Review categories
-review_categories:
-  - security
-  - performance
-  - logic
-  - compliance
+# Review Behavior
+review:
+  enabled_categories:
+    - security
+    - logic
+    - performance
+    - compliance
+  
+  # CI/CD failure conditions
+  fail_on_critical: true
+  fail_on_high: false
+  
+  # Limit issues per category (prevent overwhelming output)
+  max_issues_per_category: 20
 
-# Output configuration
-output_format: json
-verbose: false
-
-# Prompts
-prompts_dir: code_review_agent/prompts
+# API Configuration
+# Set ANTHROPIC_API_KEY environment variable or uncomment below:
+# anthropic_api_key: "sk-ant-..."

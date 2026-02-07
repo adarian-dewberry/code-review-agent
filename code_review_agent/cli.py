@@ -1,9 +1,121 @@
-"""Command-line interface for the code review agent."""
+"""
+Command-line interface for code review agent.
+
+Usage:
+    code-review review path/to/file.py
+    git diff | code-review review --stdin
+    code-review review --ci-mode path/to/file.py
+"""
+
+import sys
+import argparse
+from pathlib import Path
+from typing import Optional
+
+from .agent import CodeReviewAgent
+from .config import Config
+from .models import ReviewRecommendation
 
 
 def main():
     """Main CLI entry point."""
-    pass
+    
+    parser = argparse.ArgumentParser(
+        description="Automated code review for AI-powered development",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Review a file
+  code-review review path/to/code.py
+  
+  # Review from stdin (git diff)
+  git diff main | code-review review --stdin
+  
+  # CI/CD mode (exits with error if critical issues)
+  code-review review --ci-mode path/to/code.py
+  
+  # Custom config
+  code-review review --config config.yaml path/to/code.py
+        """
+    )
+    
+    parser.add_argument(
+        "command",
+        choices=["review"],
+        help="Command to run"
+    )
+    
+    parser.add_argument(
+        "file_path",
+        nargs="?",
+        help="Path to file to review (omit if using --stdin)"
+    )
+    
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Read code from stdin instead of file"
+    )
+    
+    parser.add_argument(
+        "--ci-mode",
+        action="store_true",
+        help="CI/CD mode: exit with error code if critical/high issues found"
+    )
+    
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Path to config file (default: config.yaml)"
+    )
+    
+    parser.add_argument(
+        "--format",
+        choices=["markdown", "json"],
+        default="markdown",
+        help="Output format (default: markdown)"
+    )
+    
+    args = parser.parse_args()
+    
+    # Load configuration
+    config = Config.load(args.config)
+    
+    # Get code to review
+    if args.stdin:
+        code = sys.stdin.read()
+        file_path = None
+    elif args.file_path:
+        file_path = Path(args.file_path)
+        if not file_path.exists():
+            print(f"Error: File not found: {file_path}", file=sys.stderr)
+            sys.exit(1)
+        code = file_path.read_text()
+    else:
+        print("Error: Must provide file path or --stdin", file=sys.stderr)
+        parser.print_help()
+        sys.exit(1)
+    
+    # Run review
+    agent = CodeReviewAgent(config)
+    result = agent.review(code, str(file_path) if file_path else None)
+    
+    # Output results
+    if args.format == "markdown":
+        print(result.to_markdown())
+    elif args.format == "json":
+        print(result.model_dump_json(indent=2))
+    
+    # CI mode: exit with error if issues found
+    if args.ci_mode:
+        if config.review.fail_on_critical and result.summary.critical_count > 0:
+            sys.exit(1)
+        if config.review.fail_on_high and result.summary.high_count > 0:
+            sys.exit(1)
+    
+    # Normal mode: exit with error only if DO_NOT_MERGE
+    if result.summary.recommendation == ReviewRecommendation.DO_NOT_MERGE:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
