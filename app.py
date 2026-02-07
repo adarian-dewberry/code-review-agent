@@ -1125,50 +1125,102 @@ body[data-theme="noir"] {
   font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* Header */
+/* Header - Enhanced professional design */
 #brand_header {
   text-align: center;
-  padding: 16px 0 24px 0;
+  padding: 32px 24px 36px 24px;
+  background: linear-gradient(135deg, rgba(205,143,122,0.08) 0%, rgba(220,204,179,0.12) 50%, rgba(205,143,122,0.06) 100%);
+  border-bottom: 1px solid var(--border);
+  margin: -12px -12px 24px -12px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.header_badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent), #B87A65);
+  color: white;
+  font-size: 0.75em;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  box-shadow: 0 3px 12px rgba(205,143,122,0.25);
 }
 #brand_title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 2em;
-  font-weight: 500;
+  font-size: 2.8em;
+  font-weight: 600;
   color: var(--text);
   margin: 0;
+  line-height: 1.1;
+}
+.header_tagline {
+  font-size: 1.1em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
 }
 #brand_subtitle {
-  font-size: 0.95em;
-  color: rgba(107, 101, 96, 0.85);
-  margin-top: 6px;
+  font-size: 1.15em;
+  color: rgba(107, 101, 96, 0.9);
+  margin-top: 12px;
+  line-height: 1.5;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.header_features {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.feature_tag {
+  font-size: 0.85em;
+  color: rgba(107,101,96,0.75);
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 999px;
+  font-weight: 500;
+}
+body[data-theme="noir"] #brand_header {
+  background: linear-gradient(135deg, rgba(205,143,122,0.12) 0%, rgba(42,41,38,0.8) 50%, rgba(205,143,122,0.08) 100%);
 }
 body[data-theme="noir"] #brand_subtitle {
-  color: rgba(250,248,244,0.6);
+  color: rgba(250,248,244,0.7);
+}
+body[data-theme="noir"] .feature_tag {
+  background: rgba(42,41,38,0.6);
+  color: rgba(250,248,244,0.7);
 }
 
 /* Theme toggle pill */
 #mode_toggle {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 #mode_toggle .wrap {
   background: var(--panel) !important;
   border: 1px solid var(--border) !important;
   border-radius: 999px !important;
-  padding: 4px 6px !important;
+  padding: 5px 8px !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
 }
 #mode_toggle label {
-  padding: 6px 16px !important;
+  padding: 8px 20px !important;
   border-radius: 999px !important;
   font-weight: 600 !important;
-  font-size: 0.85em !important;
+  font-size: 0.9em !important;
   cursor: pointer !important;
-  transition: all 0.2s !important;
+  transition: all 0.25s ease !important;
 }
 #mode_toggle input:checked + label {
   background: var(--accent) !important;
   color: var(--bg) !important;
+  box-shadow: 0 3px 10px rgba(205,143,122,0.3) !important;
 }
 body[data-theme="noir"] #mode_toggle .wrap {
   background: var(--spine2) !important;
@@ -1192,232 +1244,331 @@ body[data-theme="noir"] #mode_toggle .wrap {
   border: none !important;
 }
 
-/* Spine labels */
+/* Spine labels - larger for accessibility */
 .spine_label {
-  color: rgba(250,248,244,0.6);
-  font-size: 0.75em;
+  color: var(--accent);
+  font-size: 0.85em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 4px;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 .spine_title {
   color: var(--spineText);
-  font-weight: 600;
-  font-size: 1em;
-  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 1.25em;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.spine_hint {
+  color: rgba(250,248,244,0.55);
+  font-size: 0.9em;
+  margin-bottom: 16px;
+  line-height: 1.4;
 }
 
-/* Code editor in spine */
+/* Code editor in spine - larger text for accessibility */
 #left_spine textarea, #left_spine .cm-editor {
   background: var(--spine2) !important;
   color: var(--spineText) !important;
-  border: 1px solid rgba(250,248,244,0.1) !important;
+  border: 1px solid rgba(250,248,244,0.12) !important;
   border-radius: var(--radiusSm) !important;
   font-family: 'JetBrains Mono', ui-monospace, monospace !important;
-  font-size: 0.9em !important;
-  min-height: 300px !important;
+  font-size: 1em !important;
+  min-height: 280px !important;
+  line-height: 1.6 !important;
 }
 #left_spine textarea:focus, #left_spine .cm-editor.cm-focused {
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(205,143,122,0.3) !important;
+  box-shadow: 0 0 0 3px rgba(205,143,122,0.35) !important;
   border-color: var(--accent) !important;
 }
 
-/* Primary button */
+/* Action buttons container */
+#action_buttons {
+  margin-top: 8px !important;
+  gap: 12px !important;
+}
+
+/* Primary button - 3D effect */
 #review_btn {
-  margin-top: 16px !important;
+  flex: 1 !important;
 }
 #review_btn button {
-  background: var(--accent) !important;
-  color: var(--bg) !important;
+  background: linear-gradient(180deg, #D9977F 0%, var(--accent) 50%, #B87A65 100%) !important;
+  color: white !important;
   border: none !important;
   border-radius: 14px !important;
-  padding: 14px 24px !important;
-  font-weight: 600 !important;
-  font-size: 1em !important;
+  padding: 16px 24px !important;
+  font-weight: 700 !important;
+  font-size: 1.1em !important;
   width: 100% !important;
   cursor: pointer !important;
-  transition: all 0.2s !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 0 #9A6555, 0 6px 12px rgba(154,101,85,0.3) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+  position: relative !important;
 }
 #review_btn button:hover {
-  filter: brightness(0.92) !important;
-  transform: translateY(-1px) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 0 #9A6555, 0 10px 20px rgba(154,101,85,0.35) !important;
+}
+#review_btn button:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 2px 0 #9A6555, 0 3px 8px rgba(154,101,85,0.25) !important;
 }
 
-/* Sample button */
+/* Sample button - 3D secondary effect */
+#sample_btn {
+  flex: 1 !important;
+}
 #sample_btn button {
-  background: transparent !important;
-  color: rgba(250,248,244,0.85) !important;
+  background: linear-gradient(180deg, rgba(250,248,244,0.12) 0%, rgba(250,248,244,0.06) 100%) !important;
+  color: rgba(250,248,244,0.9) !important;
   border: 1px solid rgba(250,248,244,0.2) !important;
   border-radius: 14px !important;
-  padding: 10px 16px !important;
-  font-size: 0.9em !important;
+  padding: 16px 24px !important;
+  font-weight: 600 !important;
+  font-size: 1.1em !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 0 rgba(250,248,244,0.08), 0 4px 12px rgba(0,0,0,0.15) !important;
 }
 #sample_btn button:hover {
-  background: rgba(250,248,244,0.08) !important;
+  background: linear-gradient(180deg, rgba(250,248,244,0.18) 0%, rgba(250,248,244,0.1) 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 0 rgba(250,248,244,0.1), 0 8px 16px rgba(0,0,0,0.2) !important;
+}
+#sample_btn button:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 2px 0 rgba(250,248,244,0.06), 0 2px 6px rgba(0,0,0,0.1) !important;
 }
 
-/* Filename input */
+/* Filename input - larger text */
+#filename_box {
+  margin-top: 16px !important;
+}
 #filename_box input {
-  background: rgba(250,248,244,0.06) !important;
+  background: rgba(250,248,244,0.08) !important;
   color: var(--spineText) !important;
-  border: 1px solid rgba(250,248,244,0.15) !important;
+  border: 1px solid rgba(250,248,244,0.18) !important;
   border-radius: var(--radiusSm) !important;
-  padding: 10px 14px !important;
+  padding: 12px 16px !important;
+  font-size: 1em !important;
 }
 #filename_box input::placeholder {
-  color: rgba(250,248,244,0.4) !important;
+  color: rgba(250,248,244,0.45) !important;
 }
 #filename_box label {
-  color: rgba(250,248,244,0.7) !important;
-  font-size: 0.85em !important;
+  color: rgba(250,248,244,0.75) !important;
+  font-size: 0.95em !important;
+  font-weight: 500 !important;
 }
 
-/* Customize accordion - real affordance */
+/* Customize accordion - enhanced for accessibility */
 #customize_acc {
-  margin-top: 16px !important;
-  background: rgba(250,248,244,0.04) !important;
-  border: 1px solid rgba(250,248,244,0.15) !important;
+  margin-top: 20px !important;
+  background: rgba(250,248,244,0.05) !important;
+  border: 1px solid rgba(250,248,244,0.18) !important;
   border-radius: var(--radiusSm) !important;
 }
 #customize_acc .label-wrap {
-  color: rgba(250,248,244,0.9) !important;
+  color: rgba(250,248,244,0.95) !important;
   font-weight: 600 !important;
-  padding: 12px 14px !important;
+  font-size: 1em !important;
+  padding: 14px 16px !important;
 }
 #customize_acc .label-wrap:hover {
-  background: rgba(250,248,244,0.06) !important;
+  background: rgba(250,248,244,0.08) !important;
 }
 #customize_acc .icon {
-  color: rgba(250,248,244,0.6) !important;
+  color: rgba(250,248,244,0.7) !important;
 }
 #customize_acc .wrap {
-  padding: 0 14px 14px 14px !important;
+  padding: 4px 16px 18px 16px !important;
+}
+.config_section_title {
+  color: rgba(250,248,244,0.85);
+  font-weight: 600;
+  font-size: 0.95em;
+  margin-bottom: 12px;
 }
 #customize_acc label {
-  color: rgba(250,248,244,0.75) !important;
-  font-size: 0.9em !important;
+  color: rgba(250,248,244,0.85) !important;
+  font-size: 1em !important;
+  font-weight: 500 !important;
 }
 #customize_acc input[type="checkbox"] {
   accent-color: var(--accent) !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+#customize_acc .info {
+  font-size: 0.85em !important;
+  color: rgba(250,248,244,0.55) !important;
 }
 
 /* RIGHT: Light results panel */
 #right_panel {
-  background: rgba(231,220,206,0.35) !important;
+  background: rgba(231,220,206,0.4) !important;
   border: 1px solid var(--border) !important;
   border-left: none !important;
   border-radius: 0 var(--radius) var(--radius) 0 !important;
-  padding: 24px !important;
+  padding: 28px !important;
   min-height: 520px !important;
 }
 body[data-theme="noir"] #right_panel {
-  background: rgba(42,41,38,0.5) !important;
+  background: rgba(42,41,38,0.55) !important;
 }
 #right_panel .block, #right_panel .form {
   background: transparent !important;
   border: none !important;
 }
 
-/* Right panel labels */
+/* Right panel labels - larger for accessibility */
 .results_label {
-  color: rgba(27,26,24,0.55);
-  font-size: 0.75em;
+  color: var(--accent);
+  font-size: 0.85em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 4px;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  font-weight: 600;
 }
 .results_title {
   color: var(--text);
-  font-weight: 600;
-  font-size: 1em;
-  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.35em;
+  margin-bottom: 20px;
+  line-height: 1.3;
 }
 body[data-theme="noir"] .results_label {
-  color: rgba(250,248,244,0.5);
+  color: var(--accent);
 }
 body[data-theme="noir"] .results_title {
   color: var(--text);
 }
 
-/* Empty state */
+/* Empty state - enhanced */
 #empty_state {
-  background: rgba(250,248,244,0.7);
-  border: 1px dashed rgba(42,41,38,0.18);
+  background: rgba(250,248,244,0.75);
+  border: 2px dashed rgba(42,41,38,0.2);
   border-radius: var(--radiusSm);
-  padding: 40px 24px;
+  padding: 48px 28px;
   text-align: center;
 }
+#empty_state .empty_icon {
+  font-size: 2.5em;
+  margin-bottom: 14px;
+}
 #empty_state .empty_title {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.2em;
   color: var(--text);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 #empty_state .empty_text {
-  color: rgba(27,26,24,0.6);
-  font-size: 0.9em;
+  color: rgba(27,26,24,0.7);
+  font-size: 1em;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+#empty_state .empty_hint {
+  color: var(--accent);
+  font-size: 0.95em;
+  font-weight: 500;
 }
 body[data-theme="noir"] #empty_state {
-  background: rgba(42,41,38,0.6);
-  border-color: rgba(250,248,244,0.12);
+  background: rgba(42,41,38,0.65);
+  border-color: rgba(250,248,244,0.15);
 }
 body[data-theme="noir"] #empty_state .empty_title {
   color: var(--text);
 }
 body[data-theme="noir"] #empty_state .empty_text {
-  color: rgba(250,248,244,0.6);
+  color: rgba(250,248,244,0.65);
 }
 
 /* Verdict card */
 #verdict_card {
-  background: rgba(250,248,244,0.8);
+  background: rgba(250,248,244,0.85);
   border: 1px solid var(--border);
   border-radius: var(--radiusSm);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 24px;
+  margin-bottom: 18px;
 }
 body[data-theme="noir"] #verdict_card {
-  background: rgba(42,41,38,0.7);
+  background: rgba(42,41,38,0.75);
 }
 
-/* Verdict pill */
+/* Verdict pill - larger for accessibility */
 .verdict_pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 10px;
+  padding: 8px 18px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.8em;
+  font-size: 0.9em;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
-.verdict_pill.block { background: rgba(220,53,69,0.15); color: #dc3545; }
-.verdict_pill.review { background: rgba(205,143,122,0.2); color: #B87D6A; }
-.verdict_pill.pass { background: rgba(40,167,69,0.15); color: #28a745; }
+.verdict_pill.block { background: rgba(220,53,69,0.18); color: #dc3545; }
+.verdict_pill.review { background: rgba(205,143,122,0.22); color: #B87D6A; }
+.verdict_pill.pass { background: rgba(40,167,69,0.18); color: #28a745; }
 .verdict_dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
 }
 .verdict_dot.block { background: #dc3545; }
 .verdict_dot.review { background: var(--accent); }
 .verdict_dot.pass { background: #28a745; }
 
-/* Tabs */
+/* Tabs - larger text */
 #right_panel .tabs {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 #right_panel .tab-nav button {
   color: var(--text) !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  font-size: 1em !important;
+  padding: 12px 20px !important;
   border-radius: var(--radiusSm) var(--radiusSm) 0 0 !important;
+  transition: all 0.2s ease !important;
+}
+#right_panel .tab-nav button:hover {
+  background: rgba(205,143,122,0.1) !important;
 }
 #right_panel .tab-nav button.selected {
-  background: rgba(250,248,244,0.6) !important;
+  background: rgba(250,248,244,0.7) !important;
+  box-shadow: 0 -2px 0 var(--accent) inset !important;
 }
 body[data-theme="noir"] #right_panel .tab-nav button.selected {
-  background: rgba(42,41,38,0.8) !important;
+  background: rgba(42,41,38,0.85) !important;
+}
+
+/* Export button - 3D style */
+#export_btn button {
+  background: linear-gradient(180deg, #4A9F5E 0%, #28a745 50%, #1E7B34 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 20px !important;
+  font-weight: 600 !important;
+  font-size: 0.95em !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 3px 0 #1A6B2E, 0 4px 10px rgba(40,167,69,0.25) !important;
+  margin-top: 12px !important;
+}
+#export_btn button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 0 #1A6B2E, 0 6px 14px rgba(40,167,69,0.3) !important;
+}
+#export_btn button:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 0 #1A6B2E, 0 2px 6px rgba(40,167,69,0.2) !important;
 }
 
 /* Footer */
@@ -1697,8 +1848,15 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     # Header
     gr.HTML("""
     <div id="brand_header">
+        <div class="header_badge">🛡️ AI-POWERED SECURITY</div>
         <div id="brand_title">Code Review Agent</div>
-        <div id="brand_subtitle">Judgment-aware security analysis for AI-enabled systems</div>
+        <div class="header_tagline">Frankie</div>
+        <div id="brand_subtitle">Your AI security companion that catches vulnerabilities before they become problems</div>
+        <div class="header_features">
+            <span class="feature_tag">✓ Beginner Friendly</span>
+            <span class="feature_tag">✓ Industry Standards</span>
+            <span class="feature_tag">✓ Instant Analysis</span>
+        </div>
     </div>
     """)
 
@@ -1728,49 +1886,74 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         # =====================================================
         with gr.Column(scale=4, elem_id="left_spine"):
             gr.HTML(
-                '<div class="spine_label">Step 1</div><div class="spine_title">Paste your code</div>'
+                '<div class="spine_label">STEP 1 — YOUR CODE</div><div class="spine_title">Paste or type your code below</div><div class="spine_hint">Works with Python, JavaScript, and most programming languages</div>'
             )
 
             code = gr.Code(
                 value="", language="python", label="", lines=14, show_label=False
             )
 
-            gr.HTML('<div class="spine_label" style="margin-top: 16px;">Step 2</div>')
+            gr.HTML(
+                '<div class="spine_label" style="margin-top: 20px;">STEP 2 — RUN ANALYSIS</div><div class="spine_hint">Click to have Frankie analyze your code for security issues</div>'
+            )
 
-            with gr.Row():
-                btn = gr.Button("Review this code", elem_id="review_btn", scale=3)
-                sample_btn = gr.Button("Try example", elem_id="sample_btn", scale=2)
+            with gr.Row(elem_id="action_buttons"):
+                btn = gr.Button("🔍 Analyze My Code", elem_id="review_btn", scale=1)
+                sample_btn = gr.Button("📝 Try Example", elem_id="sample_btn", scale=1)
 
             ctx = gr.Textbox(
-                label="Filename (optional)",
-                placeholder="e.g., app.py",
+                label="File name (helps with context)",
+                placeholder="Example: app.py, server.js, main.go",
                 lines=1,
                 elem_id="filename_box",
             )
 
-            with gr.Accordion("Customize review", open=False, elem_id="customize_acc"):
+            with gr.Accordion(
+                "⚙️ Advanced Settings (Optional)", open=False, elem_id="customize_acc"
+            ):
                 gr.HTML(
-                    '<p style="color: rgba(250,248,244,0.6); font-size: 0.85em; margin-bottom: 12px;">Choose what to check. Beginners can leave this alone.</p>'
+                    '<p style="color: rgba(250,248,244,0.75); font-size: 0.95em; margin-bottom: 14px; line-height: 1.5;">🎯 <strong>New to code review?</strong> Leave these as-is — the defaults work great for most code.</p>'
+                )
+                gr.HTML(
+                    '<div class="config_section_title">What should Frankie look for?</div>'
                 )
                 with gr.Row():
-                    sec = gr.Checkbox(label="Security", value=True)
-                    comp = gr.Checkbox(label="Compliance", value=True)
+                    sec = gr.Checkbox(
+                        label="🔐 Security Vulnerabilities",
+                        value=True,
+                        info="Find hacking risks like SQL injection, XSS",
+                    )
+                    comp = gr.Checkbox(
+                        label="📋 Best Practices",
+                        value=True,
+                        info="Check coding standards and guidelines",
+                    )
                 with gr.Row():
-                    logic = gr.Checkbox(label="Logic", value=False)
-                    perf = gr.Checkbox(label="Performance", value=False)
+                    logic = gr.Checkbox(
+                        label="🧠 Logic Errors",
+                        value=False,
+                        info="Find bugs in your code flow",
+                    )
+                    perf = gr.Checkbox(
+                        label="⚡ Performance Issues",
+                        value=False,
+                        info="Find slow or inefficient code",
+                    )
 
         # =====================================================
         # RIGHT: LIGHT PANEL - "Here's what I found"
         # =====================================================
         with gr.Column(scale=6, elem_id="right_panel"):
             gr.HTML(
-                '<div class="results_label">Step 3</div><div class="results_title">Results</div>'
+                '<div class="results_label">STEP 3 — YOUR RESULTS</div><div class="results_title">Security Analysis Report</div>'
             )
 
             empty_state = gr.HTML("""
             <div id="empty_state">
-                <div class="empty_title">Your review will show up here</div>
-                <div class="empty_text">Paste code on the left and click <strong>Review this code</strong></div>
+                <div class="empty_icon">🔍</div>
+                <div class="empty_title">Ready to analyze your code</div>
+                <div class="empty_text">Paste your code on the left, then click <strong>Analyze My Code</strong></div>
+                <div class="empty_hint">💡 New here? Click "Try Example" to see how it works!</div>
             </div>
             """)
 
