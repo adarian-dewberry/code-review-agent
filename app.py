@@ -25,6 +25,10 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
     if not code or not code.strip():
         return "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>", ""
     
+    # Input size validation (prevent API token limit issues)
+    if len(code) > 50000:
+        return "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Please limit code to 50,000 characters.</p></div>", ""
+    
     if not any([sec, comp, logic, perf]):
         return "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Categories</h3><p>Select at least one.</p></div>", ""
     

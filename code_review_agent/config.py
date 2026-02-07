@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 class ModelConfig(BaseModel):
     """LLM model configuration."""
 
-    name: str = Field(default="claude-sonnet-4-20250514")
+    name: str = Field(default="claude-3-5-sonnet-20241022")
     max_tokens: int = Field(default=4000, ge=1000, le=8000)
     temperature: float = Field(default=0.0, ge=0.0, le=1.0)
 

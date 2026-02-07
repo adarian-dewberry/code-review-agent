@@ -130,66 +130,77 @@ class SASTAgent:
 
     def analyze(self, code: str, file_path: Optional[str] = None) -> List[ThreatModel]:
         """Run SAST analysis and return STRIDE-mapped threats."""
+        import tempfile
         threats = []
         function_index = self._build_function_index(code)
+        temp_file_created = False
 
         # Write code to temp file for scanning
         if not file_path:
-            temp_file = Path("temp_scan.py")
-            temp_file.write_text(code)
-            file_path = str(temp_file)
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                f.write(code)
+                file_path = f.name
+                temp_file_created = True
 
-        # Run Semgrep
-        semgrep_findings = self.scan_semgrep(file_path)
-        for finding in semgrep_findings:
-            stride_cat = self.map_to_stride(finding.get("check_id", ""))
+        try:
+            # Run Semgrep
+            semgrep_findings = self.scan_semgrep(file_path)
+            for finding in semgrep_findings:
+                stride_cat = self.map_to_stride(finding.get("check_id", ""))
 
-            line = None
-            if isinstance(finding.get("start"), dict):
-                line = finding.get("start", {}).get("line")
-            function_name = self._function_for_line(function_index, line)
-            component = file_path
-            if line:
-                component = f"{file_path}:{line}"
-            if function_name:
-                component = f"{component} (function: {function_name})"
+                line = None
+                if isinstance(finding.get("start"), dict):
+                    line = finding.get("start", {}).get("line")
+                function_name = self._function_for_line(function_index, line)
+                component = file_path
+                if line:
+                    component = f"{file_path}:{line}"
+                if function_name:
+                    component = f"{component} (function: {function_name})"
 
-            # Estimate DREAD score based on severity
-            severity = finding.get("extra", {}).get("severity", "WARNING")
-            dread = self._estimate_dread(severity)
+                # Estimate DREAD score based on severity
+                severity = finding.get("extra", {}).get("severity", "WARNING")
+                dread = self._estimate_dread(severity)
 
-            threat = ThreatModel(
-                stride_category=stride_cat,
-                description=finding.get("extra", {}).get("message", "Security issue detected"),
-                dread_score=dread,
-                affected_components=[component],
-                cwe_id=finding.get("extra", {}).get("metadata", {}).get("cwe"),
-                owasp_id=finding.get("extra", {}).get("metadata", {}).get("owasp"),
-            )
-            threats.append(threat)
+                threat = ThreatModel(
+                    stride_category=stride_cat,
+                    description=finding.get("extra", {}).get("message", "Security issue detected"),
+                    dread_score=dread,
+                    affected_components=[component],
+                    cwe_id=finding.get("extra", {}).get("metadata", {}).get("cwe"),
+                    owasp_id=finding.get("extra", {}).get("metadata", {}).get("owasp"),
+                )
+                threats.append(threat)
 
-        # Run Bandit
-        bandit_findings = self.scan_bandit(file_path)
-        for finding in bandit_findings:
-            stride_cat = self.map_to_stride(finding.get("test_id", ""))
-            dread = self._estimate_dread(finding.get("issue_severity", "MEDIUM"))
+            # Run Bandit
+            bandit_findings = self.scan_bandit(file_path)
+            for finding in bandit_findings:
+                stride_cat = self.map_to_stride(finding.get("test_id", ""))
+                dread = self._estimate_dread(finding.get("issue_severity", "MEDIUM"))
 
-            line = finding.get("line_number")
-            function_name = self._function_for_line(function_index, line)
-            component = f"{file_path}:{line}" if line else file_path
-            if function_name:
-                component = f"{component} (function: {function_name})"
+                line = finding.get("line_number")
+                function_name = self._function_for_line(function_index, line)
+                component = f"{file_path}:{line}" if line else file_path
+                if function_name:
+                    component = f"{component} (function: {function_name})"
 
-            threat = ThreatModel(
-                stride_category=stride_cat,
-                description=finding.get("issue_text", "Security issue detected"),
-                dread_score=dread,
-                affected_components=[component],
-                cwe_id=finding.get("cwe", {}).get("id"),
-            )
-            threats.append(threat)
+                threat = ThreatModel(
+                    stride_category=stride_cat,
+                    description=finding.get("issue_text", "Security issue detected"),
+                    dread_score=dread,
+                    affected_components=[component],
+                    cwe_id=finding.get("cwe", {}).get("id"),
+                )
+                threats.append(threat)
 
-        return threats
+            return threats
+        finally:
+            # Clean up temp file if we created one
+            if temp_file_created:
+                try:
+                    Path(file_path).unlink()
+                except OSError:
+                    pass
 
     def _estimate_dread(self, severity: str) -> DREADScore:
         """Estimate DREAD score from severity string."""
