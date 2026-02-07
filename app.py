@@ -691,277 +691,508 @@ APP_THEME = gr.themes.Base(
 )
 
 APP_CSS = """
-    /* =================================================================
-       MODERN AI UX - Left to Right Flow
-       Rule: Every screen answers one question at a time.
-       Rule: Whitespace is direction, not emptiness.
-       Rule: AI tools should feel like transformation, not configuration.
-       ================================================================= */
-    
-    /* Base - Warm Ivory canvas */
-    .gradio-container {
-        background: #FAF8F4 !important;
-        font-family: 'Inter', sans-serif !important;
-        max-width: 1200px !important;
-        margin: 0 auto !important;
-    }
-    
-    /* Kill the "everything is a card" problem */
-    .panel, .block, .form {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Typography - Playfair for headings only */
-    h1, h2, h3 {
-        font-family: 'Playfair Display', Georgia, serif !important;
-        color: #2A2926 !important;
-        letter-spacing: -0.01em !important;
-        font-weight: 500 !important;
-    }
-    
-    /* Body text - quiet, readable */
-    p, span, label, .prose {
-        color: #6B6560 !important;
-        line-height: 1.6 !important;
-        font-size: 0.95em !important;
-    }
-    
-    /* Code input - THE dominant element on left */
-    .code-input textarea {
-        background: #F5F1EA !important;
-        border: 2px solid #E7DCCE !important;
-        border-radius: 12px !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.9em !important;
-        padding: 16px !important;
-        min-height: 320px !important;
-    }
-    .code-input textarea:focus {
-        border-color: #CD8F7A !important;
-        outline: none !important;
-        box-shadow: 0 0 0 3px rgba(205, 143, 122, 0.15) !important;
-    }
-    
-    /* Primary button - THE only strong color on left */
-    .primary-btn {
-        background: #CD8F7A !important;
-        color: #FAF8F4 !important;
-        border: none !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        font-size: 1em !important;
-        padding: 14px 28px !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        width: 100% !important;
-    }
-    .primary-btn:hover {
-        background: #B87D6A !important;
-        transform: translateY(-1px) !important;
-    }
-    
-    /* Options toggle - collapsed by default feel */
-    .options-toggle {
-        color: #A89F91 !important;
-        font-size: 0.85em !important;
-        cursor: pointer !important;
-        padding: 8px 0 !important;
-        border: none !important;
-        background: none !important;
-    }
-    .options-toggle:hover {
-        color: #CD8F7A !important;
-    }
-    
-    /* Checkboxes - minimal */
-    .checkbox-group label {
-        font-size: 0.85em !important;
-        color: #6B6560 !important;
-    }
-    input[type="checkbox"] {
-        accent-color: #CD8F7A !important;
-    }
-    
-    /* Right side - empty on purpose before results */
-    .results-empty {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 400px;
-        color: #A89F91;
-        text-align: center;
-    }
-    
-    /* Results - transform the layout when they appear */
-    .results-container {
-        background: #FAF8F4 !important;
-        padding: 0 !important;
-    }
-    
-    /* Verdict card - big, clear, first thing you see */
-    .verdict-card {
-        padding: 28px 24px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-    }
-    .verdict-block {
-        background: linear-gradient(135deg, #FFF5F5 0%, #FAF8F4 100%);
-        border-left: 5px solid #dc3545;
-    }
-    .verdict-review {
-        background: linear-gradient(135deg, #FFFBF0 0%, #FAF8F4 100%);
-        border-left: 5px solid #CD8F7A;
-    }
-    .verdict-pass {
-        background: linear-gradient(135deg, #F0FFF4 0%, #FAF8F4 100%);
-        border-left: 5px solid #28a745;
-    }
-    
-    /* Findings - clean list, not cards */
-    .finding-item {
-        padding: 16px 0;
-        border-bottom: 1px solid #E7DCCE;
-    }
-    .finding-item:last-child {
-        border-bottom: none;
-    }
-    
-    /* Collapsible details - hidden until asked */
-    details {
-        margin-top: 16px;
-    }
-    details summary {
-        color: #A89F91 !important;
-        cursor: pointer !important;
-        font-size: 0.85em !important;
-        padding: 8px 0 !important;
-    }
-    details summary:hover {
-        color: #CD8F7A !important;
-    }
-    
-    /* Footer - quiet */
-    .footer {
-        text-align: center;
-        padding: 32px 0;
-        margin-top: 48px;
-        border-top: 1px solid #E7DCCE;
-    }
-    .footer a {
-        color: #CD8F7A;
-        text-decoration: none;
-    }
-    .footer p {
-        font-size: 0.8em !important;
-        color: #A89F91 !important;
-    }
-    """
+/* =================================================================
+   DARK SPINE + LIGHT CANVAS
+   Rule: Dark = input/focus | Light = results/explanation
+   Rule: If it's clickable, it must look clickable
+   ================================================================= */
+
+:root {
+  /* Light canvas (Ivory mode) */
+  --bg: #FAF8F4;
+  --panel: #E7DCCE;
+  --panel2: #D8C5B2;
+  --text: #2A2926;
+  --text2: #1B1A18;
+  --accent: #CD8F7A;
+  --gold: #DCCCB3;
+
+  /* Dark spine */
+  --spine: #1B1A18;
+  --spine2: #2A2926;
+  --spineText: #FAF8F4;
+
+  /* UI tokens */
+  --radius: 18px;
+  --radiusSm: 12px;
+  --border: rgba(42,41,38,0.12);
+  --shadow: 0 10px 30px rgba(27,26,24,0.10);
+}
+
+/* Noir mode */
+body[data-theme="noir"] {
+  --bg: #1B1A18;
+  --panel: #2A2926;
+  --panel2: #2A2926;
+  --text: #FAF8F4;
+  --text2: #FAF8F4;
+  --border: rgba(250,248,244,0.14);
+  --shadow: 0 12px 36px rgba(0,0,0,0.35);
+  --spine: #121110;
+  --spine2: #1B1A18;
+}
+
+/* Page */
+.gradio-container {
+  background: var(--bg) !important;
+  color: var(--text2) !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Header */
+#brand_header {
+  text-align: center;
+  padding: 16px 0 24px 0;
+}
+#brand_title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2em;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+}
+#brand_subtitle {
+  font-size: 0.95em;
+  color: rgba(107, 101, 96, 0.85);
+  margin-top: 6px;
+}
+body[data-theme="noir"] #brand_subtitle {
+  color: rgba(250,248,244,0.6);
+}
+
+/* Theme toggle pill */
+#mode_toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+#mode_toggle .wrap {
+  background: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 999px !important;
+  padding: 4px 6px !important;
+}
+#mode_toggle label {
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  font-weight: 600 !important;
+  font-size: 0.85em !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+#mode_toggle input:checked + label {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+}
+body[data-theme="noir"] #mode_toggle .wrap {
+  background: var(--spine2) !important;
+}
+
+/* Two-panel layout */
+#shell {
+  gap: 0 !important;
+}
+
+/* LEFT: Dark spine */
+#left_spine {
+  background: var(--spine) !important;
+  border-radius: var(--radius) 0 0 var(--radius) !important;
+  padding: 24px !important;
+  min-height: 520px !important;
+  border: none !important;
+}
+#left_spine .block, #left_spine .form {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Spine labels */
+.spine_label {
+  color: rgba(250,248,244,0.6);
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.spine_title {
+  color: var(--spineText);
+  font-weight: 600;
+  font-size: 1em;
+  margin-bottom: 12px;
+}
+
+/* Code editor in spine */
+#left_spine textarea, #left_spine .cm-editor {
+  background: var(--spine2) !important;
+  color: var(--spineText) !important;
+  border: 1px solid rgba(250,248,244,0.1) !important;
+  border-radius: var(--radiusSm) !important;
+  font-family: 'JetBrains Mono', ui-monospace, monospace !important;
+  font-size: 0.9em !important;
+  min-height: 300px !important;
+}
+#left_spine textarea:focus, #left_spine .cm-editor.cm-focused {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(205,143,122,0.3) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Primary button */
+#review_btn {
+  margin-top: 16px !important;
+}
+#review_btn button {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 14px 24px !important;
+  font-weight: 600 !important;
+  font-size: 1em !important;
+  width: 100% !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+#review_btn button:hover {
+  filter: brightness(0.92) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Sample button */
+#sample_btn button {
+  background: transparent !important;
+  color: rgba(250,248,244,0.85) !important;
+  border: 1px solid rgba(250,248,244,0.2) !important;
+  border-radius: 14px !important;
+  padding: 10px 16px !important;
+  font-size: 0.9em !important;
+}
+#sample_btn button:hover {
+  background: rgba(250,248,244,0.08) !important;
+}
+
+/* Filename input */
+#filename_box input {
+  background: rgba(250,248,244,0.06) !important;
+  color: var(--spineText) !important;
+  border: 1px solid rgba(250,248,244,0.15) !important;
+  border-radius: var(--radiusSm) !important;
+  padding: 10px 14px !important;
+}
+#filename_box input::placeholder {
+  color: rgba(250,248,244,0.4) !important;
+}
+#filename_box label {
+  color: rgba(250,248,244,0.7) !important;
+  font-size: 0.85em !important;
+}
+
+/* Customize accordion - real affordance */
+#customize_acc {
+  margin-top: 16px !important;
+  background: rgba(250,248,244,0.04) !important;
+  border: 1px solid rgba(250,248,244,0.15) !important;
+  border-radius: var(--radiusSm) !important;
+}
+#customize_acc .label-wrap {
+  color: rgba(250,248,244,0.9) !important;
+  font-weight: 600 !important;
+  padding: 12px 14px !important;
+}
+#customize_acc .label-wrap:hover {
+  background: rgba(250,248,244,0.06) !important;
+}
+#customize_acc .icon {
+  color: rgba(250,248,244,0.6) !important;
+}
+#customize_acc .wrap {
+  padding: 0 14px 14px 14px !important;
+}
+#customize_acc label {
+  color: rgba(250,248,244,0.75) !important;
+  font-size: 0.9em !important;
+}
+#customize_acc input[type="checkbox"] {
+  accent-color: var(--accent) !important;
+}
+
+/* RIGHT: Light results panel */
+#right_panel {
+  background: rgba(231,220,206,0.35) !important;
+  border: 1px solid var(--border) !important;
+  border-left: none !important;
+  border-radius: 0 var(--radius) var(--radius) 0 !important;
+  padding: 24px !important;
+  min-height: 520px !important;
+}
+body[data-theme="noir"] #right_panel {
+  background: rgba(42,41,38,0.5) !important;
+}
+#right_panel .block, #right_panel .form {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Right panel labels */
+.results_label {
+  color: rgba(27,26,24,0.55);
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.results_title {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 1em;
+  margin-bottom: 16px;
+}
+body[data-theme="noir"] .results_label {
+  color: rgba(250,248,244,0.5);
+}
+body[data-theme="noir"] .results_title {
+  color: var(--text);
+}
+
+/* Empty state */
+#empty_state {
+  background: rgba(250,248,244,0.7);
+  border: 1px dashed rgba(42,41,38,0.18);
+  border-radius: var(--radiusSm);
+  padding: 40px 24px;
+  text-align: center;
+}
+#empty_state .empty_title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+#empty_state .empty_text {
+  color: rgba(27,26,24,0.6);
+  font-size: 0.9em;
+}
+body[data-theme="noir"] #empty_state {
+  background: rgba(42,41,38,0.6);
+  border-color: rgba(250,248,244,0.12);
+}
+body[data-theme="noir"] #empty_state .empty_title {
+  color: var(--text);
+}
+body[data-theme="noir"] #empty_state .empty_text {
+  color: rgba(250,248,244,0.6);
+}
+
+/* Verdict card */
+#verdict_card {
+  background: rgba(250,248,244,0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusSm);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+body[data-theme="noir"] #verdict_card {
+  background: rgba(42,41,38,0.7);
+}
+
+/* Verdict pill */
+.verdict_pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.verdict_pill.block { background: rgba(220,53,69,0.15); color: #dc3545; }
+.verdict_pill.review { background: rgba(205,143,122,0.2); color: #B87D6A; }
+.verdict_pill.pass { background: rgba(40,167,69,0.15); color: #28a745; }
+.verdict_dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.verdict_dot.block { background: #dc3545; }
+.verdict_dot.review { background: var(--accent); }
+.verdict_dot.pass { background: #28a745; }
+
+/* Tabs */
+#right_panel .tabs {
+  margin-top: 8px;
+}
+#right_panel .tab-nav button {
+  color: var(--text) !important;
+  font-weight: 500 !important;
+  border-radius: var(--radiusSm) var(--radiusSm) 0 0 !important;
+}
+#right_panel .tab-nav button.selected {
+  background: rgba(250,248,244,0.6) !important;
+}
+body[data-theme="noir"] #right_panel .tab-nav button.selected {
+  background: rgba(42,41,38,0.8) !important;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 24px 0;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.footer p {
+  font-size: 0.8em;
+  color: rgba(107,101,96,0.7);
+}
+body[data-theme="noir"] .footer p {
+  color: rgba(250,248,244,0.5);
+}
+"""
+
+# Sample code for demo
+SAMPLE_CODE = '''def chat(user_input):
+    """Simple chat function with potential prompt injection risk."""
+    prompt = f"You are a helpful assistant. User says: {user_input}"
+    return llm.generate(prompt)
+
+def get_user(user_id):
+    """Fetch user from database - potential SQL injection."""
+    query = f"SELECT * FROM users WHERE id = {user_id}"
+    return db.execute(query)
+'''
+
+
+def load_sample():
+    """Load sample vulnerable code for demo."""
+    return SAMPLE_CODE, "app.py"
+
+
+def set_theme(mode: str):
+    """Return JS to set theme on body element."""
+    theme = "noir" if mode.lower() == "noir" else "light"
+    return f'<script>document.body.dataset.theme="{theme}";</script>'
+
 
 with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
-    
-    # Minimal header - not competing with content
-    gr.HTML("""
-    <div style="padding: 20px 0 32px 0; text-align: center;">
-        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.8em; font-weight: 500; color: #2A2926; margin: 0;">
-            Code Review Agent
-        </h1>
-    </div>
-    """)
 
-    with gr.Row(equal_height=False):
-        
-        # =====================================================
-        # LEFT SIDE = "Give me something"
-        # Rule: One obvious starting point
-        # Rule: Code input is visually dominant
-        # =====================================================
-        with gr.Column(scale=1):
-            
-            # Code input - THE main thing
-            gr.HTML("<p style='font-size: 0.85em; color: #A89F91; margin-bottom: 8px;'>Paste your code here. We'll take a careful look before anything ships.</p>")
-            code = gr.Code(
+    # Header
+    gr.HTML('''
+    <div id="brand_header">
+        <div id="brand_title">Code Review Agent</div>
+        <div id="brand_subtitle">Judgment-aware security analysis for AI-enabled systems</div>
+    </div>
+    ''')
+
+    # Theme toggle (Ivory / Noir)
+    with gr.Row():
+        with gr.Column():
+            theme_mode = gr.Radio(
+                choices=["Ivory", "Noir"],
+                value="Ivory",
                 label="",
+                elem_id="mode_toggle",
+                interactive=True
+            )
+            theme_js = gr.HTML("")
+
+    theme_mode.change(fn=set_theme, inputs=theme_mode, outputs=theme_js)
+
+    # Main layout: Dark spine (left) + Light results (right)
+    with gr.Row(elem_id="shell", equal_height=True):
+
+        # =====================================================
+        # LEFT: DARK SPINE - "Give me something"
+        # =====================================================
+        with gr.Column(scale=4, elem_id="left_spine"):
+
+            gr.HTML('<div class="spine_label">Step 1</div><div class="spine_title">Paste your code</div>')
+
+            code = gr.Code(
+                value="",
                 language="python",
-                lines=18,
-                show_label=False,
-                elem_classes=["code-input"]
+                label="",
+                lines=14,
+                show_label=False
             )
-            
-            # THE button - unmissable, directly under code
-            btn = gr.Button(
-                "Review this code",
-                variant="primary",
-                size="lg",
-                elem_classes=["primary-btn"]
+
+            gr.HTML('<div class="spine_label" style="margin-top: 16px;">Step 2</div>')
+
+            with gr.Row():
+                btn = gr.Button("Review this code", elem_id="review_btn", scale=3)
+                sample_btn = gr.Button("Try example", elem_id="sample_btn", scale=2)
+
+            ctx = gr.Textbox(
+                label="Filename (optional)",
+                placeholder="e.g., app.py",
+                lines=1,
+                elem_id="filename_box"
             )
-            
-            # Options - collapsed/hidden until needed
-            with gr.Accordion("Customize review", open=False):
-                ctx = gr.Textbox(
-                    label="Filename",
-                    placeholder="e.g., app.py",
-                    lines=1,
-                    show_label=True
-                )
-                gr.HTML("<p style='font-size: 0.8em; color: #A89F91; margin: 12px 0 8px 0;'>What to check</p>")
+
+            with gr.Accordion("Customize review", open=False, elem_id="customize_acc"):
+                gr.HTML('<p style="color: rgba(250,248,244,0.6); font-size: 0.85em; margin-bottom: 12px;">Choose what to check. Beginners can leave this alone.</p>')
                 with gr.Row():
                     sec = gr.Checkbox(label="Security", value=True)
                     comp = gr.Checkbox(label="Compliance", value=True)
                 with gr.Row():
                     logic = gr.Checkbox(label="Logic", value=False)
                     perf = gr.Checkbox(label="Performance", value=False)
-        
-        # =====================================================
-        # RIGHT SIDE = "Here's what I found"
-        # Rule: Empty on purpose before analysis
-        # Rule: Layout transforms when results appear
-        # =====================================================
-        with gr.Column(scale=1):
-            
-            # Summary - verdict first, big and clear
-            summ = gr.HTML(
-                value="""
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 380px; color: #A89F91; text-align: center; padding: 40px;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D8C5B2" stroke-width="1.5" style="margin-bottom: 16px;">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    <p style="font-size: 1em; color: #6B6560; margin: 0 0 8px 0;">
-                        Paste code on the left
-                    </p>
-                    <p style="font-size: 0.85em; color: #A89F91; margin: 0;">
-                        Click "Review this code" to begin
-                    </p>
-                </div>
-                """,
-                elem_classes=["results-container"]
-            )
-            
-            # Details - appears after results, in order:
-            # 1. Verdict (in summ above)
-            # 2. Explanation + Findings (det below)
-            # 3. Advanced (collapsed in det)
-            det = gr.Markdown(elem_classes=["results-container"])
 
-    # Footer - quiet, doesn't compete
-    gr.HTML("""
+        # =====================================================
+        # RIGHT: LIGHT PANEL - "Here's what I found"
+        # =====================================================
+        with gr.Column(scale=6, elem_id="right_panel"):
+
+            gr.HTML('<div class="results_label">Step 3</div><div class="results_title">Results</div>')
+
+            empty_state = gr.HTML('''
+            <div id="empty_state">
+                <div class="empty_title">Your review will show up here</div>
+                <div class="empty_text">Paste code on the left and click <strong>Review this code</strong></div>
+            </div>
+            ''')
+
+            summ = gr.HTML("", elem_id="verdict_card_container")
+
+            with gr.Tabs():
+                with gr.Tab("Overview"):
+                    det = gr.Markdown("")
+                with gr.Tab("Fixes"):
+                    fixes_tab = gr.Markdown("*Suggested fixes will appear after review*")
+                with gr.Tab("Advanced"):
+                    advanced_tab = gr.Markdown("*Decision records and audit data will appear after review*")
+
+    # Footer
+    gr.HTML('''
     <div class="footer">
-        <p style="margin: 0;">
+        <p>
             <a href="https://github.com/adarian-dewberry/code-review-agent">GitHub</a>
-            <span style="color: #D8C5B2; margin: 0 12px;">·</span>
+            <span style="margin: 0 12px; opacity: 0.4;">·</span>
             Human review always recommended
         </p>
     </div>
-    """)
+    ''')
+
+    # Wire up sample button
+    sample_btn.click(fn=load_sample, outputs=[code, ctx])
+
+    # Wire up review button - hide empty state when results arrive
+    def run_and_clear(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val):
+        summ_result, det_result = review_code(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val)
+        # Hide empty state by returning empty string
+        return "", summ_result, det_result
 
     btn.click(
-        review_code, [code, sec, comp, logic, perf, ctx], [summ, det], api_name="review"
+        fn=run_and_clear,
+        inputs=[code, sec, comp, logic, perf, ctx],
+        outputs=[empty_state, summ, det],
+        api_name="review"
     )
 
 if __name__ == "__main__":
