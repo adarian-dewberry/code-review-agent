@@ -1,7 +1,8 @@
 """
-Code Review Agent - Multi-pass AI code review
+Code Review Agent - Multi-pass AI code review with structured findings
 """
 
+import json
 import os
 import re
 import gradio as gr
@@ -12,30 +13,71 @@ import httpx
 ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 MODEL = "claude-sonnet-4-20250514"
 
-PROMPTS = {
-    "security": """You are a security engineer. Review for SQL injection, prompt injection, data leaks, auth bypass.
-Format: ## CRITICAL or ## HIGH with issue, risk, and fix.""",
-    "compliance": """You are a GRC engineer. Review for GDPR/CCPA violations, missing audit trails, PII exposure.
-Format: ## CRITICAL or ## HIGH with issue, regulation, and fix.""",
-    "logic": """You are a software engineer. Review for unhandled exceptions, null pointers, edge cases.
-Format: ## CRITICAL or ## HIGH with issue, failure scenario, and fix.""",
-    "performance": """You are a performance engineer. Review for N+1 queries, memory leaks, inefficient algorithms.
-Format: ## CRITICAL or ## HIGH with issue, impact, and fix.""",
+# Structured prompt with JSON schema for consistent output
+SYSTEM_PROMPT = """You are an expert code reviewer. Analyze code and return findings as JSON.
+
+<output_schema>
+{
+  "findings": [
+    {
+      "id": "unique-id",
+      "title": "Brief issue title",
+      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+      "confidence": 0.0-1.0,
+      "tags": ["security", "compliance", "logic", "performance"],
+      "line": 123,
+      "snippet": "3 lines of code around the issue",
+      "description": "What the issue is",
+      "impact": "Why it matters",
+      "recommendation": "Specific fix with code example"
+    }
+  ]
+}
+</output_schema>
+
+<rules>
+1. DEDUPE: One finding per root cause. Use tags array for cross-cutting concerns.
+2. COMPLIANCE: Say "Potential exposure → implement [control]" NOT "violated [regulation]"
+3. EVIDENCE: Always include line number and 3-line code snippet
+4. CONFIDENCE: Rate 0.0-1.0 based on certainty (context-dependent issues get lower scores)
+5. FIXES: Provide LLM-specific fixes (use XML delimiters, schema validation, etc.)
+</rules>"""
+
+CATEGORY_PROMPTS = {
+    "security": """Focus on: SQL injection, command injection, XSS, SSRF, path traversal, 
+auth bypass, secrets exposure, insecure deserialization, prompt injection.""",
+    "compliance": """Focus on: PII exposure, missing consent, audit trail gaps, data retention,
+encryption at rest/transit. Suggest CONTROLS not violations.""",
+    "logic": """Focus on: Null/undefined handling, race conditions, off-by-one errors,
+unhandled exceptions, infinite loops, resource leaks.""",
+    "performance": """Focus on: N+1 queries, unbounded loops, memory leaks, blocking I/O,
+missing indexes, inefficient algorithms, cache misses.""",
 }
 
 
+def parse_findings(text):
+    """Extract JSON findings from LLM response."""
+    # Try to find JSON in the response
+    json_match = re.search(r'\{[\s\S]*"findings"[\s\S]*\}', text)
+    if json_match:
+        try:
+            return json.loads(json_match.group())
+        except json.JSONDecodeError:
+            pass
+    return {"findings": []}
+
+
 def review_code(code, sec, comp, logic, perf, ctx=""):
-    """Run multi-pass code review."""
+    """Run multi-pass code review with structured output."""
     if not code or not code.strip():
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>",
             "",
         )
 
-    # Input size validation (prevent API token limit issues)
     if len(code) > 50000:
         return (
-            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Please limit code to 50,000 characters.</p></div>",
+            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Please limit to 50,000 characters.</p></div>",
             "",
         )
 
@@ -62,45 +104,95 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
         cats.append("performance")
 
     try:
-        # Create client with explicit timeout and HTTP/2 disabled (fixes some HF connectivity issues)
         http_client = httpx.Client(
-            timeout=httpx.Timeout(60.0, connect=30.0),
+            timeout=httpx.Timeout(90.0, connect=30.0),
             http2=False,
         )
         client = anthropic.Anthropic(
             api_key=ANTHROPIC_API_KEY,
             http_client=http_client,
         )
-        results = []
-        total_crit, total_high = 0, 0
 
-        for cat in cats:
-            prompt = f"{PROMPTS[cat]}\n\n# Code\n```python\n{code}\n```"
-            resp = client.messages.create(
-                model=MODEL,
-                max_tokens=4000,
-                temperature=0.0,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            text = resp.content[0].text
-            crit = len(re.findall(r"^## CRITICAL", text, re.MULTILINE))
-            high = len(re.findall(r"^## HIGH", text, re.MULTILINE))
-            total_crit += crit
-            total_high += high
-            results.append({"cat": cat, "text": text, "crit": crit, "high": high})
+        # Build category focus list
+        focus_areas = "\n".join([f"- {cat.upper()}: {CATEGORY_PROMPTS[cat]}" for cat in cats])
+        
+        # Single consolidated prompt
+        user_prompt = f"""<code>
+{code}
+</code>
 
-        if total_crit > 0:
-            rec, color, bg = "🚫 DO NOT MERGE", "#dc3545", "#fff5f5"
-        elif total_high > 3:
-            rec, color, bg = "⚠️ CAUTION", "#fd7e14", "#fff9e6"
+<context>
+File: {ctx if ctx else "unknown"}
+Categories to review: {", ".join(cats)}
+</context>
+
+<focus_areas>
+{focus_areas}
+</focus_areas>
+
+Analyze the code and return findings as JSON per the schema. Include line numbers and 3-line snippets."""
+
+        resp = client.messages.create(
+            model=MODEL,
+            max_tokens=4000,
+            temperature=0.0,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+        
+        result = parse_findings(resp.content[0].text)
+        findings = result.get("findings", [])
+        
+        # Count by severity and confidence
+        block_findings = [f for f in findings if f.get("severity") in ["CRITICAL", "HIGH"] and f.get("confidence", 0) >= 0.8]
+        warn_findings = [f for f in findings if f.get("severity") in ["CRITICAL", "HIGH"] and f.get("confidence", 0) < 0.8]
+        
+        # Decision logic: 0.8+ confidence threshold for BLOCK
+        if any(f.get("severity") == "CRITICAL" and f.get("confidence", 0) >= 0.8 for f in findings):
+            rec, color, bg = "🚫 BLOCK", "#dc3545", "#fff5f5"
+        elif len(block_findings) > 0:
+            rec, color, bg = "⚠️ REVIEW REQUIRED", "#fd7e14", "#fff9e6"
+        elif len(warn_findings) > 0:
+            rec, color, bg = "⚡ CAUTION", "#ffc107", "#fffde6"
         else:
             rec, color, bg = "✅ APPROVED", "#28a745", "#f0fff4"
 
-        summary = f"<div style='padding:20px;border-left:5px solid {color};background:{bg};border-radius:5px'><h2 style='color:{color}'>{rec}</h2><p>Critical: {total_crit} | High: {total_high}</p></div>"
+        # Summary HTML
+        summary = f"""<div style='padding:20px;border-left:5px solid {color};background:{bg};border-radius:5px'>
+<h2 style='color:{color};margin:0'>{rec}</h2>
+<p style='margin:10px 0 0 0'>High-confidence issues: {len(block_findings)} | Needs review: {len(warn_findings)} | Total: {len(findings)}</p>
+</div>"""
 
-        details = f"# Review Report\n\n**{rec}**\n\n---\n\n"
-        for r in results:
-            details += f"## {r['cat'].title()}\n\n{r['text']}\n\n---\n\n"
+        # Build detailed markdown report
+        details = f"# Code Review Report\n\n**Verdict: {rec}**\n\n---\n\n"
+        
+        if not findings:
+            details += "No issues found. ✨\n"
+        else:
+            for f in sorted(findings, key=lambda x: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(x.get("severity", "LOW"), 4), -x.get("confidence", 0))):
+                sev = f.get("severity", "UNKNOWN")
+                conf = f.get("confidence", 0)
+                conf_pct = int(conf * 100)
+                
+                # Severity badge colors
+                sev_colors = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}
+                badge = sev_colors.get(sev, "⚪")
+                
+                details += f"### {badge} {f.get('title', 'Issue')} [{sev}] ({conf_pct}% confidence)\n\n"
+                
+                if f.get("line"):
+                    details += f"**Line {f.get('line')}**\n"
+                
+                if f.get("snippet"):
+                    details += f"```python\n{f.get('snippet')}\n```\n\n"
+                
+                if f.get("tags"):
+                    details += f"**Tags:** {', '.join(f.get('tags', []))}\n\n"
+                
+                details += f"**Issue:** {f.get('description', 'N/A')}\n\n"
+                details += f"**Impact:** {f.get('impact', 'N/A')}\n\n"
+                details += f"**Recommendation:**\n{f.get('recommendation', 'N/A')}\n\n"
+                details += "---\n\n"
 
         return summary, details
 
