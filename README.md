@@ -27,12 +27,20 @@ LLMs (Claude, ChatGPT) are excellent at generating code quickly. But they miss:
 
 ### Installation
 ```bash
-# Clone repository
+# Clone repo
 git clone https://github.com/adariandewberry/code-review-agent.git
 cd code-review-agent
 
-# Install in development mode
-pip install -e .
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
+
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Set up pre-commit hooks
+pre-commit install
 
 # Set API key
 export ANTHROPIC_API_KEY=your_key_here

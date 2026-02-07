@@ -16,37 +16,30 @@ Complete guide for contributing to Code Review Agent.
 
 ## Setup
 
-### Prerequisites
-
-- Python 3.11+
-- Git
-- pip
-
-### Initial Setup
+### Clone & Install
 
 ```bash
-# Clone repository
+# Clone repo
 git clone https://github.com/adariandewberry/code-review-agent.git
 cd code-review-agent
 
 # Create virtual environment
 python3 -m venv .venv
-
-# Activate (macOS/Linux)
-source .venv/bin/activate
-
-# Activate (Windows PowerShell)
-.\.venv\Scripts\Activate.ps1
+source .venv/bin/activate  # macOS/Linux
+# .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 
 # Install with dev dependencies
 pip install -e ".[dev]"
 
 # Set up pre-commit hooks
 pre-commit install
-
-# Set API key
-export ANTHROPIC_API_KEY=sk-ant-...
 ```
+
+### Prerequisites
+
+- Python 3.11+
+- Git
+- pip
 
 ### Verify Installation
 
@@ -65,17 +58,19 @@ pytest --collect-only
 
 ## Running Tests
 
-### All Tests
-
+### All tests
 ```bash
 pytest
 ```
 
-### With Coverage Report
-
+### With coverage
 ```bash
 pytest --cov=code_review_agent --cov-report=html
-# Open htmlcov/index.html in browser
+```
+
+### Integration tests (calls real API)
+```bash
+pytest -m integration
 ```
 
 ### Specific Test File
@@ -90,23 +85,10 @@ pytest code_review_agent/tests/test_agent.py -v
 pytest code_review_agent/tests/test_agent.py::TestSecurityReview::test_detects_sql_injection -v
 ```
 
-### Test Categories
+### Unit tests only (no API calls)
 
 ```bash
-# Unit tests only (fast, no API calls)
 pytest -m "not integration"
-
-# Integration tests (calls Claude API - requires ANTHROPIC_API_KEY)
-pytest -m integration
-
-# Skip slow tests
-pytest -m "not slow"
-```
-
-### Watch Mode (Re-run on file changes)
-
-```bash
-pytest-watch
 ```
 
 ---
