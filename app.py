@@ -43,7 +43,12 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
         
         for cat in cats:
             prompt = f"{PROMPTS[cat]}\n\n# Code\n```python\n{code}\n```"
-            resp = client.messages.create(model=MODEL, max_tokens=4000, temperature=0.0, messages=[{"role": "user", "content": prompt}])
+            resp = client.messages.create(
+                model=MODEL,
+                max_tokens=4000,
+                temperature=0.0,
+                messages=[{"role": "user", "content": prompt}]
+            )
             text = resp.content[0].text
             crit = len(re.findall(r'^## CRITICAL', text, re.MULTILINE))
             high = len(re.findall(r'^## HIGH', text, re.MULTILINE))
@@ -66,8 +71,19 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
         
         return summary, details
     
+    except anthropic.AuthenticationError as e:
+        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Authentication Error</h3><p>Invalid API key. Check ANTHROPIC_API_KEY in Settings → Secrets.</p><p>Details: {str(e)}</p></div>", ""
+    
+    except anthropic.NotFoundError as e:
+        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>Model {MODEL} not available. Details: {str(e)}</p></div>", ""
+    
+    except anthropic.APIConnectionError as e:
+        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>Could not connect to Anthropic API. Details: {str(e)}</p></div>", ""
+    
     except Exception as e:
-        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>{str(e)}</p></div>", ""
+        import traceback
+        tb = traceback.format_exc()
+        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>{str(e)}</p><pre style='font-size:10px;overflow:auto'>{tb}</pre></div>", ""
 
 with gr.Blocks(title="Code Review Agent") as demo:
     gr.Markdown("# 🛡️ Code Review Agent\n\nMulti-pass AI code review. [GitHub](https://github.com/adarian-dewberry/code-review-agent)")
