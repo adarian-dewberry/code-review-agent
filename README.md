@@ -1,8 +1,6 @@
 <div align="center">
 
-<!-- TODO: Add branded header image here -->
-<!-- Suggested: Professional banner with "Code Review Agent" title, security icon, and tagline -->
-<!-- Tools: Canva, Figma, or Adobe Express | Dimensions: 1200x400px -->
+![Code Review Agent Header](docs/images/header.png)
 
 # Code Review Agent
 
