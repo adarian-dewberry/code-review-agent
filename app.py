@@ -108,6 +108,41 @@ EASTER_EGGS = {
 }
 
 
+# =============================================================================
+# FRANKIE - The Alaskan Malamute Loading Mascot
+# Rules:
+# - Frankie appears ONLY during processing (not on results, errors, or BLOCK)
+# - Frankie is calm, quiet, observant - not a dancing mascot
+# - One line at a time, rotated, no exclamation points
+# - Think: "Frankie is watching. Frankie is judging. Frankie is on your side."
+# =============================================================================
+
+FRANKIE_LINES = [
+    "Frankie is taking a look.",
+    "Frankie is checking the usual suspects.",
+    "Hang tight. Frankie doesn't rush.",
+    "Frankie has thoughts. One sec.",
+    "Frankie is being thorough. As always.",
+]
+
+
+def pick_frankie_line(run_id: str, last_line: str | None = None) -> str:
+    """
+    Deterministic pick based on run_id, avoids immediate repeats.
+    run_id can be timestamp-based, uuid, or hash of input.
+    """
+    import hashlib
+
+    h = hashlib.sha256(run_id.encode("utf-8")).hexdigest()
+    idx = int(h[:8], 16) % len(FRANKIE_LINES)
+    candidate = FRANKIE_LINES[idx]
+
+    if last_line and candidate == last_line:
+        candidate = FRANKIE_LINES[(idx + 1) % len(FRANKIE_LINES)]
+
+    return candidate
+
+
 def select_easter_egg(verdict: str, confidence: float, audience: str) -> str | None:
     """
     Selects an optional easter egg based on run context.
@@ -1054,6 +1089,96 @@ body[data-theme="noir"] #right_panel .tab-nav button.selected {
 body[data-theme="noir"] .footer p {
   color: rgba(250,248,244,0.5);
 }
+
+/* =================================================================
+   FRANKIE LOADER - Calm Alaskan Malamute loading mascot
+   Rules: Appears ONLY during processing, never on errors/results
+   ================================================================= */
+
+#frankie_loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  background: rgba(250,248,244,0.7);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusSm);
+}
+body[data-theme="noir"] #frankie_loader {
+  background: rgba(42,41,38,0.6);
+}
+
+.frankie_container {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+}
+
+/* Frankie silhouette - inline SVG malamute */
+.frankie_silhouette {
+  width: 100%;
+  height: 100%;
+  animation: frankieBreathe 2.4s ease-in-out infinite;
+}
+.frankie_silhouette svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Terracotta scan line effect */
+.frankie_scan {
+  position: absolute;
+  top: 0;
+  left: -20%;
+  width: 140%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(205,143,122,0),
+    rgba(205,143,122,0.25),
+    rgba(205,143,122,0)
+  );
+  animation: frankieScan 2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes frankieBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes frankieScan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.frankie_title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 1em;
+  margin-bottom: 6px;
+}
+
+.frankie_line {
+  color: rgba(107,101,96,0.85);
+  font-size: 0.9em;
+  font-style: italic;
+}
+body[data-theme="noir"] .frankie_line {
+  color: rgba(250,248,244,0.65);
+}
+
+.frankie_hint {
+  color: rgba(107,101,96,0.5);
+  font-size: 0.8em;
+  margin-top: 8px;
+}
+body[data-theme="noir"] .frankie_hint {
+  color: rgba(250,248,244,0.4);
+}
 """
 
 # Sample code for demo
@@ -1078,6 +1203,67 @@ def set_theme(mode: str):
     """Return JS to set theme on body element."""
     theme = "noir" if mode.lower() == "noir" else "light"
     return f'<script>document.body.dataset.theme="{theme}";</script>'
+
+
+def get_frankie_loader(run_id: str = "") -> str:
+    """
+    Generate Frankie loader HTML.
+    
+    Frankie appears ONLY when:
+    - Review is in progress
+    - Verdict is not yet determined
+    - No errors have occurred
+    
+    Frankie NEVER appears when:
+    - Verdict is BLOCK
+    - An error or crash occurs
+    - Results are visible
+    """
+    if not run_id:
+        run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+    
+    frankie_line = pick_frankie_line(run_id)
+    
+    # Inline SVG silhouette of Alaskan Malamute (based on user's design)
+    # Sitting side profile with terracotta collar
+    frankie_svg = '''
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Body silhouette -->
+      <path d="M75 85 C75 85 72 75 70 70 C68 65 65 60 60 58 C55 56 50 58 45 60 C40 62 35 65 32 70 C29 75 28 80 28 85 Z" fill="#2A2926"/>
+      <!-- Back and tail -->
+      <path d="M28 70 C25 65 22 60 20 55 C18 50 18 45 20 40 C22 35 26 32 30 30 C34 28 38 28 42 30 L42 35 C38 33 34 34 31 37 C28 40 27 45 28 50 C29 55 32 62 35 68 Z" fill="#2A2926"/>
+      <!-- Fluffy tail curl -->
+      <path d="M20 55 C15 52 12 48 10 42 C8 36 10 30 15 27 C20 24 26 26 28 30 C26 28 22 28 19 31 C16 34 15 39 17 44 C19 49 22 53 25 56 Z" fill="#2A2926"/>
+      <!-- Chest ruff -->
+      <path d="M60 58 C62 52 65 46 68 42 C71 38 75 36 78 38 C81 40 82 44 80 48 C78 52 74 56 70 60 Z" fill="#2A2926"/>
+      <!-- Neck and head -->
+      <path d="M68 42 C70 38 73 34 76 32 C79 30 82 30 84 32 C86 34 86 38 84 42 C82 46 78 48 74 48 C70 48 68 46 68 42 Z" fill="#2A2926"/>
+      <!-- Head detail -->
+      <path d="M84 32 C86 28 88 24 90 22 C92 20 94 20 95 22 C96 24 95 28 92 32 C89 36 86 38 84 38 C82 38 82 35 84 32 Z" fill="#2A2926"/>
+      <!-- Ears -->
+      <path d="M88 22 L92 12 L95 20 Z" fill="#2A2926"/>
+      <path d="M82 26 L78 16 L84 22 Z" fill="#2A2926"/>
+      <!-- Collar -->
+      <path d="M72 44 C74 42 77 41 80 42 C83 43 84 45 82 47 C80 49 77 49 74 48 C71 47 70 46 72 44 Z" fill="#CD8F7A" stroke="#CD8F7A" stroke-width="2"/>
+      <!-- Tag -->
+      <circle cx="77" cy="50" r="4" fill="#CD8F7A"/>
+      <!-- Front legs -->
+      <path d="M55 70 L56 85 L52 85 L51 72 Z" fill="#2A2926"/>
+      <path d="M62 68 L64 85 L60 85 L58 70 Z" fill="#2A2926"/>
+    </svg>
+    '''
+    
+    return f'''
+    <div id="frankie_loader">
+        <div class="frankie_container">
+            <div class="frankie_silhouette">{frankie_svg}</div>
+            <div class="frankie_scan"></div>
+        </div>
+        <div class="frankie_title">Reviewing your code</div>
+        <div class="frankie_line">{frankie_line}</div>
+        <div class="frankie_hint">This usually takes a few seconds.</div>
+    </div>
+    '''
 
 
 with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
