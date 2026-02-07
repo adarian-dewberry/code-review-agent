@@ -14,44 +14,65 @@ ANTHROPIC_API_KEY = (os.getenv("ANTHROPIC_API_KEY") or "").strip()
 MODEL = "claude-sonnet-4-20250514"
 
 # Structured prompt with JSON schema for consistent output
-SYSTEM_PROMPT = """You are an expert code reviewer. Analyze code and return findings as JSON.
+SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. Return findings as JSON.
 
 <output_schema>
 {
   "findings": [
     {
       "id": "unique-id",
+      "root_cause": "The underlying issue (group related findings)",
       "title": "Brief issue title",
       "severity": "CRITICAL|HIGH|MEDIUM|LOW",
       "confidence": 0.0-1.0,
       "tags": ["security", "compliance", "logic", "performance"],
-      "line": 123,
-      "snippet": "3 lines of code around the issue",
+      "location": "file.py:123",
+      "evidence": "exact vulnerable code with ^ caret pointing to issue",
       "description": "What the issue is",
-      "impact": "Why it matters",
-      "recommendation": "Specific fix with code example"
+      "impact": "Why it matters (context-specific, e.g., sqlite vs postgres)",
+      "recommendation": "Multi-step fix: 1) validate input 2) parameterize 3) handle errors"
     }
   ]
 }
 </output_schema>
 
 <rules>
-1. DEDUPE: One finding per root cause. Use tags array for cross-cutting concerns.
-2. COMPLIANCE: Say "Potential exposure → implement [control]" NOT "violated [regulation]"
-3. EVIDENCE: Always include line number and 3-line code snippet
-4. CONFIDENCE: Rate 0.0-1.0 based on certainty (context-dependent issues get lower scores)
-5. FIXES: Provide LLM-specific fixes (use XML delimiters, schema validation, etc.)
+1. DEDUPE: One finding per ROOT CAUSE. Use tags array for cross-cutting concerns.
+   Group related issues (e.g., "Untrusted input" covers SQLi + overexposure).
+
+2. EVIDENCE: Show exact line with caret (^) pointing to the vulnerability:
+   query = f"SELECT * FROM users WHERE id = {user_id}"
+                                          ^ untrusted input in SQL string
+
+3. COMPLIANCE: Use CONDITIONAL language for PII:
+   "If the users table contains PII, SELECT * increases exposure surface"
+   NOT "GDPR Article 5 violated"
+
+4. CONTEXT-SPECIFIC IMPACT:
+   - SQLite: "file locks, open handle limits, concurrency issues" (not "pool exhaustion")
+   - PostgreSQL/MySQL: "connection pool exhaustion, server resource drain"
+
+5. MULTI-STEP RECOMMENDATIONS:
+   For SQL injection: "1) Validate type: user_id = int(user_id) 2) Parameterize: cursor.execute('...WHERE id = ?', (user_id,)) 3) Handle errors: catch sqlite3.Error, log safely, return controlled error"
+
+6. EXCEPTION HANDLING: Always mention "don't leak internals to client"
+
+7. CONFIDENCE: 1.0 only for definite vulnerabilities. 0.7-0.9 for context-dependent issues.
 </rules>"""
 
 CATEGORY_PROMPTS = {
     "security": """Focus on: SQL injection, command injection, XSS, SSRF, path traversal, 
-auth bypass, secrets exposure, insecure deserialization, prompt injection.""",
+auth bypass, secrets exposure, insecure deserialization, prompt injection.
+For injection: recommend input validation + parameterization + error handling.""",
     "compliance": """Focus on: PII exposure, missing consent, audit trail gaps, data retention,
-encryption at rest/transit. Suggest CONTROLS not violations.""",
+encryption at rest/transit. Use CONDITIONAL language: "If table contains PII..."
+Suggest CONTROLS not violations.""",
     "logic": """Focus on: Null/undefined handling, race conditions, off-by-one errors,
-unhandled exceptions, infinite loops, resource leaks.""",
+unhandled exceptions, infinite loops, resource leaks.
+For errors: mention "don't leak internals" and "log safely without secrets".""",
     "performance": """Focus on: N+1 queries, unbounded loops, memory leaks, blocking I/O,
-missing indexes, inefficient algorithms, cache misses.""",
+missing indexes, inefficient algorithms, cache misses.
+Use DATABASE-SPECIFIC language (sqlite vs postgres vs mysql).""",
 }
 
 
@@ -169,29 +190,50 @@ Analyze the code and return findings as JSON per the schema. Include line number
         if not findings:
             details += "No issues found. ✨\n"
         else:
-            for f in sorted(findings, key=lambda x: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(x.get("severity", "LOW"), 4), -x.get("confidence", 0))):
-                sev = f.get("severity", "UNKNOWN")
-                conf = f.get("confidence", 0)
-                conf_pct = int(conf * 100)
+            # Group by root cause if available
+            root_causes = {}
+            for f in findings:
+                rc = f.get("root_cause", f.get("title", "Other"))
+                if rc not in root_causes:
+                    root_causes[rc] = []
+                root_causes[rc].append(f)
+            
+            for root_cause, items in root_causes.items():
+                # Sort items by severity
+                items = sorted(items, key=lambda x: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(x.get("severity", "LOW"), 4), -x.get("confidence", 0)))
                 
-                # Severity badge colors
+                # Root cause header
+                top_sev = items[0].get("severity", "MEDIUM")
                 sev_colors = {"CRITICAL": "🔴", "HIGH": "🟠", "MEDIUM": "🟡", "LOW": "🟢"}
-                badge = sev_colors.get(sev, "⚪")
+                badge = sev_colors.get(top_sev, "⚪")
                 
-                details += f"### {badge} {f.get('title', 'Issue')} [{sev}] ({conf_pct}% confidence)\n\n"
+                details += f"## {badge} Root Cause: {root_cause}\n\n"
                 
-                if f.get("line"):
-                    details += f"**Line {f.get('line')}**\n"
+                for f in items:
+                    sev = f.get("severity", "UNKNOWN")
+                    conf = f.get("confidence", 0)
+                    conf_pct = int(conf * 100)
+                    
+                    details += f"### {f.get('title', 'Issue')} [{sev}] ({conf_pct}% confidence)\n\n"
+                    
+                    # Location with file:line format
+                    location = f.get("location") or (f"Line {f.get('line')}" if f.get("line") else None)
+                    if location:
+                        details += f"**Location:** `{location}`\n\n"
+                    
+                    # Evidence with caret pointing to issue
+                    if f.get("evidence"):
+                        details += f"**Evidence:**\n```\n{f.get('evidence')}\n```\n\n"
+                    elif f.get("snippet"):
+                        details += f"```python\n{f.get('snippet')}\n```\n\n"
+                    
+                    if f.get("tags"):
+                        details += f"**Tags:** {', '.join(f.get('tags', []))}\n\n"
+                    
+                    details += f"**Issue:** {f.get('description', 'N/A')}\n\n"
+                    details += f"**Impact:** {f.get('impact', 'N/A')}\n\n"
+                    details += f"**Recommendation:**\n{f.get('recommendation', 'N/A')}\n\n"
                 
-                if f.get("snippet"):
-                    details += f"```python\n{f.get('snippet')}\n```\n\n"
-                
-                if f.get("tags"):
-                    details += f"**Tags:** {', '.join(f.get('tags', []))}\n\n"
-                
-                details += f"**Issue:** {f.get('description', 'N/A')}\n\n"
-                details += f"**Impact:** {f.get('impact', 'N/A')}\n\n"
-                details += f"**Recommendation:**\n{f.get('recommendation', 'N/A')}\n\n"
                 details += "---\n\n"
 
         return summary, details
