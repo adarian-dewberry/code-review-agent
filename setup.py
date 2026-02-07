@@ -17,7 +17,7 @@ setup(
     description="Automated code review agent for AI-powered development",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/adariandewberry/code-review-agent",
+    url="https://github.com/adarian-dewberry/code-review-agent",
     packages=find_packages(),
     include_package_data=True,
     package_data={

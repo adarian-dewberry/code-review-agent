@@ -433,7 +433,7 @@ code-review review --diff /tmp/changes.diff
 
 For issues:
 
-1. Check [GitHub Issues](https://github.com/adariandewberry/code-review-agent/issues)
+1. Check [GitHub Issues](https://github.com/adarian-dewberry/code-review-agent/issues)
 2. Review configuration: `config.yaml`
 3. Test locally: `code-review review test.py --format json`
 4. Check API key: `echo $ANTHROPIC_API_KEY`

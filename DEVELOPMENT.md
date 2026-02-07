@@ -20,7 +20,7 @@ Complete guide for contributing to Code Review Agent.
 
 ```bash
 # Clone repo
-git clone https://github.com/adariandewberry/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 
 # Create virtual environment
@@ -560,8 +560,8 @@ rm -rf .pytest_cache .mypy_cache __pycache__
 
 ## Getting Help
 
-1. Check existing [GitHub Issues](https://github.com/adariandewberry/code-review-agent/issues)
-2. Search [Discussions](https://github.com/adariandewberry/code-review-agent/discussions)
+1. Check existing [GitHub Issues](https://github.com/adarian-dewberry/code-review-agent/issues)
+2. Search [Discussions](https://github.com/adarian-dewberry/code-review-agent/discussions)
 3. Read [CONTRIBUTING.md](CONTRIBUTING.md)
 4. Ask in Pull Request comments
 

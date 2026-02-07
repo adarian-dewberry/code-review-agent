@@ -28,7 +28,7 @@ LLMs (Claude, ChatGPT) are excellent at generating code quickly. But they miss:
 ### Installation
 ```bash
 # Clone repo
-git clone https://github.com/adariandewberry/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 
 # Create virtual environment
