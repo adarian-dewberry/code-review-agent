@@ -6,6 +6,8 @@
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)
 
+> ⚠️ **Important**: Read the [DISCLAIMER.md](DISCLAIMER.md) before use. This tool does NOT replace professional security audits or legal compliance reviews.
+
 ## The Problem: The Security Bottleneck in Developer Workflows
 
 Modern development teams face a critical challenge:
@@ -333,9 +335,20 @@ flake8 code_review_agent tests
 mypy code_review_agent
 ```
 
-## License
+## License & Disclaimer
 
-MIT License - see LICENSE file for details
+**License**: [MIT License](LICENSE) - Free to use, modify, and distribute with attribution.
+
+**Disclaimer**: This tool is provided "AS IS" without warranties. It does NOT replace professional security audits, legal compliance reviews, or manual code review. 
+
+⚠️ **Read the full [DISCLAIMER.md](DISCLAIMER.md) before use.**
+
+**Key Points:**
+- AI models may produce false positives/negatives
+- Your code is sent to Anthropic's Claude API
+- No guarantee of regulatory compliance (GDPR, HIPAA, etc.)
+- Not a substitute for professional security assessments
+- Users are responsible for validating all findings
 
 ## Contributing
 
