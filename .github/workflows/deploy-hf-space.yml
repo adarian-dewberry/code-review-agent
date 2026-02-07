@@ -21,7 +21,7 @@ jobs:
           git config user.email "github-actions@github.com"
 
           # Hugging Face Space git remote (authenticated via token)
-          git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/adarian-dewberry/code-review-agent-demo
+          git remote add hf https://user:$HF_TOKEN@huggingface.co/spaces/adarian-dewberry/code-review-agent
 
           # Push your GitHub main branch to the Space
           git push hf main --force

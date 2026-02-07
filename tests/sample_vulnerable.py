@@ -5,8 +5,11 @@ DO NOT use this code in production.
 """
 
 import os
-import subprocess
+import pickle
+import random
 import sqlite3
+import subprocess
+
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -14,7 +17,7 @@ app = Flask(__name__)
 
 # VULN 1: SQL Injection (CWE-89)
 def get_user_by_id(user_id):
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
     query = f"SELECT * FROM users WHERE id={user_id}"  # Vulnerable
     cursor.execute(query)
@@ -38,21 +41,20 @@ DB_PASSWORD = "admin123"
 
 
 # VULN 5: Path traversal (CWE-22)
-@app.route('/download')
+@app.route("/download")
 def download_file():
-    filename = request.args.get('file')
-    return open(f"/uploads/{filename}", 'rb').read()  # Vulnerable
+    filename = request.args.get("file")
+    return open(f"/uploads/{filename}", "rb").read()  # Vulnerable
 
 
 # VULN 6: Unsafe deserialization (CWE-502)
-import pickle
 def load_data(data):
     return pickle.loads(data)  # Vulnerable
 
 
 # VULN 7: SQL Injection with concatenation (CWE-89)
 def search_users(keyword):
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect("users.db")
     cursor = conn.cursor()
     query = "SELECT * FROM users WHERE name LIKE '%" + keyword + "%'"  # Vulnerable
     cursor.execute(query)
@@ -65,19 +67,23 @@ def process_file(filename):
 
 
 # VULN 9: Weak random (CWE-330)
-import random
 def generate_token():
     return str(random.randint(100000, 999999))  # Weak for security
 
 
 # VULN 10: Missing HTTPS (CWE-319)
-@app.route('/login', methods=['POST'])
+def authenticate(username: str, password: str) -> bool:
+    """Dummy authentication function for demo purposes."""
+    return username == "admin" and password == "password"
+
+
+@app.route("/login", methods=["POST"])
 def login():
     # Should use HTTPS, validate in production
-    username = request.form['username']
-    password = request.form['password']
-    return authenticate(username, password)
+    username = request.form["username"]
+    password = request.form["password"]
+    return "Login successful" if authenticate(username, password) else "Login failed"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)  # Debug mode in production = vulnerability
