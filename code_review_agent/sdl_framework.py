@@ -25,12 +25,14 @@ SDL Phases (A1-A5):
 """
 
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
 class STRIDECategory(str, Enum):
     """STRIDE threat modeling categories."""
+
     SPOOFING = "Spoofing"
     TAMPERING = "Tampering"
     REPUDIATION = "Repudiation"
@@ -41,28 +43,23 @@ class STRIDECategory(str, Enum):
 
 class DREADScore(BaseModel):
     """DREAD risk scoring model (1-10 per dimension)."""
+
     damage: int = Field(ge=1, le=10, description="Severity of damage")
     reproducibility: int = Field(ge=1, le=10, description="Ease of reproduction")
     exploitability: int = Field(ge=1, le=10, description="Effort to exploit")
     affected_users: int = Field(ge=1, le=10, description="Number of impacted users")
     discoverability: int = Field(ge=1, le=10, description="Ease of discovery")
-    
+
     @property
     def total_score(self) -> int:
         """Calculate total DREAD score (5-50)."""
-        return (
-            self.damage + 
-            self.reproducibility + 
-            self.exploitability + 
-            self.affected_users + 
-            self.discoverability
-        )
-    
+        return self.damage + self.reproducibility + self.exploitability + self.affected_users + self.discoverability
+
     @property
     def average_score(self) -> float:
         """Calculate average DREAD score (1.0-10.0)."""
         return self.total_score / 5
-    
+
     @property
     def risk_level(self) -> str:
         """Determine risk level from DREAD score."""
@@ -79,6 +76,7 @@ class DREADScore(BaseModel):
 
 class SDLPhase(str, Enum):
     """SDL development phases."""
+
     A1_ASSESSMENT = "A1: Security Assessment"
     A2_THREAT_MODEL = "A2: Threat Modeling"
     A3_SECURE_CODING = "A3: Secure Coding"
@@ -88,6 +86,7 @@ class SDLPhase(str, Enum):
 
 class SecurityChampionRole(str, Enum):
     """Security Champion responsibilities."""
+
     ARCHITECT = "Security Architect"
     CHAMPION = "Security Champion"
     EVANGELIST = "Security Evangelist"
@@ -95,6 +94,7 @@ class SecurityChampionRole(str, Enum):
 
 class ThreatModel(BaseModel):
     """STRIDE threat with DREAD scoring."""
+
     stride_category: STRIDECategory
     description: str
     dread_score: DREADScore
@@ -102,7 +102,7 @@ class ThreatModel(BaseModel):
     mitigation: Optional[str] = None
     cwe_id: Optional[str] = None
     owasp_id: Optional[str] = None
-    
+
     @property
     def risk_priority(self) -> str:
         """Get risk priority from DREAD score."""
@@ -111,6 +111,7 @@ class ThreatModel(BaseModel):
 
 class SDLGateCheck(BaseModel):
     """SDL phase gate checklist item."""
+
     phase: SDLPhase
     check_name: str
     status: str = Field(default="PENDING")  # PENDING, PASS, FAIL
@@ -121,6 +122,7 @@ class SDLGateCheck(BaseModel):
 
 class BSIMMActivity(BaseModel):
     """BSIMM maturity model activity."""
+
     domain: str  # Governance, Intelligence, SSDL, Deployment
     practice: str  # e.g., "SM1.1: Publish process", "CP1.1: Perform code review"
     level: int = Field(ge=1, le=3, description="Maturity level 1-3")
@@ -130,6 +132,7 @@ class BSIMMActivity(BaseModel):
 
 class SecurityChampionChecklist(BaseModel):
     """Security Champion duties per SDL phase."""
+
     phase: SDLPhase
     architect_duties: List[str] = Field(default_factory=list)
     champion_duties: List[str] = Field(default_factory=list)
@@ -143,19 +146,19 @@ SDL_PHASE_GATES = {
             phase=SDLPhase.A1_ASSESSMENT,
             check_name="Security Requirements Defined",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A1_ASSESSMENT,
             check_name="Privacy Impact Assessment Complete",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A1_ASSESSMENT,
             check_name="Regulatory Compliance Mapped",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=False
+            blocker=False,
         ),
     ],
     SDLPhase.A2_THREAT_MODEL: [
@@ -163,19 +166,19 @@ SDL_PHASE_GATES = {
             phase=SDLPhase.A2_THREAT_MODEL,
             check_name="STRIDE Analysis Complete",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A2_THREAT_MODEL,
             check_name="Attack Surface Documented",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A2_THREAT_MODEL,
             check_name="DREAD Scores Assigned",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=False
+            blocker=False,
         ),
     ],
     SDLPhase.A3_SECURE_CODING: [
@@ -183,19 +186,19 @@ SDL_PHASE_GATES = {
             phase=SDLPhase.A3_SECURE_CODING,
             check_name="SAST Scans Pass (Zero Critical)",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A3_SECURE_CODING,
             check_name="SCA Dependency Check Pass",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A3_SECURE_CODING,
             check_name="Code Review Complete (Security Focus)",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=True
+            blocker=True,
         ),
     ],
     SDLPhase.A4_TESTING: [
@@ -203,19 +206,19 @@ SDL_PHASE_GATES = {
             phase=SDLPhase.A4_TESTING,
             check_name="DAST Scans Pass (Zero High)",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A4_TESTING,
             check_name="Penetration Test Complete",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A4_TESTING,
             check_name="Fuzz Testing Complete",
             responsible_role=SecurityChampionRole.CHAMPION,
-            blocker=False
+            blocker=False,
         ),
     ],
     SDLPhase.A5_RELEASE: [
@@ -223,19 +226,19 @@ SDL_PHASE_GATES = {
             phase=SDLPhase.A5_RELEASE,
             check_name="Security Sign-Off Obtained",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A5_RELEASE,
             check_name="Incident Response Plan Documented",
             responsible_role=SecurityChampionRole.ARCHITECT,
-            blocker=True
+            blocker=True,
         ),
         SDLGateCheck(
             phase=SDLPhase.A5_RELEASE,
             check_name="Security Runbook Published",
             responsible_role=SecurityChampionRole.EVANGELIST,
-            blocker=False
+            blocker=False,
         ),
     ],
 }
@@ -260,7 +263,7 @@ CHAMPION_CHECKLISTS = {
             "Train team on secure development practices",
             "Publish security coding guidelines",
             "Set up security Slack channel/wiki",
-        ]
+        ],
     ),
     SDLPhase.A2_THREAT_MODEL: SecurityChampionChecklist(
         phase=SDLPhase.A2_THREAT_MODEL,
@@ -279,7 +282,7 @@ CHAMPION_CHECKLISTS = {
             "Share threat modeling results with team",
             "Create threat model diagrams for documentation",
             "Conduct lunch-and-learn on threat modeling",
-        ]
+        ],
     ),
     SDLPhase.A3_SECURE_CODING: SecurityChampionChecklist(
         phase=SDLPhase.A3_SECURE_CODING,
@@ -298,7 +301,7 @@ CHAMPION_CHECKLISTS = {
             "Share secure coding examples and snippets",
             "Document common vulnerability patterns",
             "Organize security code review workshops",
-        ]
+        ],
     ),
     SDLPhase.A4_TESTING: SecurityChampionChecklist(
         phase=SDLPhase.A4_TESTING,
@@ -317,7 +320,7 @@ CHAMPION_CHECKLISTS = {
             "Document security testing procedures",
             "Share pentesting findings and lessons learned",
             "Create security testing checklist for team",
-        ]
+        ],
     ),
     SDLPhase.A5_RELEASE: SecurityChampionChecklist(
         phase=SDLPhase.A5_RELEASE,
@@ -336,7 +339,7 @@ CHAMPION_CHECKLISTS = {
             "Publish security release notes",
             "Conduct post-release security retrospective",
             "Share security wins and improvements",
-        ]
+        ],
     ),
 }
 

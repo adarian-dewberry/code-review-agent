@@ -13,20 +13,11 @@ from code_review_agent.security_squad import SecuritySquad
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="SDL Multi-Agent Security Squad (SAST+DAST+SCA+SDL Champion)"
-    )
+    parser = argparse.ArgumentParser(description="SDL Multi-Agent Security Squad (SAST+DAST+SCA+SDL Champion)")
     parser.add_argument("--file", required=True, help="Path to the file to analyze")
+    parser.add_argument("--sdl-full", action="store_true", help="Run full SDL analysis (SAST+DAST+SCA+SDL Champion)")
     parser.add_argument(
-        "--sdl-full",
-        action="store_true",
-        help="Run full SDL analysis (SAST+DAST+SCA+SDL Champion)"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["markdown", "json"],
-        default="markdown",
-        help="Output format (default: markdown)"
+        "--output", choices=["markdown", "json"], default="markdown", help="Output format (default: markdown)"
     )
     args = parser.parse_args()
 
@@ -36,10 +27,7 @@ def main() -> int:
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
-        print(
-            "Error: ANTHROPIC_API_KEY is not set. Set it to run SDL Champion analysis.",
-            file=sys.stderr
-        )
+        print("Error: ANTHROPIC_API_KEY is not set. Set it to run SDL Champion analysis.", file=sys.stderr)
         return 1
 
     file_path = Path(args.file)
@@ -53,6 +41,7 @@ def main() -> int:
 
     if args.output == "json":
         import json
+
         print(json.dumps(result, indent=2, default=str))
     else:
         print(result.get("threat_report", "No report generated"))
