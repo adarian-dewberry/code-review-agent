@@ -19,4 +19,4 @@ mkdocs==1.6.1
 mkdocs-material==9.5.39
 
 # Demo UI
-gradio>=4.0.0
+gradio>=5.0.0
