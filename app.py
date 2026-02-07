@@ -21,6 +21,7 @@ Format: ## CRITICAL or ## HIGH with issue, impact, and fix."""
 }
 
 def review_code(code, sec, comp, logic, perf, ctx=""):
+    """Run multi-pass code review."""
     if not code or not code.strip():
         return "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>", ""
     
@@ -81,9 +82,8 @@ def review_code(code, sec, comp, logic, perf, ctx=""):
         return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>Could not connect to Anthropic API. Details: {str(e)}</p></div>", ""
     
     except Exception as e:
-        import traceback
-        tb = traceback.format_exc()
-        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>{str(e)}</p><pre style='font-size:10px;overflow:auto'>{tb}</pre></div>", ""
+        # Don't expose traceback in production
+        return f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred. Please try again.</p><p><small>Error type: {type(e).__name__}</small></p></div>", ""
 
 with gr.Blocks(title="Code Review Agent") as demo:
     gr.Markdown("# 🛡️ Code Review Agent\n\nMulti-pass AI code review. [GitHub](https://github.com/adarian-dewberry/code-review-agent)")

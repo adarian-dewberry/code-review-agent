@@ -26,7 +26,8 @@ setup(
     install_requires=[
         "anthropic>=0.40.0",
         "pyyaml>=6.0",
-        "pydantic>=2.9.0",
+        "pydantic>=2.0.0",
+        "requests>=2.28.0",
     ],
     extras_require={
         "dev": [
@@ -47,7 +48,9 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
-    python_requires=">=3.11",
+    python_requires=">=3.10",
 )
