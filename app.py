@@ -1091,8 +1091,9 @@ body[data-theme="noir"] .footer p {
 }
 
 /* =================================================================
-   FRANKIE LOADER - Calm Alaskan Malamute loading mascot
+   FRANKIE LOADER - Animated Alaskan Malamute loading mascot
    Rules: Appears ONLY during processing, never on errors/results
+   Animation: Trotting in place with bouncing ball
    ================================================================= */
 
 #frankie_loader {
@@ -1112,47 +1113,97 @@ body[data-theme="noir"] #frankie_loader {
 
 .frankie_container {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 120px;
+  height: 80px;
   margin-bottom: 16px;
+  overflow: visible;
 }
 
 /* Frankie silhouette - inline SVG malamute */
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: frankieBreathe 2.4s ease-in-out infinite;
+  animation: frankieTrot 0.6s ease-in-out infinite;
 }
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
 }
 
-/* Terracotta scan line effect */
-.frankie_scan {
+/* Front legs animation */
+.frankie_silhouette svg .front-leg-1 {
+  transform-origin: 55px 60px;
+  animation: frankieLegFront1 0.6s ease-in-out infinite;
+}
+.frankie_silhouette svg .front-leg-2 {
+  transform-origin: 62px 58px;
+  animation: frankieLegFront2 0.6s ease-in-out infinite;
+}
+/* Back legs animation */
+.frankie_silhouette svg .back-leg-1 {
+  transform-origin: 25px 62px;
+  animation: frankieLegBack1 0.6s ease-in-out infinite;
+}
+.frankie_silhouette svg .back-leg-2 {
+  transform-origin: 32px 60px;
+  animation: frankieLegBack2 0.6s ease-in-out infinite;
+}
+/* Tail wagging */
+.frankie_silhouette svg .tail {
+  transform-origin: 15px 45px;
+  animation: frankieTailWag 0.4s ease-in-out infinite;
+}
+/* Ball bouncing */
+.frankie_silhouette svg .ball {
+  animation: frankieBallBounce 0.8s ease-in-out infinite;
+}
+
+/* Terracotta glow under Frankie */
+.frankie_glow {
   position: absolute;
-  top: 0;
-  left: -20%;
-  width: 140%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(205,143,122,0),
-    rgba(205,143,122,0.25),
-    rgba(205,143,122,0)
-  );
-  animation: frankieScan 2s linear infinite;
-  pointer-events: none;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(205,143,122,0.3), transparent 70%);
+  animation: frankieGlow 0.6s ease-in-out infinite;
 }
 
-@keyframes frankieBreathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+@keyframes frankieTrot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
-@keyframes frankieScan {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+@keyframes frankieLegFront1 {
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+}
+@keyframes frankieLegFront2 {
+  0%, 100% { transform: rotate(15deg); }
+  50% { transform: rotate(-15deg); }
+}
+@keyframes frankieLegBack1 {
+  0%, 100% { transform: rotate(12deg); }
+  50% { transform: rotate(-12deg); }
+}
+@keyframes frankieLegBack2 {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes frankieTailWag {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(8deg); }
+}
+@keyframes frankieBallBounce {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-12px) translateX(3px); }
+  50% { transform: translateY(0) translateX(6px); }
+  75% { transform: translateY(-8px) translateX(3px); }
+}
+@keyframes frankieGlow {
+  0%, 100% { opacity: 0.6; transform: translateX(-50%) scaleX(1); }
+  50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.1); }
 }
 
 .frankie_title {
@@ -1224,32 +1275,66 @@ def get_frankie_loader(run_id: str = "") -> str:
     
     frankie_line = pick_frankie_line(run_id)
     
-    # Inline SVG silhouette of Alaskan Malamute (based on user's design)
-    # Sitting side profile with terracotta collar
+    # Inline SVG of trotting Alaskan Malamute with ball
+    # Side profile in motion with animated legs, wagging tail, and bouncing ball
     frankie_svg = '''
-    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Body silhouette -->
-      <path d="M75 85 C75 85 72 75 70 70 C68 65 65 60 60 58 C55 56 50 58 45 60 C40 62 35 65 32 70 C29 75 28 80 28 85 Z" fill="#2A2926"/>
-      <!-- Back and tail -->
-      <path d="M28 70 C25 65 22 60 20 55 C18 50 18 45 20 40 C22 35 26 32 30 30 C34 28 38 28 42 30 L42 35 C38 33 34 34 31 37 C28 40 27 45 28 50 C29 55 32 62 35 68 Z" fill="#2A2926"/>
-      <!-- Fluffy tail curl -->
-      <path d="M20 55 C15 52 12 48 10 42 C8 36 10 30 15 27 C20 24 26 26 28 30 C26 28 22 28 19 31 C16 34 15 39 17 44 C19 49 22 53 25 56 Z" fill="#2A2926"/>
-      <!-- Chest ruff -->
-      <path d="M60 58 C62 52 65 46 68 42 C71 38 75 36 78 38 C81 40 82 44 80 48 C78 52 74 56 70 60 Z" fill="#2A2926"/>
-      <!-- Neck and head -->
-      <path d="M68 42 C70 38 73 34 76 32 C79 30 82 30 84 32 C86 34 86 38 84 42 C82 46 78 48 74 48 C70 48 68 46 68 42 Z" fill="#2A2926"/>
-      <!-- Head detail -->
-      <path d="M84 32 C86 28 88 24 90 22 C92 20 94 20 95 22 C96 24 95 28 92 32 C89 36 86 38 84 38 C82 38 82 35 84 32 Z" fill="#2A2926"/>
-      <!-- Ears -->
-      <path d="M88 22 L92 12 L95 20 Z" fill="#2A2926"/>
-      <path d="M82 26 L78 16 L84 22 Z" fill="#2A2926"/>
+    <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ball (terracotta, bouncing) -->
+      <circle class="ball" cx="125" cy="75" r="10" fill="#CD8F7A"/>
+      <ellipse class="ball" cx="125" cy="75" rx="10" ry="10" fill="#CD8F7A"/>
+      <path class="ball" d="M120 72 Q125 68 130 72 M120 78 Q125 82 130 78" stroke="#B87A65" stroke-width="1.5" fill="none"/>
+      
+      <!-- Body (horizontal for trotting) -->
+      <ellipse cx="55" cy="50" rx="28" ry="18" fill="#2A2926"/>
+      
+      <!-- Chest/front body -->
+      <ellipse cx="75" cy="48" rx="14" ry="14" fill="#2A2926"/>
+      
+      <!-- Fluffy chest ruff -->
+      <path d="M82 42 Q88 50 82 58 Q78 52 82 42" fill="#3D3B38"/>
+      
+      <!-- Neck -->
+      <path d="M80 38 L88 28 L92 32 L86 44 Z" fill="#2A2926"/>
+      
+      <!-- Head -->
+      <ellipse cx="94" cy="26" rx="12" ry="10" fill="#2A2926"/>
+      
+      <!-- Snout -->
+      <ellipse cx="104" cy="28" rx="8" ry="5" fill="#2A2926"/>
+      <ellipse cx="110" cy="27" rx="3" ry="2" fill="#1A1918"/>
+      
+      <!-- Ears (alert, perky) -->
+      <path d="M88 18 L84 6 L92 14 Z" fill="#2A2926"/>
+      <path d="M96 16 L100 4 L102 14 Z" fill="#2A2926"/>
+      <path d="M89 16 L86 10 L91 14 Z" fill="#3D3B38"/>
+      <path d="M97 14 L99 8 L100 13 Z" fill="#3D3B38"/>
+      
+      <!-- Eye -->
+      <circle cx="96" cy="24" r="2.5" fill="#1A1918"/>
+      <circle cx="97" cy="23" r="1" fill="#4A4845"/>
+      
       <!-- Collar -->
-      <path d="M72 44 C74 42 77 41 80 42 C83 43 84 45 82 47 C80 49 77 49 74 48 C71 47 70 46 72 44 Z" fill="#CD8F7A" stroke="#CD8F7A" stroke-width="2"/>
-      <!-- Tag -->
-      <circle cx="77" cy="50" r="4" fill="#CD8F7A"/>
-      <!-- Front legs -->
-      <path d="M55 70 L56 85 L52 85 L51 72 Z" fill="#2A2926"/>
-      <path d="M62 68 L64 85 L60 85 L58 70 Z" fill="#2A2926"/>
+      <path d="M84 36 Q88 34 92 36 Q92 40 88 42 Q84 40 84 36" fill="#CD8F7A"/>
+      <circle cx="88" cy="42" r="3" fill="#CD8F7A"/>
+      <circle cx="88" cy="42" r="1.5" fill="#B87A65"/>
+      
+      <!-- Tail (fluffy, wagging) -->
+      <path class="tail" d="M22 45 Q10 35 8 25 Q6 18 12 15 Q18 14 22 20 Q20 28 24 38" fill="#2A2926"/>
+      <path class="tail" d="M14 18 Q18 16 20 20 Q16 22 14 18" fill="#3D3B38"/>
+      
+      <!-- Back legs (animated) -->
+      <path class="back-leg-1" d="M28 58 L22 78 L18 90 L24 90 L30 78 L32 62" fill="#2A2926"/>
+      <path class="back-leg-2" d="M38 56 L42 75 L44 90 L50 90 L46 75 L40 58" fill="#2A2926"/>
+      
+      <!-- Front legs (animated) -->
+      <path class="front-leg-1" d="M68 58 L64 75 L62 90 L68 90 L72 75 L72 60" fill="#2A2926"/>
+      <path class="front-leg-2" d="M78 55 L82 72 L84 90 L90 90 L86 72 L80 56" fill="#2A2926"/>
+      
+      <!-- Paws (little detail) -->
+      <ellipse class="back-leg-1" cx="21" cy="90" rx="5" ry="3" fill="#2A2926"/>
+      <ellipse class="back-leg-2" cx="47" cy="90" rx="5" ry="3" fill="#2A2926"/>
+      <ellipse class="front-leg-1" cx="65" cy="90" rx="5" ry="3" fill="#2A2926"/>
+      <ellipse class="front-leg-2" cx="87" cy="90" rx="5" ry="3" fill="#2A2926"/>
     </svg>
     '''
     
@@ -1257,7 +1342,7 @@ def get_frankie_loader(run_id: str = "") -> str:
     <div id="frankie_loader">
         <div class="frankie_container">
             <div class="frankie_silhouette">{frankie_svg}</div>
-            <div class="frankie_scan"></div>
+            <div class="frankie_glow"></div>
         </div>
         <div class="frankie_title">Reviewing your code</div>
         <div class="frankie_line">{frankie_line}</div>
@@ -1368,14 +1453,20 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     # Wire up sample button
     sample_btn.click(fn=load_sample, outputs=[code, ctx])
 
-    # Wire up review button - hide empty state when results arrive
-    def run_and_clear(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val):
+    # Wire up review button - show Frankie during review, hide empty state when results arrive
+    def run_with_frankie(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val):
+        # First yield: show Frankie loader
+        frankie_html = get_frankie_loader()
+        yield "", frankie_html, "*Frankie is reviewing your code...*"
+        
+        # Run the actual review
         summ_result, det_result = review_code(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val)
-        # Hide empty state by returning empty string
-        return "", summ_result, det_result
+        
+        # Final yield: show results
+        yield "", summ_result, det_result
 
     btn.click(
-        fn=run_and_clear,
+        fn=run_with_frankie,
         inputs=[code, sec, comp, logic, perf, ctx],
         outputs=[empty_state, summ, det],
         api_name="review"
