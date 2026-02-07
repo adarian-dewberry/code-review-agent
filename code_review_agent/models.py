@@ -89,7 +89,7 @@ class ReviewSummary(BaseModel):
 
 
 class ReviewResult(BaseModel):
-    """Complete code review result."""
+    """Complete code review result with optional SDL metadata."""
     
     file_path: Optional[str] = None
     security: ReviewCategory
@@ -97,6 +97,7 @@ class ReviewResult(BaseModel):
     performance: ReviewCategory
     compliance: ReviewCategory
     summary: ReviewSummary
+    sdl_metadata: Optional[dict] = None  # Security Squad analysis results
     
     def to_markdown(self) -> str:
         """Format review as markdown report."""
@@ -176,5 +177,118 @@ class ReviewResult(BaseModel):
                                 lines.append(f"- Regulation: {issue.regulation_reference}")
                             
                             lines.append("")
+        
+        # SDL Multi-Agent Security Squad Results
+        if self.sdl_metadata:
+            lines.extend([
+                "---",
+                "",
+                "# SDL Multi-Agent Security Squad Analysis",
+                ""
+            ])
+            
+            # SDL Phase Status
+            if "sdl_status" in self.sdl_metadata:
+                sdl_status = self.sdl_metadata["sdl_status"]
+                lines.extend([
+                    "## SDL Phase Status",
+                    "",
+                    f"**Current Phase:** {sdl_status.get('current_phase', 'Unknown')}",
+                    f"**Recommendation:** {sdl_status.get('recommendation', 'N/A')}",
+                    ""
+                ])
+                
+                # Phase Gate Checklist
+                if "gate_checks" in sdl_status:
+                    lines.extend([
+                        "### Phase Gate Checklist",
+                        ""
+                    ])
+                    for check in sdl_status["gate_checks"]:
+                        status_icon = "✅" if check["status"] == "PASS" else "⏳"
+                        blocker_tag = " [BLOCKER]" if check["blocker"] else ""
+                        lines.append(f"{status_icon} **{check['check']}**{blocker_tag}")
+                        lines.append(f"   - Responsible: {check['responsible']}")
+                    lines.append("")
+                
+                # Security Champion Duties
+                if "champion_duties" in sdl_status:
+                    duties = sdl_status["champion_duties"]
+                    lines.extend([
+                        "### Security Champion Checklist",
+                        ""
+                    ])
+                    
+                    for role in ["architect", "champion", "evangelist"]:
+                        if duties.get(role):
+                            lines.append(f"#### {role.title()}")
+                            for duty in duties[role]:
+                                lines.append(f"- [ ] {duty}")
+                            lines.append("")
+
+                # SDL Phase Mapping Table
+                lines.extend([
+                    "### SDL Phase Mapping (A1–A5)",
+                    "",
+                    "| Phase | Focus | Output |",
+                    "|------|-------|--------|",
+                    "| A1: Security Assessment | Requirements & risk identification | Security requirements, PIA |",
+                    "| A2: Threat Modeling | STRIDE analysis | Threat model + DREAD scores |",
+                    "| A3: Secure Coding | SAST + code review | Secure implementation evidence |",
+                    "| A4: Security Testing | DAST + fuzzing | Test evidence & fixes |",
+                    "| A5: Security Release | Sign-off + monitoring | Release approval & runbook |",
+                    ""
+                ])
+            
+            # STRIDE Threat Report
+            if "threat_report" in self.sdl_metadata:
+                lines.extend([
+                    "## STRIDE/DREAD Threat Analysis",
+                    "",
+                    self.sdl_metadata["threat_report"]
+                ])
+
+            # BSIMM Maturity Dashboard
+            if "bsimm_dashboard" in self.sdl_metadata:
+                dashboard = self.sdl_metadata["bsimm_dashboard"]
+                lines.extend([
+                    "## BSIMM Maturity Dashboard",
+                    "",
+                    "### Domain Summary",
+                    "",
+                    "| Domain | Implemented | Total | Completion |",
+                    "|--------|-------------|-------|------------|",
+                ])
+                for domain, stats in dashboard.get("domain_summary", {}).items():
+                    lines.append(
+                        f"| {domain} | {stats.get('implemented', 0)} | {stats.get('total', 0)} | {stats.get('completion_percent', 0)}% |"
+                    )
+                lines.append("")
+
+                lines.extend([
+                    "### Activities",
+                    "",
+                    "| Domain | Practice | Level | Implemented |",
+                    "|--------|----------|-------|-------------|",
+                ])
+                for activity in dashboard.get("activities", []):
+                    implemented = "✅" if activity.get("implemented") else "⏳"
+                    lines.append(
+                        f"| {activity.get('domain')} | {activity.get('practice')} | L{activity.get('level')} | {implemented} |"
+                    )
+                lines.append("")
+            
+            # Agent Summary
+            if "agent_summary" in self.sdl_metadata:
+                summary = self.sdl_metadata["agent_summary"]
+                lines.extend([
+                    "## Multi-Agent Findings Summary",
+                    "",
+                    f"- **SAST Findings:** {summary.get('sast_findings', 0)}",
+                    f"- **DAST Findings:** {summary.get('dast_findings', 0)}",
+                    f"- **SCA Findings:** {summary.get('sca_findings', 0)}",
+                    f"- **Total Threats:** {summary.get('total_threats', 0)}",
+                    ""
+                ])
         
         return "\n".join(lines)

@@ -76,6 +76,12 @@ Examples:
         help="Output format (default: markdown)"
     )
     
+    parser.add_argument(
+        "--sdl-mode",
+        action="store_true",
+        help="Enable SDL Multi-Agent Security Squad (SAST+DAST+SCA+SDL Champion)"
+    )
+    
     args = parser.parse_args()
     
     # Load configuration
@@ -111,7 +117,7 @@ Examples:
         )
     
     # Run review
-    agent = CodeReviewAgent(config)
+    agent = CodeReviewAgent(config, enable_security_squad=args.sdl_mode)
     result = agent.review(code, str(file_path) if file_path else None)
     
     # Output results

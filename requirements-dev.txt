@@ -11,6 +11,8 @@ black==24.8.0
 flake8==7.1.1
 mypy==1.13.0
 isort==5.13.2
+ruff==0.7.4
+pre-commit==3.8.0
 
 # Documentation
 mkdocs==1.6.1

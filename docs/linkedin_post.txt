@@ -1,0 +1,20 @@
+SDL Multi-Agent Security Squad: STRIDE + DAST + CI/CD gates live. 🚀
+
+I just shipped an SDL Multi-Agent Security Squad that orchestrates SAST, DAST, SCA, and SDL phase gates in one pipeline.
+
+What’s included:
+✅ STRIDE threat modeling + DREAD risk scoring
+✅ SAST scans (Semgrep/Bandit)
+✅ DAST simulation + fuzzing checks
+✅ SCA dependency CVE checks
+✅ SDL phase gates (A1–A5) + Security Champion checklists
+✅ BSIMM maturity dashboard
+
+Why it matters:
+- Faster threat detection earlier in the SDLC
+- Clear risk prioritization with DREAD
+- Automated gating for CI/CD security compliance
+
+Next: live Streamlit demo + public benchmarks.
+
+#Security #SDL #AppSec #DevSecOps #SAST #DAST #SCA #STRIDE #DREAD #BSIMM #CI/CD

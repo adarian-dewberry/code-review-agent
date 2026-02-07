@@ -1,7 +1,9 @@
 """
-Core code review agent.
+Core code review agent with multi-agent security squad integration.
 
-Orchestrates multi-pass review using Claude API.
+Orchestrates:
+1. Traditional multi-pass LLM review (security, logic, performance, compliance)
+2. SDL Multi-Agent Security Squad (SAST, DAST, SCA, SDL Champion)
 """
 
 from pathlib import Path
@@ -11,6 +13,8 @@ import anthropic
 from .config import Config
 from .models import ReviewResult, ReviewCategory, ReviewSummary, ReviewRecommendation, Severity
 from .parsers import ReviewParser
+from .custom_rules import CustomRulesEngine
+from .security_squad import SecuritySquad
 
 
 class CodeReviewAgent:
@@ -24,7 +28,7 @@ class CodeReviewAgent:
     4. Compliance (GDPR, audit trails, data minimization)
     """
     
-    def __init__(self, config: Optional[Config] = None):
+    def __init__(self, config: Optional[Config] = None, enable_security_squad: bool = True):
         """Initialize agent with configuration."""
         
         self.config = config or Config.load()
@@ -32,6 +36,12 @@ class CodeReviewAgent:
         
         self.client = anthropic.Anthropic(api_key=self.config.anthropic_api_key)
         self.parser = ReviewParser()
+        self.custom_rules = CustomRulesEngine()  # Load custom organizational rules
+        
+        # Multi-agent security squad (optional)
+        self.enable_security_squad = enable_security_squad
+        if enable_security_squad:
+            self.security_squad = SecuritySquad(self.config.anthropic_api_key)
     
     def review(self, code: str, file_path: Optional[str] = None) -> ReviewResult:
         """
@@ -47,6 +57,9 @@ class CodeReviewAgent:
         
         categories = {}
         
+        # First, check custom organizational rules
+        custom_violations = self.custom_rules.check_code(code, file_path)
+        
         # Run enabled review passes
         for category in self.config.review.enabled_categories:
             if category == "security":
@@ -61,10 +74,23 @@ class CodeReviewAgent:
             elif category == "compliance":
                 categories["compliance"] = self._compliance_review(code, file_path)
         
+        # Inject custom rule violations into compliance category
+        if custom_violations:
+            if "compliance" not in categories:
+                categories["compliance"] = ReviewCategory(category="compliance")
+            
+            # Prepend custom violations to compliance issues
+            categories["compliance"].issues = custom_violations + categories["compliance"].issues
+        
         # Generate summary
         summary = self._generate_summary(categories)
         
-        return ReviewResult(
+        # Run Security Squad analysis (if enabled)
+        squad_analysis = None
+        if self.enable_security_squad:
+            squad_analysis = self.security_squad.analyze(code, file_path)
+        
+        result = ReviewResult(
             file_path=file_path,
             security=categories.get("security", ReviewCategory(category="security")),
             logic=categories.get("logic", ReviewCategory(category="logic")),
@@ -72,6 +98,12 @@ class CodeReviewAgent:
             compliance=categories.get("compliance", ReviewCategory(category="compliance")),
             summary=summary
         )
+        
+        # Attach SDL analysis as metadata if available
+        if squad_analysis:
+            result.sdl_metadata = squad_analysis
+        
+        return result
     
     def _security_review(self, code: str, file_path: Optional[str]) -> ReviewCategory:
         """Perform security-focused review pass."""

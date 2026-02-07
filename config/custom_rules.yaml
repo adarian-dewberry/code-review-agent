@@ -21,7 +21,7 @@ rules:
     description: "Hardcoded secrets should be stored in a secrets manager."
     match:
       regex:
-        - "(api_key|secret|token)\s*=\s*['\"][A-Za-z0-9_\-]{16,}['\"]"
+        - "(api_key|secret|token)\\s*=\\s*['\"][A-Za-z0-9_\\-]{16,}['\"]"
 
   - id: CR-003
     title: "Require parameterized SQL"
