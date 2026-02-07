@@ -103,7 +103,7 @@ with gr.Blocks(title="Code Review Agent") as demo:
             summ = gr.HTML(value="<p style='color:#666'>Results appear here</p>")
             det = gr.Markdown()
     
-    btn.click(review_code, [code, sec, comp, logic, perf, ctx], [summ, det])
+    btn.click(review_code, [code, sec, comp, logic, perf, ctx], [summ, det], api_name="review")
 
 if __name__ == "__main__":
     demo.launch()
