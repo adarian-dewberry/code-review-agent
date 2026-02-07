@@ -25,7 +25,14 @@ jobs:
             --exclude "**/*.pdf" \
             ./ hf_deploy/
 
-      - name: Push to Hugging Face Space
+      - name: Verify required HF files exist
+        run: |
+          echo "Checking for required Hugging Face files..."
+          test -f hf_deploy/README.md && echo "✓ README.md found" || (echo "✗ README.md missing!"; exit 1)
+          test -f hf_deploy/app.py && echo "✓ app.py found" || (echo "✗ app.py missing!"; exit 1)
+          test -f hf_deploy/requirements.txt && echo "✓ requirements.txt found" || (echo "✗ requirements.txt missing!"; exit 1)
+          echo "All required files present!"
+
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
