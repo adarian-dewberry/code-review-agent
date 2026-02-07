@@ -1250,12 +1250,6 @@ def load_sample():
     return SAMPLE_CODE, "app.py"
 
 
-def set_theme(mode: str):
-    """Return JS to set theme on body element."""
-    theme = "noir" if mode.lower() == "noir" else "light"
-    return f'<script>document.body.dataset.theme="{theme}";</script>'
-
-
 def get_frankie_loader(run_id: str = "") -> str:
     """
     Generate Frankie loader HTML.
@@ -1371,9 +1365,14 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 elem_id="mode_toggle",
                 interactive=True
             )
-            theme_js = gr.HTML("")
 
-    theme_mode.change(fn=set_theme, inputs=theme_mode, outputs=theme_js)
+    # Use js parameter - the function receives the radio value and sets theme
+    theme_mode.change(
+        fn=lambda x: None,
+        inputs=theme_mode,
+        outputs=None,
+        js="(mode) => { document.body.dataset.theme = mode.toLowerCase() === 'noir' ? 'noir' : 'light'; }"
+    )
 
     # Main layout: Dark spine (left) + Light results (right)
     with gr.Row(elem_id="shell", equal_height=True):
