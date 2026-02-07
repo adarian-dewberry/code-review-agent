@@ -2,17 +2,18 @@
 # Install with: pre-commit install
 
 repos:
-  - repo: local
-    hooks:
-      - id: code-review-agent
-        name: Code Review Agent
-        entry: code-review review
-        language: system
-        types: [python]
-        stages: [commit]
-        pass_filenames: true
-        require_serial: true
-        verbose: true
+  # Temporarily disabled - code-review CLI not yet implemented
+  # - repo: local
+  #   hooks:
+  #     - id: code-review-agent
+  #       name: Code Review Agent
+  #       entry: code-review review
+  #       language: system
+  #       types: [python]
+  #       stages: [commit]
+  #       pass_filenames: true
+  #       require_serial: true
+  #       verbose: true
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.7.4

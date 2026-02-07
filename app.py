@@ -60,8 +60,7 @@ import httpx
 
 # Configure logging with structured format
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -86,38 +85,38 @@ CACHE_TTL = int(os.getenv("CACHE_TTL", "3600"))  # 1 hour
 # RATE LIMITER - Prevent API abuse
 # =============================================================================
 
+
 class RateLimiter:
     """
     Simple in-memory rate limiter.
     Limits requests per time window to prevent abuse.
     """
-    
+
     def __init__(self, max_requests: int = 10, window_seconds: int = 60):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self.requests: dict[str, list[float]] = {}
         self._lock = threading.Lock()
-    
+
     def is_allowed(self, key: str = "global") -> bool:
         """Check if request is allowed under rate limit."""
         now = time.time()
-        
+
         with self._lock:
             if key not in self.requests:
                 self.requests[key] = []
-            
+
             # Remove old requests outside window
             self.requests[key] = [
-                ts for ts in self.requests[key]
-                if now - ts < self.window_seconds
+                ts for ts in self.requests[key] if now - ts < self.window_seconds
             ]
-            
+
             if len(self.requests[key]) >= self.max_requests:
                 return False
-            
+
             self.requests[key].append(now)
             return True
-    
+
     def get_retry_after(self, key: str = "global") -> int:
         """Get seconds until next request is allowed."""
         now = time.time()
@@ -132,30 +131,31 @@ class RateLimiter:
 # LRU CACHE - Cache review results for identical code
 # =============================================================================
 
+
 class LRUCache:
     """
     Simple LRU cache with TTL.
     Caches review results to reduce API calls and latency.
     """
-    
+
     def __init__(self, max_size: int = 100, ttl_seconds: int = 3600):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: OrderedDict[str, tuple[float, Any]] = OrderedDict()
+        self.cache: OrderedDict[str, tuple[float, tuple[str, str]]] = OrderedDict()
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
-    
+
     def _make_key(self, code: str, categories: list[str]) -> str:
         """Generate cache key from code and categories."""
         content = f"{code}:{':'.join(sorted(categories))}"
         return hashlib.sha256(content.encode()).hexdigest()[:16]
-    
-    def get(self, code: str, categories: list[str]) -> tuple[Any, Any] | None:
+
+    def get(self, code: str, categories: list[str]) -> tuple[str, str] | None:
         """Get cached result if exists and not expired."""
         key = self._make_key(code, categories)
         now = time.time()
-        
+
         with self._lock:
             if key in self.cache:
                 timestamp, value = self.cache[key]
@@ -168,25 +168,25 @@ class LRUCache:
                 else:
                     # Expired
                     del self.cache[key]
-            
+
             self._misses += 1
             return None
-    
-    def set(self, code: str, categories: list[str], value: tuple[Any, Any]) -> None:
+
+    def set(self, code: str, categories: list[str], value: tuple[str, str]) -> None:
         """Store result in cache."""
         key = self._make_key(code, categories)
         now = time.time()
-        
+
         with self._lock:
             if key in self.cache:
                 del self.cache[key]
-            
+
             self.cache[key] = (now, value)
-            
+
             # Evict oldest if over capacity
             while len(self.cache) > self.max_size:
                 self.cache.popitem(last=False)
-    
+
     def stats(self) -> dict:
         """Return cache statistics."""
         total = self._hits + self._misses
@@ -200,8 +200,13 @@ class LRUCache:
 
 
 # Initialize rate limiter and cache
-rate_limiter = RateLimiter(max_requests=RATE_LIMIT_REQUESTS, window_seconds=RATE_LIMIT_WINDOW)
+rate_limiter = RateLimiter(
+    max_requests=RATE_LIMIT_REQUESTS, window_seconds=RATE_LIMIT_WINDOW
+)
 review_cache = LRUCache(max_size=CACHE_MAX_SIZE, ttl_seconds=CACHE_TTL)
+
+# Store last audit record for export functionality
+_last_audit_record: dict | None = None
 
 
 # =============================================================================
@@ -209,7 +214,9 @@ review_cache = LRUCache(max_size=CACHE_MAX_SIZE, ttl_seconds=CACHE_TTL)
 # IMPORTANT: Only select from predefined copy. Humor and tone are intentional.
 # =============================================================================
 
-EASTER_EGGS = {
+EasterEggType = dict[str, str | list[str] | int | float]
+
+EASTER_EGGS: dict[str, EasterEggType] = {
     "quiet_win": {
         "id": "quiet_win",
         "copy": "Nothing scary here. We love to see it.",
@@ -315,15 +322,20 @@ def select_easter_egg(verdict: str, confidence: float, audience: str) -> str | N
 
     for egg in EASTER_EGGS.values():
         # Check verdict match
-        if verdict not in egg.get("allowed_verdicts", []):
+        allowed = egg.get("allowed_verdicts", [])
+        if verdict not in (allowed if isinstance(allowed, list) else []):
             continue
 
         # Check audience match
-        if audience_lower not in egg.get("audience", []):
+        aud_list = egg.get("audience", [])
+        if audience_lower not in (aud_list if isinstance(aud_list, list) else []):
             continue
 
         # Check confidence threshold if specified
-        min_conf = egg.get("min_confidence", 0.0)
+        min_conf_val = egg.get("min_confidence", 0.0)
+        min_conf = (
+            float(min_conf_val) if isinstance(min_conf_val, (int, float)) else 0.0
+        )
         if confidence < min_conf:
             continue
 
@@ -334,8 +346,11 @@ def select_easter_egg(verdict: str, confidence: float, audience: str) -> str | N
 
     # Probabilistic selection - prefer no message over forced humor
     for egg in candidates:
-        if random.random() < egg.get("probability", 0.2):
-            return egg["copy"]
+        prob_val = egg.get("probability", 0.2)
+        prob = float(prob_val) if isinstance(prob_val, (int, float)) else 0.2
+        if random.random() < prob:
+            copy = egg.get("copy", "")
+            return str(copy) if copy else None
 
     return None
 
@@ -365,19 +380,61 @@ UI_COPY = {
 }
 
 # Policy rules for decision accountability
-POLICY = {
+PolicyRuleType = dict[str, str | float]
+POLICY: dict[str, str | list[PolicyRuleType]] = {
     "version": "v1",
     "block_rules": [
-        {"rule_id": "BR-001", "description": "Block if any CRITICAL with confidence >= 0.8", "severity": "CRITICAL", "min_confidence": 0.8},
+        {
+            "rule_id": "BR-001",
+            "description": "Block if any CRITICAL with confidence >= 0.8",
+            "severity": "CRITICAL",
+            "min_confidence": 0.8,
+        },
     ],
     "review_rules": [
-        {"rule_id": "RR-001", "description": "Review required if any HIGH with confidence >= 0.7", "severity": "HIGH", "min_confidence": 0.7},
-        {"rule_id": "RR-002", "description": "Review required if any CRITICAL with confidence < 0.8", "severity": "CRITICAL", "min_confidence": 0.0, "max_confidence": 0.8},
+        {
+            "rule_id": "RR-001",
+            "description": "Review required if any HIGH with confidence >= 0.7",
+            "severity": "HIGH",
+            "min_confidence": 0.7,
+        },
+        {
+            "rule_id": "RR-002",
+            "description": "Review required if any CRITICAL with confidence < 0.8",
+            "severity": "CRITICAL",
+            "min_confidence": 0.0,
+            "max_confidence": 0.8,
+        },
     ],
 }
 
 # Structured prompt with JSON schema for consistent output
-SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. Return a complete analysis as JSON.
+# Policy v1: GRC-aligned with CWE/OWASP mapping
+SYSTEM_PROMPT = """You are the "Frankie" Secure Code Review Agent, a Senior AppSec & GRC Engineer.
+You produce audit-ready, policy-driven security reviews mapped to industry standards.
+
+# POLICY FRAMEWORK: v1
+Audit code against these controls with explicit standards mapping:
+
+## Injection Flaws (OWASP A03:2021)
+- CWE-89: SQL Injection - Unparameterized queries
+- CWE-78: OS Command Injection - Unsanitized subprocess calls
+- CWE-79: Cross-Site Scripting - Unescaped HTML output
+- CWE-94: Code Injection - eval(), exec() with user input
+
+## AI-Specific Risks (OWASP LLM Top 10)
+- LLM01: Prompt Injection - Direct string interpolation in prompts
+- Instruction Override - User input without hierarchy separation
+- Model Manipulation - Unvalidated prompt construction
+
+## Access Control (OWASP A01:2021)
+- CWE-798: Hardcoded Credentials - API keys, passwords in code
+- CWE-200: Information Exposure - Excessive data in responses
+- CWE-284: Improper Access Control - Missing auth checks
+
+## Resource Management (OWASP A05:2021)
+- CWE-772: Missing Resource Release - Unclosed connections
+- CWE-400: Resource Exhaustion - Unbounded operations
 
 <output_schema>
 {
@@ -388,6 +445,8 @@ SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. R
       "title": "Brief issue title",
       "severity": "CRITICAL|HIGH|MEDIUM|LOW",
       "confidence": 0.0-1.0,
+      "cwe": "CWE-89 (if applicable)",
+      "owasp": "A03:2021 or LLM01 (if applicable)",
       "tags": ["security", "compliance", "logic", "performance"],
       "location": "function_name():line or file.py:line",
       "evidence": "exact vulnerable code with ^ caret pointing to issue",
@@ -409,13 +468,18 @@ SYSTEM_PROMPT = """You are an expert code reviewer producing PR-ready reports. R
 <rules>
 1. DEDUPE: One finding per ROOT CAUSE. Use tags array for cross-cutting concerns.
 
-2. EVIDENCE: Show exact line with caret (^) pointing to the vulnerability:
+2. CWE/OWASP MAPPING: Include cwe and owasp fields for all security findings:
+   - SQL Injection → CWE-89, A03:2021
+   - Prompt Injection → LLM01
+   - Hardcoded Secrets → CWE-798, A01:2021
+
+3. EVIDENCE: Show exact line with caret (^) pointing to the vulnerability:
    query = f"SELECT * FROM users WHERE id = {user_id}"
                                           ^ untrusted input in SQL string
 
-3. LOCATION: Use descriptive format - "chat():2" or "get_user():5", not "unknown:2"
+4. LOCATION: Use descriptive format - "chat():2" or "get_user():5", not "unknown:2"
 
-4. BLAST RADIUS ESTIMATION (for HIGH/CRITICAL findings):
+5. BLAST RADIUS ESTIMATION (for HIGH/CRITICAL findings):
    - technical_scope: How far can exploitation spread? (function → module → service → cross-service)
    - data_scope: What data is at risk? (none → internal → customer → pii → regulated)
    - org_scope: Who is affected? (single-team → multi-team → external-customers → regulators)
@@ -479,20 +543,24 @@ def generate_decision_id() -> str:
     return f"D-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:4]}"
 
 
-def parse_findings(text: str) -> dict:
+def parse_findings(text: str) -> dict[str, list[dict[str, Any]]]:
     """Extract JSON findings from LLM response."""
     json_match = re.search(r'\{[\s\S]*"findings"[\s\S]*\}', text)
     if json_match:
         try:
-            return json.loads(json_match.group())
+            result = json.loads(json_match.group())
+            if isinstance(result, dict):
+                return result
         except json.JSONDecodeError:
             pass
     return {"findings": []}
 
 
-def review_code(code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: str = "") -> tuple[str, str]:
+def review_code(
+    code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: str = ""
+) -> tuple[str, str]:
     """Run multi-pass code review with structured output."""
-    
+
     # Rate limiting check
     if not rate_limiter.is_allowed():
         retry_after = rate_limiter.get_retry_after()
@@ -501,7 +569,7 @@ def review_code(code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: 
             f"<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Rate Limit</h3><p>Too many requests. Try again in {retry_after} seconds.</p></div>",
             "",
         )
-    
+
     if not code or not code.strip():
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>",
@@ -554,8 +622,10 @@ def review_code(code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: 
         )
 
         # Build category focus list
-        focus_areas = "\n".join([f"- {cat.upper()}: {CATEGORY_PROMPTS[cat]}" for cat in cats])
-        
+        focus_areas = "\n".join(
+            [f"- {cat.upper()}: {CATEGORY_PROMPTS[cat]}" for cat in cats]
+        )
+
         # Single consolidated prompt
         user_prompt = f"""<code>
 {code}
@@ -577,55 +647,81 @@ Analyze the code and return findings as JSON per the schema. Include line number
             model=MODEL,
             max_tokens=4000,
             temperature=0.0,
-            system=[{
-                "type": "text",
-                "text": SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"}
-            }],
+            system=[
+                {
+                    "type": "text",
+                    "text": SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=[{"role": "user", "content": user_prompt}],
         )
-        
+
         # Log token usage for cost tracking
         usage = resp.usage
-        logger.info(f"API call: input={usage.input_tokens}, output={usage.output_tokens}")
-        
-        result = parse_findings(resp.content[0].text)
-        findings = result.get("findings", [])
-        
+        logger.info(
+            f"API call: input={usage.input_tokens}, output={usage.output_tokens}"
+        )
+
+        parsed = parse_findings(resp.content[0].text)
+        findings = parsed.get("findings", [])
+
         # Count by severity and confidence
-        block_findings = [f for f in findings if f.get("severity") in ["CRITICAL", "HIGH"] and f.get("confidence", 0) >= 0.8]
-        warn_findings = [f for f in findings if f.get("severity") in ["CRITICAL", "HIGH"] and f.get("confidence", 0) < 0.8]
-        
+        block_findings = [
+            f
+            for f in findings
+            if f.get("severity") in ["CRITICAL", "HIGH"]
+            and f.get("confidence", 0) >= 0.8
+        ]
+        warn_findings = [
+            f
+            for f in findings
+            if f.get("severity") in ["CRITICAL", "HIGH"]
+            and f.get("confidence", 0) < 0.8
+        ]
+
         # Determine triggered rules for decision accountability
-        triggered_block_rules = []
-        triggered_review_rules = []
-        
-        for rule in POLICY["block_rules"]:
-            for f in findings:
-                if f.get("severity") == rule["severity"] and f.get("confidence", 0) >= rule["min_confidence"]:
-                    triggered_block_rules.append({"rule": rule, "finding": f})
-                    break
-        
-        for rule in POLICY["review_rules"]:
-            max_conf = rule.get("max_confidence", 1.0)
-            for f in findings:
-                if f.get("severity") == rule["severity"] and rule["min_confidence"] <= f.get("confidence", 0) < max_conf:
-                    triggered_review_rules.append({"rule": rule, "finding": f})
-                    break
-        
+        triggered_block_rules: list[dict[str, Any]] = []
+        triggered_review_rules: list[dict[str, Any]] = []
+
+        block_rules = POLICY.get("block_rules", [])
+        review_rules = POLICY.get("review_rules", [])
+
+        if isinstance(block_rules, list):
+            for rule in block_rules:
+                if not isinstance(rule, dict):
+                    continue
+                for f in findings:
+                    if f.get("severity") == rule.get("severity") and f.get(
+                        "confidence", 0
+                    ) >= float(rule.get("min_confidence", 0)):
+                        triggered_block_rules.append({"rule": rule, "finding": f})
+                        break
+
+        if isinstance(review_rules, list):
+            for rule in review_rules:
+                if not isinstance(rule, dict):
+                    continue
+                max_conf = float(rule.get("max_confidence", 1.0))
+                for f in findings:
+                    if (
+                        f.get("severity") == rule.get("severity")
+                        and float(rule.get("min_confidence", 0))
+                        <= f.get("confidence", 0)
+                        < max_conf
+                    ):
+                        triggered_review_rules.append({"rule": rule, "finding": f})
+                        break
+
         # Decision logic with policy-based verdict
         if triggered_block_rules:
             verdict = "BLOCK"
-            rec, color, bg = "🚫 BLOCK", "#dc3545", "#fff5f5"
         elif triggered_review_rules or len(block_findings) > 0:
             verdict = "REVIEW_REQUIRED"
-            rec, color, bg = "⚠️ REVIEW REQUIRED", "#fd7e14", "#fff9e6"
         elif len(warn_findings) > 0:
             verdict = "REVIEW_REQUIRED"
-            rec, color, bg = "⚡ CAUTION", "#ffc107", "#fffde6"
         else:
             verdict = "PASS"
-            rec, color, bg = "✅ APPROVED", "#28a745", "#f0fff4"
 
         # Generate decision record for audit trail
         run_id = generate_run_id()
@@ -636,8 +732,23 @@ Analyze the code and return findings as JSON per the schema. Include line number
             "verdict": verdict,
             "policy": {
                 "policy_version": POLICY["version"],
-                "block_rules": [{"rule_id": r["rule"]["rule_id"], "description": r["rule"]["description"], "triggered": True} for r in triggered_block_rules],
-                "review_rules": [{"rule_id": r["rule"]["rule_id"], "description": r["rule"]["description"], "triggered": True} for r in triggered_review_rules],
+                "policy_url": "https://github.com/adarian-dewberry/code-review-agent/blob/main/POLICIES.md",
+                "block_rules": [
+                    {
+                        "rule_id": r["rule"]["rule_id"],
+                        "description": r["rule"]["description"],
+                        "triggered": True,
+                    }
+                    for r in triggered_block_rules
+                ],
+                "review_rules": [
+                    {
+                        "rule_id": r["rule"]["rule_id"],
+                        "description": r["rule"]["description"],
+                        "triggered": True,
+                    }
+                    for r in triggered_review_rules
+                ],
             },
             "decision_drivers": [
                 {
@@ -645,8 +756,12 @@ Analyze the code and return findings as JSON per the schema. Include line number
                     "title": f.get("title", ""),
                     "severity": f.get("severity", ""),
                     "confidence": f.get("confidence", 0),
+                    "cwe": f.get("cwe", None),
+                    "owasp": f.get("owasp", None),
                     "location": f.get("location", ""),
-                    "why_it_matters": f.get("why_it_matters", [f.get("description", "")])
+                    "why_it_matters": f.get(
+                        "why_it_matters", [f.get("description", "")]
+                    ),
                 }
                 for f in (block_findings + warn_findings)[:5]  # Top 5 drivers
             ],
@@ -654,7 +769,7 @@ Analyze the code and return findings as JSON per the schema. Include line number
                 "allowed": True,
                 "status": "none",
                 "approver": None,
-                "justification": None
+                "justification": None,
             },
             "run_context": {
                 "run_id": run_id,
@@ -664,53 +779,56 @@ Analyze the code and return findings as JSON per the schema. Include line number
                 "limits": {
                     "max_chars": 50000,
                     "truncated": len(code) > 50000,
-                }
-            }
+                },
+            },
         }
-        
+
         # Extract blast radius summaries for HIGH/CRITICAL findings
         blast_radius_findings = []
         for f in findings:
             if f.get("severity") in ["CRITICAL", "HIGH"] and f.get("blast_radius"):
-                blast_radius_findings.append({
-                    "finding_id": f.get("id", "unknown"),
-                    "blast_radius": f.get("blast_radius"),
-                    "confidence": f.get("confidence", 0),
-                })
+                blast_radius_findings.append(
+                    {
+                        "finding_id": f.get("id", "unknown"),
+                        "blast_radius": f.get("blast_radius"),
+                        "confidence": f.get("confidence", 0),
+                    }
+                )
 
         # Summary HTML with blast radius indicator
         has_high_blast = any(
-            br.get("blast_radius", {}).get("data_scope") in ["pii", "regulated"] or
-            br.get("blast_radius", {}).get("org_scope") in ["external-customers", "regulators"]
+            br.get("blast_radius", {}).get("data_scope") in ["pii", "regulated"]
+            or br.get("blast_radius", {}).get("org_scope")
+            in ["external-customers", "regulators"]
             for br in blast_radius_findings
         )
         blast_indicator = " · High Blast Radius" if has_high_blast else ""
-        
+
         # Get top confidence for easter egg selection
         top_confidence = max((f.get("confidence", 0) for f in findings), default=0)
-        
+
         # Default audience mode (will be passed from UI in future)
         audience_mode = "intermediate"
-        
+
         # Try to select an easter egg (respects voice guidelines)
         easter_egg = select_easter_egg(verdict, top_confidence, audience_mode)
-        
+
         # Build verdict copy from curated UI_COPY
         # IMPORTANT: Do not generate new UI copy here.
         base_copy = UI_COPY.get(verdict, UI_COPY["PASS"])
-        
+
         # Use easter egg for subtext if available (never on BLOCK)
         subtext = easter_egg if easter_egg else base_copy["subtext"]
-        
+
         # Verdict display config
         verdict_display = {
             "BLOCK": {"css_class": "verdict-block", "dot_color": "#dc3545"},
             "REVIEW_REQUIRED": {"css_class": "verdict-review", "dot_color": "#CD8F7A"},
             "PASS": {"css_class": "verdict-pass", "dot_color": "#28a745"},
         }
-        
+
         vd = verdict_display.get(verdict, verdict_display["PASS"])
-        
+
         # Luxury summary card
         summary = f"""
 <div style="padding: 24px; background: linear-gradient(135deg, #FAF8F4 0%, #E7DCCE 100%); border-left: 4px solid {vd['dot_color']}; border-radius: 12px; margin-bottom: 16px;">
@@ -738,7 +856,7 @@ Analyze the code and return findings as JSON per the schema. Include line number
 
         # Build detailed markdown report with progressive disclosure
         details = ""
-        
+
         if not findings:
             details += """
 ## No issues found
@@ -750,17 +868,26 @@ This code follows safe patterns based on the signals we checked.
         else:
             # Layer 1: Plain language overview (Beginner-friendly)
             details += "## What we found\n\n"
-            
+
             for i, f in enumerate(findings[:3]):  # Top 3 for overview
                 sev = f.get("severity", "MEDIUM")
-                border_color = {"CRITICAL": "#CD8F7A", "HIGH": "#A89F91", "MEDIUM": "#D8C5B2", "LOW": "#E7DCCE"}.get(sev, "#D8C5B2")
-                
+                border_color = {
+                    "CRITICAL": "#CD8F7A",
+                    "HIGH": "#A89F91",
+                    "MEDIUM": "#D8C5B2",
+                    "LOW": "#E7DCCE",
+                }.get(sev, "#D8C5B2")
+
                 # Plain language explanation - escape to prevent XSS
                 plain_title = html.escape(f.get("title", "Issue"))
                 plain_desc = html.escape(f.get("description", "An issue was detected."))
-                plain_impact = html.escape(f.get("impact", "This could affect how the code behaves."))
-                plain_rec = html.escape(f.get("recommendation", "Review and address this issue."))
-                
+                plain_impact = html.escape(
+                    f.get("impact", "This could affect how the code behaves.")
+                )
+                plain_rec = html.escape(
+                    f.get("recommendation", "Review and address this issue.")
+                )
+
                 details += f"""
 <div style="border-left: 3px solid {border_color}; padding-left: 16px; margin-bottom: 20px;">
 
@@ -774,90 +901,116 @@ This code follows safe patterns based on the signals we checked.
 
 </div>
 """
-            
+
             if len(findings) > 3:
                 details += f"\n*+ {len(findings) - 3} more finding{'s' if len(findings) - 3 != 1 else ''} in Advanced tab*\n"
-            
+
             # Layer 2: Technical details (Intermediate)
             details += "\n---\n\n## Technical Details\n\n"
-            
+
             # Group by root cause
-            root_causes = {}
+            root_causes: dict[str, list[dict[str, Any]]] = {}
             for f in findings:
                 rc = f.get("root_cause", f.get("title", "Other"))
                 if rc not in root_causes:
                     root_causes[rc] = []
                 root_causes[rc].append(f)
-            
+
             for root_cause, items in root_causes.items():
-                items = sorted(items, key=lambda x: ({"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(x.get("severity", "LOW"), 4), -x.get("confidence", 0)))
-                
+                items = sorted(
+                    items,
+                    key=lambda x: (
+                        {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
+                            x.get("severity", "LOW"), 4
+                        ),
+                        -x.get("confidence", 0),
+                    ),
+                )
+
                 # Escape root cause for XSS prevention
                 safe_root_cause = html.escape(root_cause)
                 details += f"### Root Cause: {safe_root_cause}\n\n"
-                
+
                 for f in items:
                     sev = f.get("severity", "UNKNOWN")
                     conf = f.get("confidence", 0)
-                    conf_text = "High confidence" if conf >= 0.8 else "Medium confidence" if conf >= 0.5 else "Low confidence"
-                    
+                    conf_text = (
+                        "High confidence"
+                        if conf >= 0.8
+                        else "Medium confidence"
+                        if conf >= 0.5
+                        else "Low confidence"
+                    )
+
                     # Escape dynamic content for XSS prevention
                     safe_title = html.escape(f.get("title", "Issue"))
                     details += f"**{safe_title}** · {sev} · {conf_text}\n\n"
-                    
-                    location = f.get("location") or (f"Line {f.get('line')}" if f.get("line") else None)
+
+                    location = f.get("location") or (
+                        f"Line {f.get('line')}" if f.get("line") else None
+                    )
                     if location:
                         safe_location = html.escape(str(location))
                         details += f"Location: `{safe_location}`\n\n"
-                    
+
                     if f.get("evidence"):
                         # Evidence in code block - escape for safety
-                        safe_evidence = html.escape(f.get("evidence"))
+                        safe_evidence = html.escape(str(f.get("evidence", "")))
                         details += f"```\n{safe_evidence}\n```\n\n"
                     elif f.get("snippet"):
-                        safe_snippet = html.escape(f.get("snippet"))
+                        safe_snippet = html.escape(str(f.get("snippet", "")))
                         details += f"```python\n{safe_snippet}\n```\n\n"
-                    
+
                     if f.get("tags"):
                         safe_tags = ", ".join(html.escape(t) for t in f.get("tags", []))
                         details += f"Tags: {safe_tags}\n\n"
-                    
+
                     # Blast radius for HIGH/CRITICAL
                     br = f.get("blast_radius")
                     if br and sev in ["CRITICAL", "HIGH"]:
-                        details += "<details>\n<summary>Blast Radius Estimate</summary>\n\n"
+                        details += (
+                            "<details>\n<summary>Blast Radius Estimate</summary>\n\n"
+                        )
                         details += f"- **Technical:** {html.escape(br.get('technical_scope', 'unknown'))}\n"
                         details += f"- **Data:** {html.escape(br.get('data_scope', 'unknown'))}\n"
                         details += f"- **Organizational:** {html.escape(br.get('org_scope', 'unknown'))}\n\n"
                         details += "</details>\n\n"
-                    
+
                     if f.get("escalation") and sev in ["HIGH", "MEDIUM"]:
-                        safe_escalation = html.escape(f.get("escalation"))
+                        safe_escalation = html.escape(str(f.get("escalation", "")))
                         details += f"*Escalates to CRITICAL if: {safe_escalation}*\n\n"
-                
+
                 details += "---\n\n"
-        
+
         # Decision accountability section (collapsible)
         if triggered_block_rules or triggered_review_rules:
             details += "<details>\n<summary>Decision Reasoning</summary>\n\n"
             details += "**Why this verdict was reached:**\n\n"
             for tr in triggered_block_rules:
-                details += f"- **{tr['rule']['rule_id']}**: {tr['rule']['description']}\n"
+                details += (
+                    f"- **{tr['rule']['rule_id']}**: {tr['rule']['description']}\n"
+                )
             for tr in triggered_review_rules:
-                details += f"- **{tr['rule']['rule_id']}**: {tr['rule']['description']}\n"
+                details += (
+                    f"- **{tr['rule']['rule_id']}**: {tr['rule']['description']}\n"
+                )
             details += "\n*Override allowed with human approval + justification*\n\n"
             details += "</details>\n\n"
-        
+
         # Audit record (Advanced tab content)
         details += "<details>\n<summary>Audit Record (JSON)</summary>\n\n```json\n"
         details += json.dumps(decision_record, indent=2)
         details += "\n```\n</details>\n"
 
+        # Store audit record globally for export functionality
+        global _last_audit_record
+        _last_audit_record = decision_record
+
         # Cache the result for future identical requests
         result = (summary, details)
         review_cache.set(code, cats, result)
         logger.info(f"Review complete: verdict={verdict}, findings={len(findings)}")
-        
+
         return result
 
     except anthropic.AuthenticationError as e:
@@ -870,7 +1023,7 @@ This code follows safe patterns based on the signals we checked.
     except anthropic.NotFoundError as e:
         logger.error(f"Model not found: {e}")
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>The model is not available. Try again later.</p></div>",
+            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>The model is not available. Try again later.</p></div>",
             "",
         )
 
@@ -898,7 +1051,7 @@ This code follows safe patterns based on the signals we checked.
             "",
         )
 
-    except Exception as e:
+    except Exception:
         # Log full exception server-side, show generic message to users
         logger.exception("Unexpected error during code review")
         return (
@@ -1449,12 +1602,12 @@ def load_sample():
 def get_frankie_loader(run_id: str = "") -> str:
     """
     Generate Frankie loader HTML.
-    
+
     Frankie appears ONLY when:
     - Review is in progress
     - Verdict is not yet determined
     - No errors have occurred
-    
+
     Frankie NEVER appears when:
     - Verdict is BLOCK
     - An error or crash occurs
@@ -1462,12 +1615,12 @@ def get_frankie_loader(run_id: str = "") -> str:
     """
     if not run_id:
         run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
-    
+
     frankie_line = pick_frankie_line(run_id)
-    
+
     # Inline SVG of trotting Alaskan Malamute with ball
     # Side profile in motion with animated legs, wagging tail, and bouncing ball
-    frankie_svg = '''
+    frankie_svg = """
     <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Ball (terracotta, bouncing) -->
       <circle class="ball" cx="125" cy="75" r="10" fill="#CD8F7A"/>
@@ -1525,9 +1678,9 @@ def get_frankie_loader(run_id: str = "") -> str:
       <ellipse class="front-leg-1" cx="65" cy="90" rx="5" ry="3" fill="#2A2926"/>
       <ellipse class="front-leg-2" cx="87" cy="90" rx="5" ry="3" fill="#2A2926"/>
     </svg>
-    '''
-    
-    return f'''
+    """
+
+    return f"""
     <div id="frankie_loader">
         <div class="frankie_container">
             <div class="frankie_silhouette">{frankie_svg}</div>
@@ -1537,18 +1690,17 @@ def get_frankie_loader(run_id: str = "") -> str:
         <div class="frankie_line">{frankie_line}</div>
         <div class="frankie_hint">This usually takes a few seconds.</div>
     </div>
-    '''
+    """
 
 
 with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
-
     # Header
-    gr.HTML('''
+    gr.HTML("""
     <div id="brand_header">
         <div id="brand_title">Code Review Agent</div>
         <div id="brand_subtitle">Judgment-aware security analysis for AI-enabled systems</div>
     </div>
-    ''')
+    """)
 
     # Theme toggle (Ivory / Noir)
     with gr.Row():
@@ -1558,7 +1710,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 value="Ivory",
                 label="",
                 elem_id="mode_toggle",
-                interactive=True
+                interactive=True,
             )
 
     # Use js parameter - the function receives the radio value and sets theme
@@ -1566,25 +1718,21 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         fn=lambda x: None,
         inputs=theme_mode,
         outputs=None,
-        js="(mode) => { document.body.dataset.theme = mode.toLowerCase() === 'noir' ? 'noir' : 'light'; }"
+        js="(mode) => { document.body.dataset.theme = mode.toLowerCase() === 'noir' ? 'noir' : 'light'; }",
     )
 
     # Main layout: Dark spine (left) + Light results (right)
     with gr.Row(elem_id="shell", equal_height=True):
-
         # =====================================================
         # LEFT: DARK SPINE - "Give me something"
         # =====================================================
         with gr.Column(scale=4, elem_id="left_spine"):
-
-            gr.HTML('<div class="spine_label">Step 1</div><div class="spine_title">Paste your code</div>')
+            gr.HTML(
+                '<div class="spine_label">Step 1</div><div class="spine_title">Paste your code</div>'
+            )
 
             code = gr.Code(
-                value="",
-                language="python",
-                label="",
-                lines=14,
-                show_label=False
+                value="", language="python", label="", lines=14, show_label=False
             )
 
             gr.HTML('<div class="spine_label" style="margin-top: 16px;">Step 2</div>')
@@ -1597,11 +1745,13 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 label="Filename (optional)",
                 placeholder="e.g., app.py",
                 lines=1,
-                elem_id="filename_box"
+                elem_id="filename_box",
             )
 
             with gr.Accordion("Customize review", open=False, elem_id="customize_acc"):
-                gr.HTML('<p style="color: rgba(250,248,244,0.6); font-size: 0.85em; margin-bottom: 12px;">Choose what to check. Beginners can leave this alone.</p>')
+                gr.HTML(
+                    '<p style="color: rgba(250,248,244,0.6); font-size: 0.85em; margin-bottom: 12px;">Choose what to check. Beginners can leave this alone.</p>'
+                )
                 with gr.Row():
                     sec = gr.Checkbox(label="Security", value=True)
                     comp = gr.Checkbox(label="Compliance", value=True)
@@ -1613,15 +1763,16 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         # RIGHT: LIGHT PANEL - "Here's what I found"
         # =====================================================
         with gr.Column(scale=6, elem_id="right_panel"):
+            gr.HTML(
+                '<div class="results_label">Step 3</div><div class="results_title">Results</div>'
+            )
 
-            gr.HTML('<div class="results_label">Step 3</div><div class="results_title">Results</div>')
-
-            empty_state = gr.HTML('''
+            empty_state = gr.HTML("""
             <div id="empty_state">
                 <div class="empty_title">Your review will show up here</div>
                 <div class="empty_text">Paste code on the left and click <strong>Review this code</strong></div>
             </div>
-            ''')
+            """)
 
             summ = gr.HTML("", elem_id="verdict_card_container")
 
@@ -1629,42 +1780,77 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 with gr.Tab("Overview"):
                     det = gr.Markdown("")
                 with gr.Tab("Fixes"):
-                    fixes_tab = gr.Markdown("*Suggested fixes will appear after review*")
+                    fixes_tab = gr.Markdown(
+                        "*Suggested fixes will appear after review*"
+                    )
                 with gr.Tab("Advanced"):
-                    advanced_tab = gr.Markdown("*Decision records and audit data will appear after review*")
+                    advanced_tab = gr.Markdown(
+                        "*Decision records and audit data will appear after review*"
+                    )
+                    audit_json = gr.JSON(label="Audit Record (JSON)", visible=False)
+                    export_btn = gr.Button(
+                        "📥 Export Audit JSON", visible=False, elem_id="export_btn"
+                    )
 
     # Footer
-    gr.HTML('''
+    gr.HTML("""
     <div class="footer">
         <p>
             <a href="https://github.com/adarian-dewberry/code-review-agent">GitHub</a>
             <span style="margin: 0 12px; opacity: 0.4;">·</span>
+            <a href="https://github.com/adarian-dewberry/code-review-agent/blob/main/POLICIES.md">Policy v1</a>
+            <span style="margin: 0 12px; opacity: 0.4;">·</span>
             Human review always recommended
         </p>
     </div>
-    ''')
+    """)
 
     # Wire up sample button
     sample_btn.click(fn=load_sample, outputs=[code, ctx])
 
     # Wire up review button - show Frankie during review, hide empty state when results arrive
     def run_with_frankie(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val):
-        # First yield: show Frankie loader
+        # First yield: show Frankie loader, hide export controls
         frankie_html = get_frankie_loader()
-        yield "", frankie_html, "*Frankie is reviewing your code...*"
-        
+        yield (
+            "",  # empty_state
+            frankie_html,  # summ
+            "*Frankie is reviewing your code...*",  # det
+            gr.update(value=None, visible=False),  # audit_json
+            gr.update(visible=False),  # export_btn
+        )
+
         # Run the actual review
-        summ_result, det_result = review_code(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val)
-        
-        # Final yield: show results
-        yield "", summ_result, det_result
+        summ_result, det_result = review_code(
+            code_val, sec_val, comp_val, logic_val, perf_val, ctx_val
+        )
+
+        # Get the audit record for export
+        audit_record = _last_audit_record
+
+        # Final yield: show results and export controls
+        yield (
+            "",  # empty_state
+            summ_result,  # summ
+            det_result,  # det
+            gr.update(value=audit_record, visible=True),  # audit_json
+            gr.update(visible=True),  # export_btn
+        )
 
     btn.click(
         fn=run_with_frankie,
         inputs=[code, sec, comp, logic, perf, ctx],
-        outputs=[empty_state, summ, det],
-        api_name="review"
+        outputs=[empty_state, summ, det, audit_json, export_btn],
+        api_name="review",
     )
+
+    # Wire up export button to download JSON
+    def do_export():
+        """Return audit record for JSON component."""
+        global _last_audit_record
+        return _last_audit_record
+
+    export_btn.click(fn=do_export, outputs=audit_json, api_name="export_audit")
 
 
 # =============================================================================
@@ -1672,26 +1858,41 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
 # For monitoring and uptime checks
 # =============================================================================
 
-def get_health_status() -> dict:
+
+def get_audit_export() -> tuple[dict | None, str]:
+    """
+    Export the last audit record as JSON for compliance/GRC workflows.
+    Returns the audit record and a downloadable filename.
+    """
+    global _last_audit_record
+    if _last_audit_record is None:
+        return None, "No audit record available"
+    return (
+        _last_audit_record,
+        f"audit_{_last_audit_record.get('decision_id', 'unknown')}.json",
+    )
+
+
+def get_health_status() -> dict[str, Any]:
     """
     Health check for monitoring.
     Returns status of all dependencies.
     """
-    status = {
+    status: dict[str, Any] = {
         "status": "healthy",
         "version": TOOL_VERSION,
         "schema_version": SCHEMA_VERSION,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "components": {},
     }
-    
+
     # Check API key configured
     if ANTHROPIC_API_KEY:
         status["components"]["api_key"] = "configured"
     else:
         status["components"]["api_key"] = "missing"
         status["status"] = "degraded"
-    
+
     # Cache stats
     cache_stats = review_cache.stats()
     status["components"]["cache"] = {
@@ -1699,13 +1900,13 @@ def get_health_status() -> dict:
         "hit_rate": f"{cache_stats['hit_rate']:.1%}",
         "size": cache_stats["size"],
     }
-    
+
     # Rate limiter status
     status["components"]["rate_limiter"] = {
         "status": "healthy",
         "limit": f"{RATE_LIMIT_REQUESTS}/{RATE_LIMIT_WINDOW}s",
     }
-    
+
     return status
 
 
