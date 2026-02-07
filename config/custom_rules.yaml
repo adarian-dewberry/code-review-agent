@@ -1,0 +1,35 @@
+# Custom Rules Template (Experimental)
+# NOTE: This is a placeholder for future rule enforcement.
+# You can define organizational policies here and wire them into the parser.
+
+rules:
+  - id: CR-001
+    title: "Disallow eval()"
+    severity: HIGH
+    cwe_id: "CWE-95"
+    owasp_id: "A03:2021 - Injection"
+    description: "The eval() function executes arbitrary code. Replace with safe parsing."
+    match:
+      patterns:
+        - "eval("
+
+  - id: CR-002
+    title: "Disallow hardcoded secrets"
+    severity: HIGH
+    cwe_id: "CWE-798"
+    owasp_id: "A02:2021 - Cryptographic Failures"
+    description: "Hardcoded secrets should be stored in a secrets manager."
+    match:
+      regex:
+        - "(api_key|secret|token)\s*=\s*['\"][A-Za-z0-9_\-]{16,}['\"]"
+
+  - id: CR-003
+    title: "Require parameterized SQL"
+    severity: CRITICAL
+    cwe_id: "CWE-89"
+    owasp_id: "A03:2021 - Injection"
+    description: "SQL queries must use parameterized statements."
+    match:
+      patterns:
+        - "SELECT * FROM"
+        - "f\"SELECT"

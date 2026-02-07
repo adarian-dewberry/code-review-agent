@@ -11,12 +11,40 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)
+![CI](https://github.com/adarian-dewberry/code-review-agent/actions/workflows/ci.yml/badge.svg)
 
 </div>
 
 ---
 
 > ⚠️ **Important**: Read the [DISCLAIMER.md](DISCLAIMER.md) before use. This tool does NOT replace professional security audits or legal compliance reviews.
+
+## Vibe Securely (60-Second Flow)
+
+**Paste AI code → Get fixes → Ship confidently**
+
+1. Paste AI-generated code into the tool
+2. Get **OWASP + CWE mapped** findings with risk levels
+3. Apply fixes before the code reaches production
+
+**Security checklist for vibe-coders:**
+- [docs/vibe_checklist.txt](docs/vibe_checklist.txt)
+
+**Secure prompt templates:**
+- [docs/prompt_library.txt](docs/prompt_library.txt)
+
+---
+
+## Live Demo (Streamlit)
+
+Run a local demo (no deployment required):
+
+```bash
+pip install -e ".[dev]"
+streamlit run demo/streamlit_app.py
+```
+
+**Demo mode** lets you explore output without sending code to an LLM.
 
 ## The Business Case: Why Remediation Cost Matters
 
@@ -240,10 +268,16 @@ code-review review --ci-mode path/to/code.py
 - **OWASP & CWE Mapping**: Professional risk classification for audit trails
 - **CLI Interface**: Easy-to-use command-line tool (2-second reviews)
 - **CI/CD Integration**: Fail builds with critical issues automatically
+- **GitHub Actions CI**: Lint, type-check, and tests on every PR
 - **Structured Output**: Markdown reports and JSON data (with risk levels)
 - **File Exclusion**: Skip node_modules, .env, and other safe patterns automatically
 - **Data Privacy**: Explicit warning before sending code to Claude API
 - **Configurable**: Custom categories, risk thresholds, and exclusions
+
+### Custom Rules (Experimental)
+
+Start with a template for organizational policies:
+- [config/custom_rules.yaml](config/custom_rules.yaml)
 
 ---
 

@@ -1,0 +1,56 @@
+PROMPT LIBRARY: Secure AI Coding Templates
+
+Use these prompts with ChatGPT/Copilot/Claude to generate safer code by default.
+
+1) Secure Python Function (Input Validation + No Secrets)
+"""
+Write a Python function that [TASK].
+Requirements:
+- Validate all user input (type, length, allowed characters)
+- Do NOT include hardcoded secrets, API keys, or tokens
+- Use parameterized queries for any database access
+- Add basic logging for security-relevant events
+- Return safe, user-friendly error messages (no stack traces)
+"""
+
+2) Secure API Endpoint (FastAPI)
+"""
+Create a FastAPI endpoint for [TASK].
+Requirements:
+- Validate and sanitize all request fields
+- Use pydantic models for input/output schemas
+- Enforce authentication & authorization checks
+- Rate limit the endpoint (e.g., 10 requests/min)
+- Avoid logging PII or secrets
+"""
+
+3) Secure File Upload
+"""
+Implement a file upload handler in Python.
+Requirements:
+- Restrict file types to a safe allowlist
+- Enforce size limits
+- Scan filenames for path traversal
+- Store files outside web root
+- Generate random filenames
+"""
+
+4) Secure LLM Prompting
+"""
+Generate a prompt template for [TASK].
+Requirements:
+- Separate system instructions from user input
+- Explicitly forbid prompt injection instructions
+- Strip or escape user-provided content
+- Add a policy block for secrets/PII
+"""
+
+5) Secure Data Access Layer
+"""
+Write a data access function for [TASK].
+Requirements:
+- Use parameterized queries
+- Add retry logic with exponential backoff
+- Enforce least privilege for database user
+- Include audit logging for PII access
+"""
