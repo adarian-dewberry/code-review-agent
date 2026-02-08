@@ -132,6 +132,10 @@ class RateLimiter:
 # =============================================================================
 
 
+# Type alias for cached review results (summary, details, fixes, audit_record)
+CacheValue = tuple[str, str, str, dict | None]
+
+
 class LRUCache:
     """
     Simple LRU cache with TTL.
@@ -141,7 +145,7 @@ class LRUCache:
     def __init__(self, max_size: int = 100, ttl_seconds: int = 3600):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: OrderedDict[str, tuple[float, tuple[str, str, str]]] = OrderedDict()
+        self.cache: OrderedDict[str, tuple[float, CacheValue]] = OrderedDict()
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
@@ -151,7 +155,7 @@ class LRUCache:
         content = f"{code}:{':'.join(sorted(categories))}"
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
-    def get(self, code: str, categories: list[str]) -> tuple[str, str, str] | None:
+    def get(self, code: str, categories: list[str]) -> CacheValue | None:
         """Get cached result if exists and not expired."""
         key = self._make_key(code, categories)
         now = time.time()
@@ -172,9 +176,7 @@ class LRUCache:
             self._misses += 1
             return None
 
-    def set(
-        self, code: str, categories: list[str], value: tuple[str, str, str]
-    ) -> None:
+    def set(self, code: str, categories: list[str], value: CacheValue) -> None:
         """Store result in cache."""
         key = self._make_key(code, categories)
         now = time.time()
@@ -207,8 +209,10 @@ rate_limiter = RateLimiter(
 )
 review_cache = LRUCache(max_size=CACHE_MAX_SIZE, ttl_seconds=CACHE_TTL)
 
-# Store last audit record for export functionality
-_last_audit_record: dict | None = None
+
+def generate_session_id() -> str:
+    """Generate a unique session ID for rate limiting."""
+    return uuid.uuid4().hex[:12]
 
 
 # =============================================================================
@@ -504,7 +508,7 @@ Audit code against these controls with explicit standards mapping:
    - technical_scope: How far can exploitation spread? (function → module → service → cross-service)
    - data_scope: What data is at risk? (none → internal → customer → pii → regulated)
    - org_scope: Who is affected? (single-team → multi-team → external-customers → regulators)
-   
+
    Heuristics:
    - SQL injection + SELECT * FROM users → data_scope: "pii", technical_scope: "service"
    - Prompt injection without tool access → technical_scope: "function"
@@ -536,7 +540,7 @@ Audit code against these controls with explicit standards mapping:
 </rules>"""
 
 CATEGORY_PROMPTS = {
-    "security": """Focus on: SQL injection (A03:2025), command injection, XSS, SSRF (A10:2025), path traversal, 
+    "security": """Focus on: SQL injection (A03:2025), command injection, XSS, SSRF (A10:2025), path traversal,
 auth bypass (A01:2025), secrets exposure, insecure deserialization, prompt injection (LLM01:2025).
 For prompt injection: use "instruction hierarchy" concept, flag heuristically, include escalation conditions.
 For SQL injection: validate type + parameterize + handle errors.
@@ -581,50 +585,64 @@ def parse_findings(text: str) -> dict[str, list[dict[str, Any]]]:
 
 
 def review_code(
-    code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: str = ""
-) -> tuple[str, str, str]:
+    code: str,
+    sec: bool,
+    comp: bool,
+    logic: bool,
+    perf: bool,
+    ctx: str = "",
+    review_mode: str = "Deep",
+    session_id: str = "global",
+) -> tuple[str, str, str, dict | None]:
     """Run multi-pass code review with structured output.
 
     Returns:
-        tuple: (summary_html, details_markdown, fixes_markdown)
+        tuple: (summary_html, details_markdown, fixes_markdown, audit_record)
     """
 
-    # Rate limiting check
-    if not rate_limiter.is_allowed():
-        retry_after = rate_limiter.get_retry_after()
-        logger.warning(f"Rate limit exceeded, retry after {retry_after}s")
+    # Rate limiting check (per-session for multi-tenant isolation)
+    if not rate_limiter.is_allowed(session_id):
+        retry_after = rate_limiter.get_retry_after(session_id)
+        logger.warning(
+            f"Rate limit exceeded for session {session_id[:6]}, retry after {retry_after}s"
+        )
         return (
-            f"<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Rate Limit</h3><p>Too many requests. Try again in {retry_after} seconds.</p></div>",
+            f"<div class='error-banner warning'><div class='error-icon'>⏱️</div><div class='error-content'><h3>Slow down there</h3><p>You've made a lot of requests. Try again in <strong>{retry_after} seconds</strong>.</p></div></div>",
             "",
             "",
+            None,
         )
 
     if not code or not code.strip():
         return (
-            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>",
+            "<div class='error-banner warning'><div class='error-icon'>📝</div><div class='error-content'><h3>Nothing to review yet</h3><p>Paste your code in the editor on the left, then click <strong>Analyze My Code</strong>.</p></div></div>",
             "",
             "",
+            None,
         )
 
     if len(code) > 50000:
         return (
-            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Limit to 50,000 characters.</p></div>",
+            f"<div class='error-banner warning'><div class='error-icon'>📏</div><div class='error-content'><h3>That's a lot of code</h3><p>Your snippet is <strong>{len(code):,}</strong> characters. Break it into smaller chunks (under 50,000 characters) for best results.</p></div></div>",
             "",
             "",
+            None,
         )
 
     if not any([sec, comp, logic, perf]):
         return (
-            "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Categories</h3><p>Select at least one.</p></div>",
+            "<div class='error-banner warning'><div class='error-icon'>☑️</div><div class='error-content'><h3>Pick something to check</h3><p>Select at least one category in <strong>Fine-Tune Categories</strong> below the code editor.</p></div></div>",
             "",
             "",
+            None,
         )
 
     if not ANTHROPIC_API_KEY:
         return (
-            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ API Key Missing</h3><p>Add ANTHROPIC_API_KEY in Settings → Secrets</p></div>",
+            "<div class='error-banner error'><div class='error-icon'>🔑</div><div class='error-content'><h3>API key not configured</h3><p>This space needs an Anthropic API key. If you're the owner, add <code>ANTHROPIC_API_KEY</code> in Settings → Secrets.</p></div></div>",
             "",
             "",
+            None,
         )
 
     cats = []
@@ -637,8 +655,9 @@ def review_code(
     if perf:
         cats.append("performance")
 
-    # Check cache first
-    cached_result = review_cache.get(code, cats)
+    # Check cache first (cache key now includes review mode)
+    cache_key_cats = cats + [review_mode]
+    cached_result = review_cache.get(code, cache_key_cats)
     if cached_result is not None:
         logger.info("Returning cached result")
         return cached_result
@@ -913,51 +932,66 @@ Analyze the code and return findings as JSON per the schema. Include line number
                 </div>
             </div>"""
 
+        # Extract review mode display name
+        review_mode_display = (
+            review_mode.replace("⚡ ", "").replace("🔬 ", "").replace("📋 ", "")
+            if review_mode
+            else "Deep"
+        )
+        review_mode_icon = (
+            "⚡"
+            if "Quick" in (review_mode or "")
+            else "📋"
+            if "Compliance" in (review_mode or "")
+            else "🔬"
+        )
+
         # Premium verdict card with severity counters
         summary = f"""
 <div id="verdict_card">
     <div class="verdict_header">
-        <div class="verdict_icon {vc['css_class']}">{vc['icon']}</div>
+        <div class="verdict_icon {vc["css_class"]}">{vc["icon"]}</div>
         <div class="verdict_main">
-            <div class="verdict_pill {vc['css_class']}">
-                <span style="width: 8px; height: 8px; background: {vc['dot_color']}; border-radius: 50%;"></span>
-                {verdict.replace('_', ' ')}
+            <div class="verdict_pill {vc["css_class"]}">
+                <span style="width: 8px; height: 8px; background: {vc["dot_color"]}; border-radius: 50%;"></span>
+                {verdict.replace("_", " ")}
             </div>
-            <h2 class="verdict_headline">{base_copy['headline']}</h2>
+            <h2 class="verdict_headline">{base_copy["headline"]}</h2>
             <p class="verdict_subtext">{subtext}</p>
         </div>
     </div>
-    
+
     <div class="severity_counters">
         <div class="severity_counter">
-            <div class="counter_value critical">{severity_counts['CRITICAL']}</div>
+            <div class="counter_value critical">{severity_counts["CRITICAL"]}</div>
             <div class="counter_label">Critical</div>
         </div>
         <div class="severity_counter">
-            <div class="counter_value high">{severity_counts['HIGH']}</div>
+            <div class="counter_value high">{severity_counts["HIGH"]}</div>
             <div class="counter_label">High</div>
         </div>
         <div class="severity_counter">
-            <div class="counter_value medium">{severity_counts['MEDIUM']}</div>
+            <div class="counter_value medium">{severity_counts["MEDIUM"]}</div>
             <div class="counter_label">Medium</div>
         </div>
         <div class="severity_counter">
-            <div class="counter_value low">{severity_counts['LOW']}</div>
+            <div class="counter_value low">{severity_counts["LOW"]}</div>
             <div class="counter_label">Low</div>
         </div>
     </div>
-    
+
     {"<div class='top_fixes'><div class='top_fixes_title'>Top Fixes</div>" + top_fixes_html + "</div>" if findings else ""}
-    
+
     <div class="trust_signals">
-        <span class="trust_signal">📊 <strong>{len(findings)}</strong> finding{'s' if len(findings) != 1 else ''}</span>
+        <span class="trust_signal">{review_mode_icon} <strong>{review_mode_display}</strong> mode</span>
+        <span class="trust_signal">📊 <strong>{len(findings)}</strong> finding{"s" if len(findings) != 1 else ""}</span>
         <span class="trust_signal">📁 <strong>1</strong> file analyzed</span>
-        <span class="trust_signal">🎯 <strong>{base_copy['confidence_text']}</strong></span>
+        <span class="trust_signal">🎯 <strong>{base_copy["confidence_text"]}</strong></span>
         {"<span class='trust_signal'>💥 <strong>High Blast Radius</strong></span>" if has_high_blast else ""}
     </div>
 </div>
 <p style="font-size: 0.78em; color: #A89F91; margin-top: 10px; text-align: center;">
-    Decision ID: <code style="background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">{decision_record['decision_id']}</code> · Policy: {POLICY['version']}
+    Decision ID: <code style="background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">{decision_record["decision_id"]}</code> · Policy: {POLICY["version"]}
 </p>
 """
 
@@ -1150,10 +1184,6 @@ This code follows safe patterns based on the signals we checked.
         details += json.dumps(decision_record, indent=2)
         details += "\n```\n</details>\n"
 
-        # Store audit record globally for export functionality
-        global _last_audit_record
-        _last_audit_record = decision_record
-
         # Generate Fixes tab content with consolidated recommendations
         fixes_content = ""
         if findings:
@@ -1193,8 +1223,8 @@ This code follows safe patterns based on the signals we checked.
             fixes_content = "## ✅ No Fixes Needed\n\nThis code follows safe patterns. No changes required based on this review."
 
         # Cache the result for future identical requests
-        result = (summary, details, fixes_content)
-        review_cache.set(code, cats, result)
+        result = (summary, details, fixes_content, decision_record)
+        review_cache.set(code, cache_key_cats, result)
         logger.info(f"Review complete: verdict={verdict}, findings={len(findings)}")
 
         return result
@@ -1202,17 +1232,19 @@ This code follows safe patterns based on the signals we checked.
     except anthropic.AuthenticationError as e:
         logger.error(f"Authentication error: {e}")
         return (
-            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Authentication Error</h3><p>Invalid API key. Check ANTHROPIC_API_KEY in Settings → Secrets.</p></div>",
+            "<div class='error-banner error'><div class='error-icon'>🔐</div><div class='error-content'><h3>Invalid API key</h3><p>The API key was rejected. Double-check <code>ANTHROPIC_API_KEY</code> in Settings → Secrets.</p></div></div>",
             "",
             "",
+            None,
         )
 
     except anthropic.NotFoundError as e:
         logger.error(f"Model not found: {e}")
         return (
-            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>The model is not available. Try again later.</p></div>",
+            "<div class='error-banner error'><div class='error-icon'>🤖</div><div class='error-content'><h3>Model unavailable</h3><p>The AI model isn't responding right now. This usually resolves in a few minutes.</p></div></div>",
             "",
             "",
+            None,
         )
 
     except anthropic.APIConnectionError as e:
@@ -1220,34 +1252,35 @@ This code follows safe patterns based on the signals we checked.
         error_detail = str(e)
         logger.error(f"API connection error: {error_detail}")
         if "SSL" in error_detail or "certificate" in error_detail.lower():
-            hint = (
-                "SSL/TLS certificate issue. The server may need updated certificates."
-            )
+            hint = "There's a secure connection issue. The team has been notified."
         elif "timeout" in error_detail.lower():
-            hint = "Connection timed out. Try again in a moment."
+            hint = "The request timed out. Try again in a moment."
         else:
-            hint = "Network connectivity issue. The Anthropic API may be temporarily unreachable."
+            hint = "Can't reach the AI service right now. Try again in a few seconds."
         return (
-            f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>{hint}</p></div>",
+            f"<div class='error-banner error'><div class='error-icon'>🌐</div><div class='error-content'><h3>Connection issue</h3><p>{hint}</p></div></div>",
             "",
             "",
+            None,
         )
 
     except anthropic.BadRequestError as e:
         logger.error(f"Bad request error: {e}")
         return (
-            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Request Error</h3><p>The request could not be processed. Try simplifying your code.</p></div>",
+            "<div class='error-banner error'><div class='error-icon'>📋</div><div class='error-content'><h3>Couldn't process that</h3><p>The code might be too complex or contain unusual characters. Try a smaller snippet.</p></div></div>",
             "",
             "",
+            None,
         )
 
     except Exception:
         # Log full exception server-side, show generic message to users
         logger.exception("Unexpected error during code review")
         return (
-            "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred. Try again or contact support if the issue persists.</p></div>",
+            "<div class='error-banner error'><div class='error-icon'>🐛</div><div class='error-content'><h3>Something went wrong</h3><p>We hit an unexpected error. Try again, or <a href='https://github.com/adarian-dewberry/code-review-agent/issues' target='_blank'>report this</a> if it keeps happening.</p></div></div>",
             "",
             "",
+            None,
         )
 
     finally:
@@ -1284,14 +1317,14 @@ APP_CSS = """
   --accent: #CD8F7A;
   --accent-dark: #B87A65;
   --gold: #DCCCB3;
-  
+
   /* Severity colors */
   --critical: #dc3545;
   --high: #e67700;
   --medium: #d4a017;
   --low: #6c757d;
   --pass: #28a745;
-  
+
   /* Dark spine */
   --spine: #1B1A18;
   --spine2: #2A2926;
@@ -1304,7 +1337,7 @@ APP_CSS = """
   --border: rgba(42,41,38,0.12);
   --shadow: 0 8px 24px rgba(27,26,24,0.10);
   --shadow-sm: 0 4px 12px rgba(27,26,24,0.08);
-  
+
   /* Typography - LARGER for readability */
   --font-base: 1rem;
   --font-lg: 1.125rem;
@@ -1312,7 +1345,7 @@ APP_CSS = """
   --font-2xl: 1.5rem;
   --font-sm: 0.9rem;
   --font-xs: 0.8rem;
-  
+
   /* Animation */
   --transition: all 0.2s ease;
 }
@@ -2133,6 +2166,102 @@ body[data-theme="noir"] .finding_card {
 }
 
 /* =================================================================
+   ERROR BANNERS - User-friendly error states
+   ================================================================= */
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  margin: 16px 0;
+}
+.error-banner.warning {
+  background: linear-gradient(135deg, rgba(255,193,7,0.08) 0%, rgba(255,193,7,0.04) 100%);
+  border: 1px solid rgba(255,193,7,0.3);
+  border-left: 4px solid #ffc107;
+}
+.error-banner.error {
+  background: linear-gradient(135deg, rgba(220,53,69,0.08) 0%, rgba(220,53,69,0.04) 100%);
+  border: 1px solid rgba(220,53,69,0.3);
+  border-left: 4px solid #dc3545;
+}
+.error-banner .error-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.error-banner .error-content h3 {
+  margin: 0 0 6px 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+.error-banner .error-content p {
+  margin: 0;
+  font-size: var(--font-base);
+  color: var(--muted);
+  line-height: 1.5;
+}
+.error-banner .error-content code {
+  background: rgba(0,0,0,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+}
+.error-banner .error-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+body[data-theme="noir"] .error-banner .error-content code {
+  background: rgba(255,255,255,0.1);
+}
+
+/* =================================================================
+   COPY TO CLIPBOARD - Button for results
+   ================================================================= */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusXs);
+  padding: 6px 10px;
+  font-size: var(--font-xs);
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+.copy-btn:hover {
+  background: var(--panel2);
+  color: var(--text);
+}
+.copy-btn.copied {
+  background: rgba(40,167,69,0.15);
+  color: #28a745;
+  border-color: rgba(40,167,69,0.3);
+}
+.result-container:hover .copy-btn {
+  opacity: 1;
+}
+
+/* =================================================================
+   CLEAR BUTTON STYLING
+   ================================================================= */
+#clear_btn {
+  background: var(--panel) !important;
+  color: var(--muted) !important;
+  border: 1px solid var(--border) !important;
+}
+#clear_btn:hover {
+  background: var(--panel2) !important;
+  color: var(--text) !important;
+  border-color: var(--accent) !important;
+}
+
+/* =================================================================
    FOOTER - Minimal
    ================================================================= */
 .footer {
@@ -2332,8 +2461,8 @@ body[data-theme="noir"] #frankie_loader {
   outline: 3px solid var(--accent) !important;
   outline-offset: 2px !important;
 }
-button:focus-visible, 
-input:focus-visible, 
+button:focus-visible,
+input:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
   outline: 3px solid var(--accent) !important;
@@ -2444,25 +2573,25 @@ body[data-theme="noir"] .mode_descriptions {
     max-width: 100% !important;
     padding: 0 12px !important;
   }
-  
+
   #shell {
     flex-direction: column !important;
   }
-  
+
   #left_spine,
   #right_panel {
     border-radius: var(--radius) !important;
     margin-bottom: 16px !important;
   }
-  
+
   #left_spine {
     border-right: none !important;
   }
-  
+
   #right_panel {
     border-left: 1px solid var(--border) !important;
   }
-  
+
   .header_features {
     flex-wrap: wrap !important;
     justify-content: center !important;
@@ -2477,57 +2606,57 @@ body[data-theme="noir"] .mode_descriptions {
     --font-xl: 1.25rem;
     --font-2xl: 1.375rem;
   }
-  
+
   .gradio-container {
     padding: 0 8px !important;
   }
-  
+
   #brand_header {
     padding: 20px 16px 24px 16px !important;
     margin: -8px -8px 16px -8px !important;
   }
-  
+
   #brand_title {
     font-size: 1.75em !important;
   }
-  
+
   #brand_subtitle {
     font-size: var(--font-base) !important;
   }
-  
+
   .header_features {
     gap: 8px !important;
   }
-  
+
   .feature_tag {
     font-size: var(--font-xs) !important;
     padding: 4px 10px !important;
   }
-  
+
   #left_spine,
   #right_panel {
     padding: 16px !important;
   }
-  
+
   /* Stack review mode buttons vertically on mobile */
   #review_mode .wrap {
     flex-direction: column !important;
     gap: 8px !important;
   }
-  
+
   #review_mode label {
     padding: 14px 12px !important;
   }
-  
+
   /* Stack action buttons */
   #action_buttons {
     flex-direction: column !important;
   }
-  
+
   #action_buttons > div {
     width: 100% !important;
   }
-  
+
   /* Larger touch targets */
   #review_btn button,
   #sample_btn button {
@@ -2535,83 +2664,83 @@ body[data-theme="noir"] .mode_descriptions {
     font-size: var(--font-lg) !important;
     padding: 16px 20px !important;
   }
-  
+
   /* Findings table: horizontal scroll */
   .findings_table {
     display: block !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  
+
   /* Severity counters: 2x2 grid on mobile */
   .severity_counters {
     flex-wrap: wrap !important;
   }
-  
+
   .severity_counter {
     flex: 1 1 50% !important;
     min-width: 0 !important;
     border-bottom: 1px solid var(--border) !important;
   }
-  
+
   .severity_counter:nth-child(3),
   .severity_counter:nth-child(4) {
     border-bottom: none !important;
   }
-  
+
   .severity_counter:nth-child(2),
   .severity_counter:nth-child(4) {
     border-right: none !important;
   }
-  
+
   /* Top fixes: full width */
   .top_fix {
     flex-direction: column !important;
     gap: 8px !important;
   }
-  
+
   .fix_number {
     align-self: flex-start !important;
   }
-  
+
   /* Trust signals: wrap nicely */
   .trust_signals {
     justify-content: center !important;
     gap: 10px !important;
   }
-  
+
   /* Tabs: scrollable on mobile */
   #right_panel .tab-nav {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     flex-wrap: nowrap !important;
   }
-  
+
   #right_panel .tab-nav button {
     flex: 0 0 auto !important;
     white-space: nowrap !important;
     padding: 12px 14px !important;
   }
-  
+
   /* Code editor: better mobile height */
   #left_spine textarea,
   #left_spine .cm-editor {
     min-height: 150px !important;
     max-height: 250px !important;
   }
-  
+
   /* Frankie loader: smaller on mobile */
   #frankie_loader {
     padding: 32px 24px !important;
     max-width: 90% !important;
     margin: 16px !important;
   }
-  
+
   .frankie_container {
     width: 100px !important;
     height: 68px !important;
   }
-  
+
   /* Footer: stacked links */
   .footer_links {
     display: flex !important;
@@ -2619,7 +2748,7 @@ body[data-theme="noir"] .mode_descriptions {
     justify-content: center !important;
     gap: 8px !important;
   }
-  
+
   .footer a {
     margin: 0 6px !important;
   }
@@ -2631,31 +2760,31 @@ body[data-theme="noir"] .mode_descriptions {
     --font-base: 0.9375rem;
     --font-sm: 0.8125rem;
   }
-  
+
   #brand_title {
     font-size: 1.5em !important;
   }
-  
+
   .header_tagline {
     font-size: var(--font-base) !important;
   }
-  
+
   /* Single column severity counters on very small screens */
   .severity_counter {
     flex: 1 1 50% !important;
   }
-  
+
   /* Compact verdict card */
   .verdict_header {
     flex-direction: column !important;
     text-align: center !important;
     gap: 12px !important;
   }
-  
+
   .verdict_main {
     text-align: center !important;
   }
-  
+
   /* Accordion: ensure tap target */
   #customize_acc .label-wrap {
     padding: 14px 40px 14px 14px !important;
@@ -2669,13 +2798,13 @@ body[data-theme="noir"] .mode_descriptions {
   input, textarea, select {
     font-size: 16px !important;
   }
-  
+
   /* iOS safe area for notched devices */
   .gradio-container {
     padding-left: max(12px, env(safe-area-inset-left)) !important;
     padding-right: max(12px, env(safe-area-inset-right)) !important;
   }
-  
+
   .footer {
     padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
   }
@@ -2686,17 +2815,17 @@ body[data-theme="noir"] .mode_descriptions {
   :root {
     --border: rgba(0,0,0,0.4);
   }
-  
+
   body[data-theme="noir"] {
     --border: rgba(255,255,255,0.4);
   }
-  
+
   .severity_badge,
   .fix_severity,
   .verdict_pill {
     border: 2px solid currentColor !important;
   }
-  
+
   button, [role="button"] {
     border: 2px solid currentColor !important;
   }
@@ -2789,53 +2918,53 @@ def get_frankie_loader(run_id: str = "") -> str:
       <!-- Ball (terracotta, bouncing) -->
       <circle class="ball" cx="125" cy="75" r="10" fill="#CD8F7A"/>
       <path class="ball" d="M120 72 Q125 68 130 72 M120 78 Q125 82 130 78" stroke="#B87A65" stroke-width="1.5" fill="none"/>
-      
+
       <!-- Body (horizontal for trotting) -->
       <ellipse cx="55" cy="50" rx="28" ry="18" fill="#2A2926"/>
-      
+
       <!-- Chest/front body -->
       <ellipse cx="75" cy="48" rx="14" ry="14" fill="#2A2926"/>
-      
+
       <!-- Fluffy chest ruff -->
       <path d="M82 42 Q88 50 82 58 Q78 52 82 42" fill="#3D3B38"/>
-      
+
       <!-- Neck -->
       <path d="M80 38 L88 28 L92 32 L86 44 Z" fill="#2A2926"/>
-      
+
       <!-- Head -->
       <ellipse cx="94" cy="26" rx="12" ry="10" fill="#2A2926"/>
-      
+
       <!-- Snout -->
       <ellipse cx="104" cy="28" rx="8" ry="5" fill="#2A2926"/>
       <ellipse cx="110" cy="27" rx="3" ry="2" fill="#1A1918"/>
-      
+
       <!-- Ears (alert, perky) -->
       <path d="M88 18 L84 6 L92 14 Z" fill="#2A2926"/>
       <path d="M96 16 L100 4 L102 14 Z" fill="#2A2926"/>
       <path d="M89 16 L86 10 L91 14 Z" fill="#3D3B38"/>
       <path d="M97 14 L99 8 L100 13 Z" fill="#3D3B38"/>
-      
+
       <!-- Eye -->
       <circle cx="96" cy="24" r="2.5" fill="#1A1918"/>
       <circle cx="97" cy="23" r="1" fill="#4A4845"/>
-      
+
       <!-- Collar -->
       <path d="M84 36 Q88 34 92 36 Q92 40 88 42 Q84 40 84 36" fill="#CD8F7A"/>
       <circle cx="88" cy="42" r="3" fill="#CD8F7A"/>
       <circle cx="88" cy="42" r="1.5" fill="#B87A65"/>
-      
+
       <!-- Tail (fluffy, wagging) -->
       <path class="tail" d="M22 45 Q10 35 8 25 Q6 18 12 15 Q18 14 22 20 Q20 28 24 38" fill="#2A2926"/>
       <path class="tail" d="M14 18 Q18 16 20 20 Q16 22 14 18" fill="#3D3B38"/>
-      
+
       <!-- Back legs (animated) -->
       <path class="back-leg-1" d="M28 58 L22 78 L18 90 L24 90 L30 78 L32 62" fill="#2A2926"/>
       <path class="back-leg-2" d="M38 56 L42 75 L44 90 L50 90 L46 75 L40 58" fill="#2A2926"/>
-      
+
       <!-- Front legs (animated) -->
       <path class="front-leg-1" d="M68 58 L64 75 L62 90 L68 90 L72 75 L72 60" fill="#2A2926"/>
       <path class="front-leg-2" d="M78 55 L82 72 L84 90 L90 90 L86 72 L80 56" fill="#2A2926"/>
-      
+
       <!-- Paws (little detail) -->
       <ellipse class="back-leg-1" cx="21" cy="90" rx="5" ry="3" fill="#2A2926"/>
       <ellipse class="back-leg-2" cx="47" cy="90" rx="5" ry="3" fill="#2A2926"/>
@@ -2937,8 +3066,9 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             )
 
             with gr.Row(elem_id="action_buttons"):
-                btn = gr.Button("🔍 Analyze My Code", elem_id="review_btn", scale=1)
+                btn = gr.Button("🔍 Analyze My Code", elem_id="review_btn", scale=2)
                 sample_btn = gr.Button("📝 Try Example", elem_id="sample_btn", scale=1)
+                clear_btn = gr.Button("🗑️ Clear", elem_id="clear_btn", scale=1)
 
             # Quick examples for testing - clickable samples
             gr.Examples(
@@ -3031,12 +3161,96 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     </div>
     """)
 
-    # Wire up sample button
-    sample_btn.click(fn=load_sample, outputs=[code, ctx])
+    # Session state for audit record (replaces global variable for multi-tenant isolation)
+    audit_state = gr.State(value=None)
+    session_id_state = gr.State(value=generate_session_id)
+
+    # Wire up sample button with loading indication
+    def load_sample_with_state():
+        """Load sample code and return to clear any previous results."""
+        code_val, ctx_val = load_sample()
+        empty_html = """
+        <div id="empty_state">
+            <div class="empty_icon">📝</div>
+            <div class="empty_title">Example loaded</div>
+            <div class="empty_text">Click <strong>Analyze My Code</strong> to see Frankie in action</div>
+        </div>
+        """
+        return (
+            code_val,
+            ctx_val,
+            empty_html,  # Show helpful message
+            "",  # Clear summary
+            "",  # Clear details
+            "",  # Clear fixes
+            gr.update(visible=False),  # Hide export btn
+            gr.update(visible=False),  # Hide export md btn
+        )
+
+    sample_btn.click(
+        fn=load_sample_with_state,
+        outputs=[
+            code,
+            ctx,
+            empty_state,
+            summ,
+            det,
+            fixes_tab,
+            export_btn,
+            export_md_btn,
+        ],
+    )
+
+    # Wire up clear button
+    def clear_all():
+        """Reset the entire form to start fresh."""
+        empty_html = """
+        <div id="empty_state">
+            <div class="empty_icon">🔍</div>
+            <div class="empty_title">Ready to analyze your code</div>
+            <div class="empty_text">Paste code on the left, choose your review mode, then click <strong>Analyze My Code</strong></div>
+            <div class="empty_hint">💡 New here? Click "Try Example" to see Frankie in action</div>
+        </div>
+        """
+        return (
+            "",  # Clear code
+            "",  # Clear filename
+            empty_html,  # Reset empty state
+            "",  # Clear summary
+            "",  # Clear details
+            "",  # Clear fixes
+            gr.update(value=None, visible=False),  # Clear and hide audit JSON
+            gr.update(visible=False),  # Hide export btn
+            gr.update(visible=False),  # Hide export md btn
+            None,  # Clear audit state
+        )
+
+    clear_btn.click(
+        fn=clear_all,
+        outputs=[
+            code,
+            ctx,
+            empty_state,
+            summ,
+            det,
+            fixes_tab,
+            audit_json,
+            export_btn,
+            export_md_btn,
+            audit_state,
+        ],
+    )
 
     # Wire up review button - show Frankie during review, hide empty state when results arrive
     def run_with_frankie(
-        code_val, sec_val, comp_val, logic_val, perf_val, ctx_val, review_mode_val
+        code_val,
+        sec_val,
+        comp_val,
+        logic_val,
+        perf_val,
+        ctx_val,
+        review_mode_val,
+        session_id,
     ):
         # Adjust categories based on review mode
         # Quick mode: security only, fast
@@ -3057,15 +3271,20 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             gr.update(value=None, visible=False),  # audit_json
             gr.update(visible=False),  # export_btn
             gr.update(visible=False),  # export_md_btn
+            None,  # audit_state
         )
 
-        # Run the actual review
-        summ_result, det_result, fixes_result = review_code(
-            code_val, sec_val, comp_val, logic_val, perf_val, ctx_val
+        # Run the actual review (now returns 4-tuple with audit_record)
+        summ_result, det_result, fixes_result, audit_record = review_code(
+            code_val,
+            sec_val,
+            comp_val,
+            logic_val,
+            perf_val,
+            ctx_val,
+            review_mode_val,
+            session_id,
         )
-
-        # Get the audit record for export
-        audit_record = _last_audit_record
 
         # Final yield: show results and export controls
         yield (
@@ -3073,14 +3292,15 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             summ_result,  # summ
             det_result,  # det
             fixes_result,  # fixes_tab
-            gr.update(value=audit_record, visible=True),  # audit_json
-            gr.update(visible=True),  # export_btn
-            gr.update(visible=True),  # export_md_btn
+            gr.update(value=audit_record, visible=bool(audit_record)),  # audit_json
+            gr.update(visible=bool(audit_record)),  # export_btn
+            gr.update(visible=bool(audit_record)),  # export_md_btn
+            audit_record,  # audit_state
         )
 
     btn.click(
         fn=run_with_frankie,
-        inputs=[code, sec, comp, logic, perf, ctx, review_mode],
+        inputs=[code, sec, comp, logic, perf, ctx, review_mode, session_id_state],
         outputs=[
             empty_state,
             summ,
@@ -3089,37 +3309,70 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             audit_json,
             export_btn,
             export_md_btn,
+            audit_state,
         ],
         api_name="review",
     )
 
-    # Wire up export button to download JSON
-    def do_export():
+    # Wire up export JSON button
+    def do_export_json(audit_record):
         """Return audit record for JSON component."""
-        global _last_audit_record
-        return _last_audit_record
+        return audit_record
 
-    export_btn.click(fn=do_export, outputs=audit_json, api_name="export_audit")
+    export_btn.click(
+        fn=do_export_json,
+        inputs=[audit_state],
+        outputs=audit_json,
+        api_name="export_audit",
+    )
+
+    # Wire up export Markdown button
+    def do_export_markdown(audit_record):
+        """Generate markdown export of the audit record."""
+        if not audit_record:
+            return "No audit record available."
+
+        md = f"""# Security Audit Report
+
+**Decision ID:** {audit_record.get("decision_id", "N/A")}
+**Timestamp:** {audit_record.get("timestamp_utc", "N/A")}
+**Verdict:** {audit_record.get("verdict", "N/A")}
+
+## Policy Information
+
+- **Version:** {audit_record.get("policy", {}).get("policy_version", "N/A")}
+- **URL:** {audit_record.get("policy", {}).get("policy_url", "N/A")}
+
+## Decision Drivers
+
+"""
+        for driver in audit_record.get("decision_drivers", []):
+            md += f"""### {driver.get("finding_id", "N/A")}: {driver.get("title", "Untitled")}
+- **Severity:** {driver.get("severity", "N/A")}
+- **Confidence:** {driver.get("confidence", 0):.0%}
+- **Location:** {driver.get("location", "N/A")}
+- **CWE:** {driver.get("cwe") or "N/A"}
+- **OWASP:** {driver.get("owasp") or "N/A"}
+
+"""
+        md += """---
+
+*Generated by Code Review Agent (Frankie)*
+"""
+        return md
+
+    export_md_btn.click(
+        fn=do_export_markdown,
+        inputs=[audit_state],
+        outputs=det,
+        api_name="export_markdown",
+    )
 
 
 # =============================================================================
 # HEALTH CHECK ENDPOINT
 # For monitoring and uptime checks
 # =============================================================================
-
-
-def get_audit_export() -> tuple[dict | None, str]:
-    """
-    Export the last audit record as JSON for compliance/GRC workflows.
-    Returns the audit record and a downloadable filename.
-    """
-    global _last_audit_record
-    if _last_audit_record is None:
-        return None, "No audit record available"
-    return (
-        _last_audit_record,
-        f"audit_{_last_audit_record.get('decision_id', 'unknown')}.json",
-    )
 
 
 def get_health_status() -> dict[str, Any]:
