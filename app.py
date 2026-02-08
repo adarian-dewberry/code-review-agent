@@ -3114,126 +3114,136 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     frankie_line = pick_frankie_line(run_id)
 
-    # Professional Alaskan Malamute in sitting position - watchful and calm
-    # Simple, clean design that looks natural without being too animated
+    # Professional Alaskan Malamute - friendly, watchful sitting pose
+    # Based on reference image: black/white coloring, warm eyes, alert ears
     frankie_svg = """
-    <svg viewBox="0 0 360 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 380 420" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Fur gradients for realistic coat -->
-        <linearGradient id="coatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#8B9494;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#4A5A5A;stop-opacity:1" />
+        <!-- Gradient for dark charcoal coat -->
+        <linearGradient id="darkCoat" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2F2F2F;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#1F1F1F;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#0F0F0F;stop-opacity:1" />
         </linearGradient>
-        <radialGradient id="bodyLight" cx="40%" cy="20%">
-          <stop offset="0%" style="stop-color:#ABABAB;stop-opacity:0.5" />
-          <stop offset="100%" style="stop-color:#6A7A7A;stop-opacity:0" />
+        <!-- Light shine on dark coat -->
+        <radialGradient id="darkShine" cx="35%" cy="20%">
+          <stop offset="0%" style="stop-color:#555555;stop-opacity:0.4" />
+          <stop offset="100%" style="stop-color:#1F1F1F;stop-opacity:0" />
         </radialGradient>
-        <linearGradient id="whiteBlaze" x1="0%" y1="0%" x2="0%" y2="100%">
+        <!-- Pure white for markings -->
+        <linearGradient id="whiteMarkings" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#F0F0F0;stop-opacity:0.95" />
+          <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:0.98" />
         </linearGradient>
-        <filter id="softShadow">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+        <!-- Light gray for inner ears -->
+        <linearGradient id="earInner" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#D4A5A5;stop-opacity:0.95" />
+          <stop offset="100%" style="stop-color:#C08080;stop-opacity:0.85" />
+        </linearGradient>
+        <filter id="medShadow">
+          <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-opacity="0.35"/>
         </filter>
-        <filter id="softGlow">
+        <filter id="softShadow">
           <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.15"/>
         </filter>
       </defs>
 
-      <!-- Back of body (sitting position, rump down) -->
-      <ellipse cx="180" cy="240" rx="75" ry="85" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <ellipse cx="180" cy="235" rx="70" ry="80" fill="url(#bodyLight)"/>
+      <!-- BODY (sitting, dark charcoal) -->
+      <ellipse cx="190" cy="260" rx="80" ry="90" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+      <ellipse cx="190" cy="255" rx="76" ry="85" fill="url(#darkShine)"/>
 
-      <!-- Left back leg (sitting) -->
-      <ellipse cx="110" cy="300" rx="28" ry="70" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <!-- Left paw pad -->
-      <ellipse cx="110" cy="368" rx="22" ry="14" fill="#5A5A5A"/>
+      <!-- White chest blaze (distinctive marking) -->
+      <ellipse cx="190" cy="280" rx="55" ry="68" fill="url(#whiteMarkings)" opacity="0.98"/>
+      <ellipse cx="190" cy="295" rx="42" ry="55" fill="#FFFFFF" opacity="0.95"/>
 
-      <!-- Right back leg (sitting) -->
-      <ellipse cx="250" cy="300" rx="28" ry="70" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <!-- Right paw pad -->
-      <ellipse cx="250" cy="368" rx="22" ry="14" fill="#5A5A5A"/>
+      <!-- Back legs (sitting position) -->
+      <ellipse cx="120" cy="320" rx="30" ry="75" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+      <ellipse cx="260" cy="320" rx="30" ry="75" fill="url(#darkCoat)" filter="url(#medShadow)"/>
 
-      <!-- White chest blaze (characteristic malamute marking) -->
-      <ellipse cx="180" cy="260" rx="50" ry="60" fill="url(#whiteBlaze)" opacity="0.95"/>
-      <ellipse cx="180" cy="275" rx="38" ry="48" fill="#FFFFFF" opacity="0.9"/>
+      <!-- Back paws -->
+      <ellipse cx="120" cy="390" rx="24" ry="15" fill="#1A1A1A"/>
+      <ellipse cx="260" cy="390" rx="24" ry="15" fill="#1A1A1A"/>
 
-      <!-- Thick, powerful neck -->
-      <path d="M 130 220 Q 125 200 130 180 Q 145 160 180 165 Q 215 160 230 180 Q 235 200 230 220 Q 220 235 180 238 Q 140 235 130 220" 
-            fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <!-- Front legs (sitting, visible) -->
+      <ellipse cx="150" cy="330" rx="26" ry="70" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+      <ellipse cx="230" cy="330" rx="26" ry="70" fill="url(#darkCoat)" filter="url(#medShadow)"/>
 
-      <!-- BROAD HEAD (sitting alert, facing forward) -->
-      <ellipse cx="180" cy="110" rx="68" ry="78" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <ellipse cx="180" cy="105" rx="64" ry="74" fill="url(#bodyLight)"/>
+      <!-- Front paws -->
+      <ellipse cx="150" cy="398" rx="22" ry="13" fill="#1A1A1A"/>
+      <ellipse cx="230" cy="398" rx="22" ry="13" fill="#1A1A1A"/>
 
-      <!-- Face white blaze / white mask -->
-      <ellipse cx="180" cy="95" rx="48" ry="58" fill="url(#whiteBlaze)" opacity="0.95"/>
-      <ellipse cx="180" cy="105" rx="40" ry="50" fill="#FFFFFF" opacity="0.9"/>
+      <!-- Thick neck -->
+      <path d="M 140 240 Q 135 220 140 200 Q 155 180 190 185 Q 225 180 240 200 Q 245 220 240 240 Q 230 255 190 258 Q 150 255 140 240" 
+            fill="url(#darkCoat)" filter="url(#medShadow)"/>
 
-      <!-- Snout - relaxed position -->
-      <ellipse cx="220" cy="135" rx="40" ry="32" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <ellipse cx="228" cy="135" rx="34" ry="27" fill="#6A7A7A"/>
-      <!-- Muzzle tip -->
-      <ellipse cx="255" cy="135" rx="24" ry="20" fill="url(#whiteBlaze)" opacity="0.9"/>
+      <!-- HEAD (alert, facing forward) -->
+      <ellipse cx="190" cy="120" rx="72" ry="85" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+      <ellipse cx="190" cy="115" rx="68" ry="80" fill="url(#darkShine)"/>
+
+      <!-- White face blaze (from image: white forehead/mask area) -->
+      <ellipse cx="190" cy="105" rx="50" ry="62" fill="url(#whiteMarkings)" opacity="0.98"/>
+      <ellipse cx="190" cy="115" rx="42" ry="52" fill="#FFFFFF" opacity="0.95"/>
+
+      <!-- Snout (friendly, alert position) -->
+      <ellipse cx="235" cy="145" rx="42" ry="35" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+      <ellipse cx="244" cy="145" rx="35" ry="30" fill="#1A1A1A"/>
+      <!-- Snout white tip -->
+      <ellipse cx="268" cy="145" rx="26" ry="22" fill="url(#whiteMarkings)" opacity="0.96"/>
       <!-- Nose -->
-      <ellipse cx="272" cy="134" rx="7" ry="6" fill="#2A2926"/>
-      <circle cx="273" cy="132" r="3" fill="#1A1A1A"/>
+      <ellipse cx="285" cy="143" rx="8" ry="7" fill="#1A1A1A" filter="url(#softShadow)"/>
+      <circle cx="286.5" cy="141" r="3" fill="#000000"/>
 
-      <!-- EYES - Warm, intelligent, attentive gaze -->
-      <circle cx="145" cy="90" r="9" fill="#1A1A1A" filter="url(#softGlow)"/>
-      <circle cx="147" cy="87" r="3.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="148" cy="86" r="1.5" fill="#000000"/>
+      <!-- EYES - Big, warm, intelligent (like the image) -->
+      <!-- Left eye -->
+      <circle cx="150" cy="95" r="11" fill="#1A1A1A" filter="url(#softShadow)"/>
+      <circle cx="152" cy="91" r="4.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="153" cy="89" r="2" fill="#000000"/>
+      <circle cx="151" cy="94" r="1.5" fill="#4A4A4A" opacity="0.6"/>
 
-      <circle cx="210" cy="85" r="9" fill="#1A1A1A" filter="url(#softGlow)"/>
-      <circle cx="212" cy="82" r="3.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="213" cy="81" r="1.5" fill="#000000"/>
+      <!-- Right eye -->
+      <circle cx="220" cy="90" r="11" fill="#1A1A1A" filter="url(#softShadow)"/>
+      <circle cx="222" cy="86" r="4.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="223" cy="84" r="2" fill="#000000"/>
+      <circle cx="221" cy="89" r="1.5" fill="#4A4A4A" opacity="0.6"/>
 
-      <!-- EARS - Alert, upright, slightly forward -->
-      <!-- Left ear -->
-      <g transform="translate(115, 55)">
-        <ellipse cx="0" cy="0" rx="14" ry="42" fill="#5A6A6A" filter="url(#softShadow)" transform="rotate(-12)"/>
-        <ellipse cx="0" cy="0" rx="10" ry="35" fill="#7A8A8A" opacity="0.9" transform="rotate(-12)"/>
-        <ellipse cx="0" cy="-8" rx="6" ry="18" fill="#D0A0A0" opacity="0.4" transform="rotate(-12)"/>
+      <!-- EARS - Alert, pointed, slightly forward (from image) -->
+      <!-- Left ear - dark outside -->
+      <g transform="translate(120, 60)">
+        <path d="M 0 0 L -16 -52 L -4 -2 Z" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+        <path d="M -1 -1 L -12 -46 L -3 -1.5 Z" fill="#2F2F2F" opacity="0.9"/>
+        <!-- Inner ear pink -->
+        <path d="M -3 -3 L -9 -36 L -3 -4 Z" fill="url(#earInner)"/>
       </g>
 
-      <!-- Right ear -->
-      <g transform="translate(245, 50)">
-        <ellipse cx="0" cy="0" rx="14" ry="42" fill="#5A6A6A" filter="url(#softShadow)" transform="rotate(12)"/>
-        <ellipse cx="0" cy="0" rx="10" ry="35" fill="#7A8A8A" opacity="0.9" transform="rotate(12)"/>
-        <ellipse cx="0" cy="-8" rx="6" ry="18" fill="#D0A0A0" opacity="0.4" transform="rotate(12)"/>
+      <!-- Right ear - dark outside -->
+      <g transform="translate(260, 55)">
+        <path d="M 0 0 L 16 -54 L 4 -2 Z" fill="url(#darkCoat)" filter="url(#medShadow)"/>
+        <path d="M 1 -1 L 12 -48 L 3 -1.5 Z" fill="#2F2F2F" opacity="0.9"/>
+        <!-- Inner ear pink -->
+        <path d="M 3 -3 L 9 -38 L 3 -4 Z" fill="url(#earInner)"/>
       </g>
 
-      <!-- TAIL - Curled over back (sitting position) -->
-      <g class="frankie-tail" transform="translate(120, 180)">
+      <!-- TAIL - Fluffy, animated wag (sitting) -->
+      <g class="frankie-tail" transform="translate(135, 190)">
         <!-- Outer shadow -->
-        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
-              fill="none" stroke="#4A5A5A" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)"/>
-        <!-- Main coat -->
-        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
-              fill="none" stroke="#8BA5A5" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-        <!-- Highlight -->
-        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
-              fill="none" stroke="#D8D0C8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
+              fill="none" stroke="#0F0F0F" stroke-width="35" stroke-linecap="round" stroke-linejoin="round" filter="url(#medShadow)"/>
+        <!-- Main dark coat -->
+        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
+              fill="none" stroke="#2F2F2F" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- White highlight on tail -->
+        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
+              fill="none" stroke="#E8E0D8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
       </g>
 
-      <!-- Front left leg (sitting, visible) -->
-      <ellipse cx="140" cy="310" rx="24" ry="65" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <!-- Front left paw -->
-      <ellipse cx="140" cy="373" rx="20" ry="12" fill="#5A5A5A"/>
+      <!-- Subtle fur texture details for depth -->
+      <circle cx="160" cy="160" r="3" fill="#555555" opacity="0.2" filter="url(#softShadow)"/>
+      <circle cx="220" cy="155" r="3" fill="#555555" opacity="0.2" filter="url(#softShadow)"/>
+      <circle cx="175" cy="270" r="2.5" fill="#555555" opacity="0.15"/>
+      <circle cx="205" cy="275" r="2.5" fill="#555555" opacity="0.15"/>
 
-      <!-- Front right leg (sitting, visible) -->
-      <ellipse cx="220" cy="310" rx="24" ry="65" fill="url(#coatGrad)" filter="url(#softShadow)"/>
-      <!-- Front right paw -->
-      <ellipse cx="220" cy="373" rx="20" ry="12" fill="#5A5A5A"/>
-
-      <!-- Subtle fur texture details -->
-      <circle cx="155" cy="155" r="3" fill="#9BA8A8" opacity="0.25" filter="url(#softGlow)"/>
-      <circle cx="205" cy="150" r="3" fill="#9BA8A8" opacity="0.25" filter="url(#softGlow)"/>
-      <circle cx="170" cy="250" r="2.5" fill="#9BA8A8" opacity="0.2" filter="url(#softGlow)"/>
-      <circle cx="190" cy="255" r="2.5" fill="#9BA8A8" opacity="0.2" filter="url(#softGlow)"/>
-
-      <!-- Ground shadow (soft, sitting) -->
-      <ellipse cx="180" cy="390" rx="95" ry="8" fill="rgba(0,0,0,0.12)" filter="url(#softGlow)"/>
+      <!-- Ground shadow -->
+      <ellipse cx="190" cy="410" rx="100" ry="10" fill="rgba(0,0,0,0.15)" filter="url(#softShadow)"/>
     </svg>
     """
 
