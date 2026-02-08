@@ -1,5 +1,5 @@
 """
-Path Traversal Example - CWE-22, OWASP A01:2021
+Path Traversal Example - CWE-22, OWASP A01:2025 (Broken Access Control)
 
 This code demonstrates CRITICAL path traversal vulnerabilities
 that allow attackers to read or write files outside intended directories.

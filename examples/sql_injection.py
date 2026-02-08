@@ -1,5 +1,5 @@
 """
-SQL Injection Example - CWE-89, OWASP A03:2021
+SQL Injection Example - CWE-89, OWASP A03:2025 (Injection)
 
 This code demonstrates a CRITICAL SQL injection vulnerability
 caused by string formatting in database queries.

@@ -1,5 +1,5 @@
 """
-Prompt Injection Example - OWASP LLM01
+Prompt Injection Example - OWASP LLM01:2025 (Prompt Injection)
 
 This code demonstrates a CRITICAL prompt injection vulnerability
 where user input is directly interpolated into LLM prompts without

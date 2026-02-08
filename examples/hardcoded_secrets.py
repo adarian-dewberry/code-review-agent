@@ -1,5 +1,5 @@
 """
-Hardcoded Secrets Example - CWE-798, OWASP A07:2021
+Hardcoded Secrets Example - CWE-798, OWASP A01:2025 (Broken Access Control)
 
 This code demonstrates CRITICAL security vulnerabilities
 from hardcoding sensitive credentials directly in source code.
