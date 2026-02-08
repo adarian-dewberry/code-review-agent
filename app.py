@@ -2369,13 +2369,13 @@ body[data-theme="dark-mode"] #frankie_loader {
 
 .frankie_container {
   position: relative;
-  width: 300px;
+  width: 280px;
   height: auto;
   margin: 0 auto 32px;
   overflow: visible;
   flex-shrink: 0;
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
-  animation: frankieBounce 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.2));
+  animation: frankieBreath 4s ease-in-out infinite;
 }
 
 .frankie_silhouette {
@@ -2387,72 +2387,21 @@ body[data-theme="dark-mode"] #frankie_loader {
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
-  animation: dogHeadTilt 2.8s ease-in-out infinite;
-  transform-origin: 170px 120px;
+  animation: tailWag 3.5s ease-in-out infinite;
 }
 
-/* Separate red ball element */
-.frankie_ball {
-  position: absolute;
-  top: 15px;
-  left: 120px;
-  width: 32px;
-  height: 32px;
-  background: radial-gradient(circle at 30% 30%, #FF9999, #CC0000);
-  border-radius: 50%;
-  box-shadow: 
-    0 4px 12px rgba(204, 0, 0, 0.4),
-    inset -2px -2px 4px rgba(0, 0, 0, 0.2),
-    inset 2px 2px 4px rgba(255, 255, 255, 0.3);
-  animation: ballBounce 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
-  z-index: 10;
-}
+/* Separate red ball element - REMOVED */
+/* .frankie_ball now hidden since dog is sitting */
 
 /* ===== PROFESSIONAL LOADING ANIMATIONS ===== */
 
-/* Container bounce for play bow effect */
-@keyframes frankieBounce {
+/* Gentle breathing motion for sitting dog */
+@keyframes frankieBreath {
   0%, 100% { 
-    transform: translateY(0);
-  }
-  50% { 
-    transform: translateY(-8px);
-  }
-}
-
-/* Dog head tilt - synchronized with ball bounce */
-@keyframes dogHeadTilt {
-  0%, 100% { 
-    transform: rotateZ(0deg); 
-  }
-  25% { 
-    transform: rotateZ(-3deg); 
-  }
-  50% { 
-    transform: rotateZ(0deg); 
-  }
-  75% { 
-    transform: rotateZ(3deg); 
-  }
-}
-
-/* Ball bounce - playful, energetic bouncing */
-@keyframes ballBounce {
-  0% { 
     transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  40% { 
-    transform: translateY(-60px) scale(1.05);
-    opacity: 1;
   }
   50% { 
-    transform: translateY(-70px) scale(1);
-    opacity: 0.98;
-  }
-  100% { 
-    transform: translateY(0) scale(1);
-    opacity: 1;
+    transform: translateY(-4px) scale(1.01);
   }
 }
 
@@ -2472,8 +2421,6 @@ body[data-theme="dark-mode"] #frankie_loader {
 /* Respects reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .frankie_container,
-  .frankie_ball,
-  .frankie-tail,
   .frankie_silhouette svg {
     animation: none !important;
   }
@@ -3167,125 +3114,126 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     frankie_line = pick_frankie_line(run_id)
 
-    # Professional 3D-styled Alaskan Malamute hero asset
-    # High-quality SVG with realistic fur, anatomy, and presence
+    # Professional Alaskan Malamute in sitting position - watchful and calm
+    # Simple, clean design that looks natural without being too animated
     frankie_svg = """
-    <svg viewBox="0 0 400 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 360 400" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Fur gradient layers for 3D effect -->
-        <linearGradient id="coatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#9BA8A8;stop-opacity:1" />
-          <stop offset="50%" style="stop-color:#6B7A7A;stop-opacity:1" />
+        <!-- Fur gradients for realistic coat -->
+        <linearGradient id="coatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B9494;stop-opacity:1" />
           <stop offset="100%" style="stop-color:#4A5A5A;stop-opacity:1" />
         </linearGradient>
-        <radialGradient id="bodyShine" cx="35%" cy="25%">
-          <stop offset="0%" style="stop-color:#B8C5C5;stop-opacity:0.6" />
-          <stop offset="100%" style="stop-color:#5A6A6A;stop-opacity:0" />
+        <radialGradient id="bodyLight" cx="40%" cy="20%">
+          <stop offset="0%" style="stop-color:#ABABAB;stop-opacity:0.5" />
+          <stop offset="100%" style="stop-color:#6A7A7A;stop-opacity:0" />
         </radialGradient>
-        <linearGradient id="whiteChest" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="whiteBlaze" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#E5E0D8;stop-opacity:0.95" />
+          <stop offset="100%" style="stop-color:#F0F0F0;stop-opacity:0.95" />
         </linearGradient>
-        <filter id="deepShadow">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.4"/>
+        <filter id="softShadow">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
         </filter>
-        <filter id="lightShadow">
-          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.2"/>
+        <filter id="softGlow">
+          <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.15"/>
         </filter>
       </defs>
 
-      <!-- Back legs (rump up, play bow position) -->
-      <ellipse cx="120" cy="220" rx="22" ry="55" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="220" cy="230" rx="22" ry="52" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <!-- Back paw pads -->
-      <ellipse cx="120" cy="275" rx="18" ry="12" fill="#5A6A6A"/>
-      <ellipse cx="220" cy="282" rx="18" ry="12" fill="#5A6A6A"/>
+      <!-- Back of body (sitting position, rump down) -->
+      <ellipse cx="180" cy="240" rx="75" ry="85" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <ellipse cx="180" cy="235" rx="70" ry="80" fill="url(#bodyLight)"/>
 
-      <!-- Rear haunch (rounded, fluffy) -->
-      <ellipse cx="170" cy="180" rx="70" ry="75" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="170" cy="175" rx="64" ry="68" fill="url(#bodyShine)"/>
+      <!-- Left back leg (sitting) -->
+      <ellipse cx="110" cy="300" rx="28" ry="70" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <!-- Left paw pad -->
+      <ellipse cx="110" cy="368" rx="22" ry="14" fill="#5A5A5A"/>
 
-      <!-- White rump marking -->
-      <ellipse cx="180" cy="200" rx="45" ry="50" fill="url(#whiteChest)" opacity="0.75"/>
+      <!-- Right back leg (sitting) -->
+      <ellipse cx="250" cy="300" rx="28" ry="70" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <!-- Right paw pad -->
+      <ellipse cx="250" cy="368" rx="22" ry="14" fill="#5A5A5A"/>
 
-      <!-- Main body/chest area (broad, powerful) -->
-      <ellipse cx="170" cy="280" rx="90" ry="80" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="170" cy="275" rx="85" ry="75" fill="url(#bodyShine)"/>
+      <!-- White chest blaze (characteristic malamute marking) -->
+      <ellipse cx="180" cy="260" rx="50" ry="60" fill="url(#whiteBlaze)" opacity="0.95"/>
+      <ellipse cx="180" cy="275" rx="38" ry="48" fill="#FFFFFF" opacity="0.9"/>
 
-      <!-- Prominent white chest blaze -->
-      <ellipse cx="175" cy="295" rx="60" ry="65" fill="url(#whiteChest)"/>
-      <ellipse cx="175" cy="310" rx="45" ry="50" fill="#FFFFFF" opacity="0.95"/>
+      <!-- Thick, powerful neck -->
+      <path d="M 130 220 Q 125 200 130 180 Q 145 160 180 165 Q 215 160 230 180 Q 235 200 230 220 Q 220 235 180 238 Q 140 235 130 220" 
+            fill="url(#coatGrad)" filter="url(#softShadow)"/>
 
-      <!-- Thick neck connecting to head (muscular) -->
-      <path d="M 120 250 Q 115 220 125 190 Q 140 170 170 175 Q 200 170 215 190 Q 225 220 220 250 Q 210 265 170 270 Q 130 265 120 250" 
-            fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-
-      <!-- BROAD MALAMUTE HEAD (the focal point) -->
-      <ellipse cx="170" cy="120" rx="75" ry="85" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="170" cy="115" rx="70" ry="80" fill="url(#bodyShine)"/>
+      <!-- BROAD HEAD (sitting alert, facing forward) -->
+      <ellipse cx="180" cy="110" rx="68" ry="78" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <ellipse cx="180" cy="105" rx="64" ry="74" fill="url(#bodyLight)"/>
 
       <!-- Face white blaze / white mask -->
-      <ellipse cx="170" cy="100" rx="52" ry="62" fill="url(#whiteChest)" opacity="0.95"/>
-      <ellipse cx="170" cy="110" rx="40" ry="50" fill="#FFFFFF" opacity="0.9"/>
+      <ellipse cx="180" cy="95" rx="48" ry="58" fill="url(#whiteBlaze)" opacity="0.95"/>
+      <ellipse cx="180" cy="105" rx="40" ry="50" fill="#FFFFFF" opacity="0.9"/>
 
-      <!-- Prominent snout - thick, powerful muzzle -->
-      <ellipse cx="225" cy="140" rx="45" ry="35" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="235" cy="140" rx="38" ry="30" fill="#7A8A8A"/>
-      <!-- Muzzle tip with white marking -->
-      <ellipse cx="265" cy="140" rx="28" ry="24" fill="url(#whiteChest)" opacity="0.9"/>
+      <!-- Snout - relaxed position -->
+      <ellipse cx="220" cy="135" rx="40" ry="32" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <ellipse cx="228" cy="135" rx="34" ry="27" fill="#6A7A7A"/>
+      <!-- Muzzle tip -->
+      <ellipse cx="255" cy="135" rx="24" ry="20" fill="url(#whiteBlaze)" opacity="0.9"/>
       <!-- Nose -->
-      <ellipse cx="285" cy="138" rx="8" ry="7" fill="#2A2926"/>
-      <circle cx="286" cy="136" r="3.5" fill="#1A1A1A"/>
+      <ellipse cx="272" cy="134" rx="7" ry="6" fill="#2A2926"/>
+      <circle cx="273" cy="132" r="3" fill="#1A1A1A"/>
 
-      <!-- EYES - Intelligent, warm expression, wide-set -->
-      <circle cx="135" cy="85" r="9" fill="#1A1A1A" filter="url(#lightShadow)"/>
-      <circle cx="137" cy="82" r="3.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="138" cy="81" r="1.5" fill="#000000"/>
+      <!-- EYES - Warm, intelligent, attentive gaze -->
+      <circle cx="145" cy="90" r="9" fill="#1A1A1A" filter="url(#softGlow)"/>
+      <circle cx="147" cy="87" r="3.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="148" cy="86" r="1.5" fill="#000000"/>
 
-      <circle cx="205" cy="80" r="9" fill="#1A1A1A" filter="url(#lightShadow)"/>
-      <circle cx="207" cy="77" r="3.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="208" cy="76" r="1.5" fill="#000000"/>
+      <circle cx="210" cy="85" r="9" fill="#1A1A1A" filter="url(#softGlow)"/>
+      <circle cx="212" cy="82" r="3.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="213" cy="81" r="1.5" fill="#000000"/>
 
-      <!-- EARS - Small, triangular, upright, well-furred -->
+      <!-- EARS - Alert, upright, slightly forward -->
       <!-- Left ear -->
-      <g transform="translate(105, 50)">
-        <path d="M 0 0 L -12 -48 L -3 -2 Z" fill="#5A6A6A" filter="url(#deepShadow)"/>
-        <path d="M -1 -1 L -10 -42 L -2 -1.5 Z" fill="#7A8A8A" opacity="0.95"/>
-        <path d="M -2 -2 L -8 -32 L -2 -2.5 Z" fill="#D5A8A8" opacity="0.5"/>
+      <g transform="translate(115, 55)">
+        <ellipse cx="0" cy="0" rx="14" ry="42" fill="#5A6A6A" filter="url(#softShadow)" transform="rotate(-12)"/>
+        <ellipse cx="0" cy="0" rx="10" ry="35" fill="#7A8A8A" opacity="0.9" transform="rotate(-12)"/>
+        <ellipse cx="0" cy="-8" rx="6" ry="18" fill="#D0A0A0" opacity="0.4" transform="rotate(-12)"/>
       </g>
 
       <!-- Right ear -->
-      <g transform="translate(235, 48)">
-        <path d="M 0 0 L 12 -50 L 3 -2 Z" fill="#5A6A6A" filter="url(#deepShadow)"/>
-        <path d="M 1 -1 L 10 -44 L 2 -1.5 Z" fill="#7A8A8A" opacity="0.95"/>
-        <path d="M 2 -2 L 8 -34 L 2 -2.5 Z" fill="#D5A8A8" opacity="0.5"/>
+      <g transform="translate(245, 50)">
+        <ellipse cx="0" cy="0" rx="14" ry="42" fill="#5A6A6A" filter="url(#softShadow)" transform="rotate(12)"/>
+        <ellipse cx="0" cy="0" rx="10" ry="35" fill="#7A8A8A" opacity="0.9" transform="rotate(12)"/>
+        <ellipse cx="0" cy="-8" rx="6" ry="18" fill="#D0A0A0" opacity="0.4" transform="rotate(12)"/>
       </g>
 
-      <!-- BUSHY PLUME TAIL - Thick, fluffy, curling over back -->
-      <g class="frankie-tail" transform="translate(110, 160)">
-        <!-- Outer shadow layer -->
-        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
-              fill="none" stroke="#4A5A5A" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" filter="url(#deepShadow)"/>
-        <!-- Main coat layer -->
-        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
-              fill="none" stroke="#8BA5A5" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
-        <!-- Highlight/white layer -->
-        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
-              fill="none" stroke="#D8D0C8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+      <!-- TAIL - Curled over back (sitting position) -->
+      <g class="frankie-tail" transform="translate(120, 180)">
+        <!-- Outer shadow -->
+        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
+              fill="none" stroke="#4A5A5A" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)"/>
+        <!-- Main coat -->
+        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
+              fill="none" stroke="#8BA5A5" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Highlight -->
+        <path d="M 0 0 Q -25 -40 -35 -90 Q -40 -130 -15 -155 Q 15 -170 40 -145 Q 50 -120 48 -70 Q 45 -20 40 20" 
+              fill="none" stroke="#D8D0C8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
       </g>
 
-      <!-- Front legs (extended forward and down, play bow) -->
-      <ellipse cx="110" cy="350" rx="20" ry="60" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <ellipse cx="225" cy="360" rx="20" ry="58" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
-      <!-- Front paws -->
-      <ellipse cx="110" cy="410" rx="16" ry="10" fill="#5A6A6A"/>
-      <ellipse cx="225" cy="418" rx="16" ry="10" fill="#5A6A6A"/>
+      <!-- Front left leg (sitting, visible) -->
+      <ellipse cx="140" cy="310" rx="24" ry="65" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <!-- Front left paw -->
+      <ellipse cx="140" cy="373" rx="20" ry="12" fill="#5A5A5A"/>
 
-      <!-- Fur texture detail elements -->
-      <circle cx="130" cy="160" r="4" fill="#9BA8A8" opacity="0.3" filter="url(#lightShadow)"/>
-      <circle cx="210" cy="170" r="3.5" fill="#9BA8A8" opacity="0.25"/>
-      <circle cx="150" cy="240" r="3" fill="#9BA8A8" opacity="0.2"/>
-      <circle cx="190" cy="250" r="3.5" fill="#9BA8A8" opacity="0.25"/>
+      <!-- Front right leg (sitting, visible) -->
+      <ellipse cx="220" cy="310" rx="24" ry="65" fill="url(#coatGrad)" filter="url(#softShadow)"/>
+      <!-- Front right paw -->
+      <ellipse cx="220" cy="373" rx="20" ry="12" fill="#5A5A5A"/>
+
+      <!-- Subtle fur texture details -->
+      <circle cx="155" cy="155" r="3" fill="#9BA8A8" opacity="0.25" filter="url(#softGlow)"/>
+      <circle cx="205" cy="150" r="3" fill="#9BA8A8" opacity="0.25" filter="url(#softGlow)"/>
+      <circle cx="170" cy="250" r="2.5" fill="#9BA8A8" opacity="0.2" filter="url(#softGlow)"/>
+      <circle cx="190" cy="255" r="2.5" fill="#9BA8A8" opacity="0.2" filter="url(#softGlow)"/>
+
+      <!-- Ground shadow (soft, sitting) -->
+      <ellipse cx="180" cy="390" rx="95" ry="8" fill="rgba(0,0,0,0.12)" filter="url(#softGlow)"/>
     </svg>
     """
 
@@ -3293,20 +3241,18 @@ def get_frankie_loader(run_id: str = "") -> str:
     <div id="frankie_overlay" style="display: flex; opacity: 1;">
         <div id="frankie_inline_container" class="frankie-state-scanning">
             <div id="frankie_loader">
-                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's got his eye on it">
-                    <!-- Ball bouncing in front of dog -->
-                    <div class="frankie_ball"></div>
-                    <!-- Dog SVG -->
+                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
+                    <!-- Dog SVG - sitting position -->
                     <div class="frankie_silhouette">{frankie_svg}</div>
                 </div>
-                <div class="frankie_title">Frankie's Got His Eye on It</div>
+                <div class="frankie_title">Frankie's Watching Your Code</div>
                 <div class="frankie_line">{frankie_line}</div>
                 <div class="frankie_progress_section">
                     <div class="frankie_progress_bar">
                         <div class="frankie_progress_fill"></div>
                     </div>
                 </div>
-                <div class="frankie_hint">Just a moment...</div>
+                <div class="frankie_hint">Analyzing thoroughly...</div>
             </div>
         </div>
     </div>
