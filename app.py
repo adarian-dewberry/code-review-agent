@@ -1316,7 +1316,7 @@ APP_CSS = """
    ================================================================= */
 
 :root {
-  /* Light canvas (Ivory mode) */
+  /* Light canvas (Light mode) */
   --bg: #FAF8F4;
   --panel: #E7DCCE;
   --panel2: #D8C5B2;
@@ -1359,8 +1359,8 @@ APP_CSS = """
   --transition: all 0.2s ease;
 }
 
-/* Noir mode */
-body[data-theme="noir"] {
+/* Dark mode */
+body[data-theme="dark-mode"] {
   --bg: #1B1A18;
   --panel: #2A2926;
   --panel2: #2A2926;
@@ -1455,10 +1455,10 @@ body[data-theme="noir"] {
   border-radius: 999px;
   font-weight: 500;
 }
-body[data-theme="noir"] #brand_header {
+body[data-theme="dark-mode"] #brand_header {
   background: linear-gradient(145deg, rgba(205,143,122,0.08) 0%, rgba(42,41,38,0.6) 100%);
 }
-body[data-theme="noir"] .feature_tag {
+body[data-theme="dark-mode"] .feature_tag {
   background: rgba(42,41,38,0.6);
   color: rgba(250,248,244,0.75);
 }
@@ -1488,7 +1488,7 @@ body[data-theme="noir"] .feature_tag {
   background: var(--accent) !important;
   color: var(--bg) !important;
 }
-body[data-theme="noir"] #mode_toggle .wrap {
+body[data-theme="dark-mode"] #mode_toggle .wrap {
   background: var(--spine2) !important;
 }
 
@@ -1719,7 +1719,7 @@ body[data-theme="noir"] #mode_toggle .wrap {
   border-radius: 0 var(--radius) var(--radius) 0 !important;
   padding: 20px !important;
 }
-body[data-theme="noir"] #right_panel {
+body[data-theme="dark-mode"] #right_panel {
   background: rgba(42,41,38,0.5) !important;
 }
 #right_panel .block, #right_panel .form {
@@ -1774,7 +1774,7 @@ body[data-theme="noir"] #right_panel {
   font-size: var(--font-base);
   font-weight: 600;
 }
-body[data-theme="noir"] #empty_state {
+body[data-theme="dark-mode"] #empty_state {
   background: linear-gradient(145deg, rgba(42,41,38,0.7), rgba(27,26,24,0.6));
   border-color: rgba(250,248,244,0.15);
 }
@@ -1791,7 +1791,7 @@ body[data-theme="noir"] #empty_state {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
-body[data-theme="noir"] #verdict_card {
+body[data-theme="dark-mode"] #verdict_card {
   background: linear-gradient(145deg, rgba(42,41,38,0.9), rgba(27,26,24,0.8));
 }
 
@@ -1856,7 +1856,7 @@ body[data-theme="noir"] #verdict_card {
   gap: 0;
   background: rgba(0,0,0,0.02);
 }
-body[data-theme="noir"] .severity_counters {
+body[data-theme="dark-mode"] .severity_counters {
   background: rgba(0,0,0,0.12);
 }
 .severity_counter {
@@ -1913,7 +1913,7 @@ body[data-theme="noir"] .severity_counters {
   border-radius: var(--radiusXs);
   margin-bottom: 8px;
 }
-body[data-theme="noir"] .top_fix {
+body[data-theme="dark-mode"] .top_fix {
   background: rgba(42,41,38,0.5);
 }
 .fix_number {
@@ -1963,7 +1963,7 @@ body[data-theme="noir"] .top_fix {
   font-size: var(--font-sm);
   color: var(--muted);
 }
-body[data-theme="noir"] .trust_signals {
+body[data-theme="dark-mode"] .trust_signals {
   background: rgba(0,0,0,0.08);
 }
 .trust_signal {
@@ -1989,7 +1989,7 @@ body[data-theme="noir"] .trust_signals {
   border-radius: var(--radiusSm);
   margin-bottom: 14px;
 }
-body[data-theme="noir"] #right_panel .tab-nav {
+body[data-theme="dark-mode"] #right_panel .tab-nav {
   background: rgba(0,0,0,0.2);
 }
 #right_panel .tab-nav button {
@@ -2013,7 +2013,7 @@ body[data-theme="noir"] #right_panel .tab-nav {
   color: var(--text) !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
 }
-body[data-theme="noir"] #right_panel .tab-nav button.selected {
+body[data-theme="dark-mode"] #right_panel .tab-nav button.selected {
   background: var(--spine2) !important;
 }
 
@@ -2099,7 +2099,7 @@ body[data-theme="noir"] #right_panel .tab-nav button.selected {
   margin-bottom: 14px;
   overflow: hidden;
 }
-body[data-theme="noir"] .finding_card {
+body[data-theme="dark-mode"] .finding_card {
   background: rgba(42,41,38,0.6);
 }
 .finding_card_header {
@@ -2230,7 +2230,7 @@ body[data-theme="noir"] .finding_card {
   color: var(--accent);
   text-decoration: underline;
 }
-body[data-theme="noir"] .error-banner .error-content code {
+body[data-theme="dark-mode"] .error-banner .error-content code {
   background: rgba(255,255,255,0.1);
 }
 
@@ -2350,7 +2350,7 @@ body[data-theme="noir"] .error-banner .error-content code {
   position: relative;
 }
 
-body[data-theme="noir"] #frankie_loader {
+body[data-theme="dark-mode"] #frankie_loader {
   background: linear-gradient(135deg, rgba(12,11,10,0.97) 0%, rgba(30,28,25,0.90) 100%);
   border: 1px solid rgba(205,143,122,0.15);
 }
@@ -2656,21 +2656,21 @@ textarea:focus-visible,
   font-size: var(--font-lg) !important;
 }
 
-/* Noir mode accessibility fixes */
-body[data-theme="noir"] .gradio-container {
+/* Dark mode accessibility fixes */
+body[data-theme="dark-mode"] .gradio-container {
   color: #FAF8F4 !important;
 }
-body[data-theme="noir"] .muted,
-body[data-theme="noir"] .text2 {
+body[data-theme="dark-mode"] .muted,
+body[data-theme="dark-mode"] .text2 {
   color: rgba(250,248,244,0.8) !important;
 }
-body[data-theme="noir"] select,
-body[data-theme="noir"] .dropdown {
+body[data-theme="dark-mode"] select,
+body[data-theme="dark-mode"] .dropdown {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CD8F7A' d='M2 4l4 4 4-4'/%3E%3C/svg%3E") !important;
   color: #FAF8F4 !important;
 }
-body[data-theme="noir"] .spine_hint,
-body[data-theme="noir"] .mode_descriptions {
+body[data-theme="dark-mode"] .spine_hint,
+body[data-theme="dark-mode"] .mode_descriptions {
   color: rgba(250,248,244,0.75) !important;
 }
 
@@ -2927,7 +2927,7 @@ body[data-theme="noir"] .mode_descriptions {
     --border: rgba(0,0,0,0.4);
   }
 
-  body[data-theme="noir"] {
+  body[data-theme="dark-mode"] {
     --border: rgba(255,255,255,0.4);
   }
 
@@ -3027,64 +3027,73 @@ def get_frankie_loader(run_id: str = "") -> str:
     # Silent witness to the review process
     frankie_svg = """
     <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- SENTINEL POSTURE: Alert, leaning forward into active scanning -->
-      <!-- Metaphor: Escape artist finding gaps in security - focused intensity -->
+      <!-- Alaskan Malamute - Sentinel scanning for security gaps -->
       
-      <!-- Back legs (dynamic stance, ready to launch into next scan) -->
-      <path d="M 55 78 L 50 105 L 50 115 L 62 115 L 62 105 L 60 78" fill="#2A2926" stroke="none"/>
-      <path d="M 82 80 L 88 105 L 88 115 L 100 115 L 100 105 L 92 80" fill="#2A2926" stroke="none"/>
+      <!-- Back legs -->
+      <path d="M 45 85 L 40 115 L 50 115 L 52 85 Q 50 87 45 85" fill="#5A6B6B"/>
+      <path d="M 75 88 L 72 115 L 82 115 L 85 88 Q 82 89 75 88" fill="#5A6B6B"/>
       
-      <!-- Body (compact, alert lean forward) -->
-      <ellipse cx="65" cy="70" rx="30" ry="20" fill="#2A2926"/>
+      <!-- Body - strong malamute physique -->
+      <ellipse cx="55" cy="72" rx="28" ry="24" fill="#6B7D7D"/>
+      <ellipse cx="55" cy="72" rx="26" ry="22" fill="#8FA0A0"/>
       
-      <!-- Chest (extended forward - active engagement posture) -->
-      <ellipse cx="80" cy="65" rx="22" ry="26" fill="#2A2926"/>
+      <!-- Chest - white/light markings typical of malamutes -->
+      <ellipse cx="62" cy="68" rx="18" ry="22" fill="#F5F0E8"/>
+      <path d="M 58 75 L 65 75 L 68 88 L 55 88 Z" fill="#F5F0E8"/>
       
-      <!-- Neck (bridge to rotated head - scanning angle) -->
-      <path d="M 85 48 L 100 35 L 104 38 L 92 50 Z" fill="#2A2926"/>
+      <!-- Front left leg -->
+      <path d="M 50 88 L 48 115 L 58 115 L 60 88 Q 56 89 50 88" fill="#5A6B6B"/>
       
-      <!-- Head (rotated -22° toward gap discovery - intense focus angle) -->
-      <g transform="translate(115, 28) rotate(-22)">
-        <ellipse cx="0" cy="0" rx="14" ry="13" fill="#2A2926"/>
+      <!-- Front right leg -->
+      <path d="M 72 87 L 70 115 L 80 115 L 82 87 Q 78 88 72 87" fill="#5A6B6B"/>
+      
+      <!-- Neck (connecting to head) -->
+      <ellipse cx="68" cy="52" rx="14" ry="18" fill="#8FA0A0"/>
+      <path d="M 65 52 L 72 52 L 74 60 L 63 60 Z" fill="#F5F0E8"/>
+      
+      <!-- Head - proper malamute skull shape -->
+      <ellipse cx="82" cy="35" rx="16" ry="18" fill="#8FA0A0"/>
+      <ellipse cx="82" cy="35" rx="14" ry="16" fill="#6B7D7D"/>
+      
+      <!-- Face white blaze (characteristic malamute marking) -->
+      <ellipse cx="82" cy="38" rx="8" ry="10" fill="#F5F0E8"/>
+      
+      <!-- Snout - prominent malamute muzzle -->
+      <ellipse cx="95" cy="40" rx="11" ry="9" fill="#8FA0A0"/>
+      <ellipse cx="98" cy="40" rx="8" ry="7" fill="#F5F0E8"/>
+      <ellipse cx="103" cy="40" rx="3" ry="2.5" fill="#3A3A3A"/>
+      
+      <!-- Nose -->
+      <ellipse cx="103" cy="39" rx="2.5" ry="1.8" fill="#1A1A1A"/>
+      
+      <!-- Eyes (alert, scanning) - spaced for intelligent expression -->
+      <circle class="frankie-scanning-eye" cx="78" cy="30" r="3.2" fill="#1A1A1A"/>
+      <circle cx="79" cy="29" r="1.2" fill="#FFFFFF"/>
+      
+      <circle class="frankie-scanning-eye" cx="86" cy="28" r="3" fill="#1A1A1A"/>
+      <circle cx="87" cy="27" r="1.1" fill="#FFFFFF"/>
+      
+      <!-- Left ear - large malamute ear, perked forward alert -->
+      <g transform="translate(70, 18)">
+        <ellipse cx="0" cy="0" rx="7" ry="14" fill="#5A6B6B"/>
+        <ellipse cx="0.5" cy="1" rx="5" ry="11" fill="#8FA0A0"/>
+        <path d="M -3 5 L 3 5 L 2 10 L -2 10 Z" fill="#F5F0E8" opacity="0.7"/>
       </g>
       
-      <!-- Snout (angled toward vulnerability - escape artist finding the weak point) -->
-      <g transform="translate(115, 28) rotate(-22)">
-        <ellipse cx="13" cy="2" rx="9" ry="6" fill="#2A2926"/>
-        <path d="M 20 2 L 23 2 L 23 3 L 20 3 Z" fill="#1A1918"/>
+      <!-- Right ear - large malamute ear, perked forward alert -->
+      <g transform="translate(94, 16)">
+        <ellipse cx="0" cy="0" rx="7" ry="15" fill="#5A6B6B"/>
+        <ellipse cx="-0.5" cy="1" rx="5" ry="12" fill="#8FA0A0"/>
+        <path d="M -3 6 L 3 6 L 2 11 L -2 11 Z" fill="#F5F0E8" opacity="0.7"/>
       </g>
       
-      <!-- Eyes (both visible - heightened alertness for scanning) -->
-      <g transform="translate(115, 28) rotate(-22)">
-        <!-- Primary eye (intense focus point) -->
-        <circle class="frankie-scanning-eye" cx="8" cy="-1" r="3.5" fill="#1A1918"/>
-        <circle cx="9.2" cy="-2" r="1.4" fill="#FAF8F4" opacity="0.85"/>
-        <!-- Secondary eye (peripheral awareness) -->
-        <circle class="frankie-scanning-eye" cx="12" cy="-2" r="2.5" fill="#1A1918" opacity="0.75"/>
-        <circle cx="12.8" cy="-3" r="0.9" fill="#FAF8F4" opacity="0.65"/>
-      </g>
-      
-      <!-- Ears (fully perked forward - active listening for gaps/anomalies) -->
-      <!-- Left ear (forward alert) -->
-      <g transform="translate(115, 28) rotate(-22)">
-        <path d="M -7 -10 L -14 -28 L -5 -11 Z" fill="#2A2926"/>
-        <path d="M -6.5 -10.5 L -12 -24 L -5 -11 Z" fill="#3D3B38"/>
-      </g>
-      <!-- Right ear (forward alert) -->
-      <g transform="translate(115, 28) rotate(-22)">
-        <path d="M 7 -11 L 15 -30 L 9 -9 Z" fill="#2A2926"/>
-        <path d="M 7.5 -11 L 14 -27 L 9 -10 Z" fill="#3D3B38"/>
-      </g>
-      
-      <!-- Tail (alert curve - elevated kinetic energy, searching momentum) -->
-      <path class="frankie-alert-tail" d="M 35 65 Q 20 52 12 30 Q 8 14 20 8 Q 35 2 44 22 Q 52 48 55 72" 
-            fill="none" stroke="#2A2926" stroke-width="14" stroke-linecap="round"/>
-      <path class="frankie-alert-tail" d="M 35 65 Q 20 52 12 30 Q 8 14 20 8 Q 35 2 44 22 Q 52 48 55 72" 
-            fill="none" stroke="#3D3B38" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
-      
-      <!-- Front legs (forward reach - poised to investigate findings) -->
-      <path d="M 70 88 L 68 108 L 68 115 L 80 115 L 80 108 L 78 88" fill="#2A2926"/>
-      <path d="M 92 89 L 97 108 L 97 115 L 109 115 L 109 108 L 105 89" fill="#2A2926"/>
+      <!-- Tail - thick, powerful malamute tail, alert curve upward -->
+      <path class="frankie-alert-tail" 
+            d="M 35 70 Q 25 50 28 25 Q 32 15 42 12 Q 50 10 52 30 Q 52 55 50 75"
+            fill="none" stroke="#5A6B6B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="frankie-alert-tail" 
+            d="M 35 70 Q 25 50 28 25 Q 32 15 42 12 Q 50 10 52 30 Q 52 55 50 75"
+            fill="none" stroke="#8FA0A0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
     </svg>
     """
 
@@ -3189,12 +3198,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     </script>
     """)
 
-    # Theme toggle (Ivory / Noir)
+    # Theme toggle (Light Mode / Dark Mode)
     with gr.Row():
         with gr.Column():
             theme_mode = gr.Radio(
-                choices=["Ivory", "Noir"],
-                value="Ivory",
+                choices=["Light Mode", "Dark Mode"],
+                value="Light Mode",
                 label="",
                 elem_id="mode_toggle",
                 interactive=True,
@@ -3205,7 +3214,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         fn=lambda x: None,
         inputs=theme_mode,
         outputs=None,
-        js="(mode) => { document.body.dataset.theme = mode.toLowerCase() === 'noir' ? 'noir' : 'light'; }",
+        js="(mode) => { document.body.dataset.theme = mode.toLowerCase().includes('dark') ? 'dark-mode' : 'light-mode'; }",
     )
 
     # Main layout: Dark spine (left) + Light results (right)
