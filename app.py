@@ -817,14 +817,13 @@ Analyze the code and return findings as JSON per the schema. Include line number
                     }
                 )
 
-        # Summary HTML with blast radius indicator
+        # Check for high blast radius findings (for UI indicator)
         has_high_blast = any(
             br.get("blast_radius", {}).get("data_scope") in ["pii", "regulated"]
             or br.get("blast_radius", {}).get("org_scope")
             in ["external-customers", "regulators"]
             for br in blast_radius_findings
         )
-        blast_indicator = " · High Blast Radius" if has_high_blast else ""
 
         # Get top confidence for easter egg selection
         top_confidence = max((f.get("confidence", 0) for f in findings), default=0)
@@ -842,37 +841,112 @@ Analyze the code and return findings as JSON per the schema. Include line number
         # Use easter egg for subtext if available (never on BLOCK)
         subtext = easter_egg if easter_egg else base_copy["subtext"]
 
+        # Count findings by severity
+        severity_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
+        for f in findings:
+            sev = f.get("severity", "MEDIUM")
+            if sev in severity_counts:
+                severity_counts[sev] += 1
+
         # Verdict display config
-        verdict_display = {
-            "BLOCK": {"css_class": "verdict-block", "dot_color": "#dc3545"},
-            "REVIEW_REQUIRED": {"css_class": "verdict-review", "dot_color": "#CD8F7A"},
-            "PASS": {"css_class": "verdict-pass", "dot_color": "#28a745"},
+        verdict_config = {
+            "BLOCK": {
+                "icon": "🚫",
+                "css_class": "block",
+                "dot_color": "#dc3545",
+            },
+            "REVIEW_REQUIRED": {
+                "icon": "⚠️",
+                "css_class": "review",
+                "dot_color": "#CD8F7A",
+            },
+            "PASS": {
+                "icon": "✅",
+                "css_class": "pass",
+                "dot_color": "#28a745",
+            },
         }
 
-        vd = verdict_display.get(verdict, verdict_display["PASS"])
+        vc = verdict_config.get(verdict, verdict_config["PASS"])
 
-        # Luxury summary card
+        # Build top 3 fixes for quick action
+        top_fixes_html = ""
+        sorted_findings = sorted(
+            findings,
+            key=lambda x: (
+                {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
+                    x.get("severity", "LOW"), 4
+                ),
+                -x.get("confidence", 0),
+            ),
+        )
+        for i, f in enumerate(sorted_findings[:3]):
+            sev = f.get("severity", "MEDIUM").lower()
+            safe_title = html.escape(f.get("title", "Issue"))
+            location = f.get("location") or (
+                f"Line {f.get('line')}" if f.get("line") else "—"
+            )
+            safe_location = html.escape(str(location))
+            owasp = f.get("owasp", "")
+            cwe = f.get("cwe", "")
+            tags = f" · {owasp}" if owasp else (f" · {cwe}" if cwe else "")
+            top_fixes_html += f"""
+            <div class="top_fix">
+                <div class="fix_number">{i + 1}</div>
+                <div class="fix_content">
+                    <div class="fix_title">{safe_title}</div>
+                    <div class="fix_meta">
+                        <span class="fix_severity {sev}">{sev.upper()}</span>
+                        <span>{safe_location}{tags}</span>
+                    </div>
+                </div>
+            </div>"""
+
+        # Premium verdict card with severity counters
         summary = f"""
-<div style="padding: 24px; background: linear-gradient(135deg, #FAF8F4 0%, #E7DCCE 100%); border-left: 4px solid {vd['dot_color']}; border-radius: 12px; margin-bottom: 16px;">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-        <span style="width: 12px; height: 12px; background: {vd['dot_color']}; border-radius: 50%;"></span>
-        <span style="font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85em; color: #2A2926; text-transform: uppercase; letter-spacing: 0.05em;">
-            {verdict.replace('_', ' ')}
-        </span>
+<div id="verdict_card">
+    <div class="verdict_header">
+        <div class="verdict_icon {vc['css_class']}">{vc['icon']}</div>
+        <div class="verdict_main">
+            <div class="verdict_pill {vc['css_class']}">
+                <span style="width: 8px; height: 8px; background: {vc['dot_color']}; border-radius: 50%;"></span>
+                {verdict.replace('_', ' ')}
+            </div>
+            <h2 class="verdict_headline">{base_copy['headline']}</h2>
+            <p class="verdict_subtext">{subtext}</p>
+        </div>
     </div>
-    <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.5em; color: #2A2926; margin: 0 0 8px 0; font-weight: 500;">
-        {base_copy['headline']}
-    </h2>
-    <p style="font-family: 'Inter', sans-serif; color: #6B6560; font-size: 0.95em; margin: 0 0 16px 0; line-height: 1.5;">
-        {subtext}
-    </p>
-    <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85em; color: #6B6560;">
-        <span style="background: rgba(220, 204, 179, 0.7); padding: 4px 12px; border-radius: 999px;">{base_copy['confidence_text']}</span>
-        <span>{len(findings)} finding{'s' if len(findings) != 1 else ''}{blast_indicator}</span>
+    
+    <div class="severity_counters">
+        <div class="severity_counter">
+            <div class="counter_value critical">{severity_counts['CRITICAL']}</div>
+            <div class="counter_label">Critical</div>
+        </div>
+        <div class="severity_counter">
+            <div class="counter_value high">{severity_counts['HIGH']}</div>
+            <div class="counter_label">High</div>
+        </div>
+        <div class="severity_counter">
+            <div class="counter_value medium">{severity_counts['MEDIUM']}</div>
+            <div class="counter_label">Medium</div>
+        </div>
+        <div class="severity_counter">
+            <div class="counter_value low">{severity_counts['LOW']}</div>
+            <div class="counter_label">Low</div>
+        </div>
+    </div>
+    
+    {"<div class='top_fixes'><div class='top_fixes_title'>Top Fixes</div>" + top_fixes_html + "</div>" if findings else ""}
+    
+    <div class="trust_signals">
+        <span class="trust_signal">📊 <strong>{len(findings)}</strong> finding{'s' if len(findings) != 1 else ''}</span>
+        <span class="trust_signal">📁 <strong>1</strong> file analyzed</span>
+        <span class="trust_signal">🎯 <strong>{base_copy['confidence_text']}</strong></span>
+        {"<span class='trust_signal'>💥 <strong>High Blast Radius</strong></span>" if has_high_blast else ""}
     </div>
 </div>
-<p style="font-size: 0.8em; color: #A89F91; margin-top: 8px;">
-    Decision ID: {decision_record['decision_id']} · Policy: {POLICY['version']}
+<p style="font-size: 0.78em; color: #A89F91; margin-top: 10px; text-align: center;">
+    Decision ID: <code style="background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">{decision_record['decision_id']}</code> · Policy: {POLICY['version']}
 </p>
 """
 
@@ -881,23 +955,34 @@ Analyze the code and return findings as JSON per the schema. Include line number
 
         if not findings:
             details += """
-## No issues found
+## ✅ No issues found
 
 This code follows safe patterns based on the signals we checked.
 
-*This doesn't guarantee zero risk, but no concerning patterns were detected.*
+<div style="background: rgba(40,167,69,0.08); border-left: 3px solid #28a745; padding: 16px; border-radius: 0 8px 8px 0; margin: 16px 0;">
+
+**What was checked:**
+- SQL injection patterns
+- Cross-site scripting (XSS)
+- Hardcoded secrets
+- Prompt injection (for LLM code)
+- Access control issues
+
+</div>
+
+*This doesn't guarantee zero risk, but no concerning patterns were detected in this review.*
 """
         else:
             # Layer 1: Plain language overview (Beginner-friendly)
-            details += "## What we found\n\n"
+            details += "## 🔍 What we found\n\n"
 
-            for i, f in enumerate(findings[:3]):  # Top 3 for overview
+            for i, f in enumerate(sorted_findings[:3]):  # Top 3 for overview
                 sev = f.get("severity", "MEDIUM")
                 border_color = {
-                    "CRITICAL": "#CD8F7A",
-                    "HIGH": "#A89F91",
-                    "MEDIUM": "#D8C5B2",
-                    "LOW": "#E7DCCE",
+                    "CRITICAL": "#dc3545",
+                    "HIGH": "#e67700",
+                    "MEDIUM": "#ffc107",
+                    "LOW": "#6c757d",
                 }.get(sev, "#D8C5B2")
 
                 # Plain language explanation - escape to prevent XSS
@@ -925,33 +1010,63 @@ This code follows safe patterns based on the signals we checked.
 """
 
             if len(findings) > 3:
-                details += f"\n*+ {len(findings) - 3} more finding{'s' if len(findings) - 3 != 1 else ''} in Advanced tab*\n"
+                details += f"\n*+ {len(findings) - 3} more finding{'s' if len(findings) - 3 != 1 else ''} below*\n"
 
-            # Layer 2: Technical details (Intermediate)
-            details += "\n---\n\n## Technical Details\n\n"
+            # Layer 2: Findings Table (Intermediate - scannable)
+            details += "\n---\n\n## 📋 All Findings\n\n"
+
+            # Build findings table HTML
+            details += """<table class="findings_table">
+<thead>
+<tr>
+<th>Severity</th>
+<th>Title</th>
+<th>Location</th>
+<th>CWE/OWASP</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+"""
+            for f in sorted_findings:
+                sev = f.get("severity", "MEDIUM")
+                sev_lower = sev.lower()
+                safe_title = html.escape(f.get("title", "Issue"))
+                location = f.get("location") or (
+                    f"Line {f.get('line')}" if f.get("line") else "—"
+                )
+                safe_location = html.escape(str(location))
+                owasp = f.get("owasp", "")
+                cwe = f.get("cwe", "")
+                mapping = owasp if owasp else cwe if cwe else "—"
+                conf = f.get("confidence", 0)
+                conf_pct = int(conf * 100)
+
+                details += f"""<tr>
+<td><span class="severity_badge {sev_lower}">{sev}</span></td>
+<td><strong>{safe_title}</strong></td>
+<td><code>{safe_location}</code></td>
+<td>{mapping}</td>
+<td><div class="confidence_bar"><div class="confidence_fill" style="width: {conf_pct}%"></div></div> {conf_pct}%</td>
+</tr>
+"""
+            details += "</tbody></table>\n\n"
+
+            # Layer 3: Technical details by root cause (Advanced)
+            details += "---\n\n## 🔬 Technical Analysis\n\n"
 
             # Group by root cause
             root_causes: dict[str, list[dict[str, Any]]] = {}
-            for f in findings:
+            for f in sorted_findings:
                 rc = f.get("root_cause", f.get("title", "Other"))
                 if rc not in root_causes:
                     root_causes[rc] = []
                 root_causes[rc].append(f)
 
             for root_cause, items in root_causes.items():
-                items = sorted(
-                    items,
-                    key=lambda x: (
-                        {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}.get(
-                            x.get("severity", "LOW"), 4
-                        ),
-                        -x.get("confidence", 0),
-                    ),
-                )
-
                 # Escape root cause for XSS prevention
                 safe_root_cause = html.escape(root_cause)
-                details += f"### Root Cause: {safe_root_cause}\n\n"
+                details += f"### 🎯 {safe_root_cause}\n\n"
 
                 for f in items:
                     sev = f.get("severity", "UNKNOWN")
@@ -1098,9 +1213,10 @@ APP_THEME = gr.themes.Base(
 
 APP_CSS = """
 /* =================================================================
-   DARK SPINE + LIGHT CANVAS
-   Rule: Dark = input/focus | Light = results/explanation
-   Rule: If it's clickable, it must look clickable
+   2026 TECH-FORWARD UI - Premium Security Console
+   Design: Card-based, trust-visible, persona-aware
+   Rule: Every persona finds their stopping point
+   Rule: Audit-ready = provably audit-ready
    ================================================================= */
 
 :root {
@@ -1110,9 +1226,18 @@ APP_CSS = """
   --panel2: #D8C5B2;
   --text: #2A2926;
   --text2: #1B1A18;
+  --muted: #6B6560;
   --accent: #CD8F7A;
+  --accent-dark: #B87A65;
   --gold: #DCCCB3;
-
+  
+  /* Severity colors */
+  --critical: #dc3545;
+  --high: #e67700;
+  --medium: #ffc107;
+  --low: #6c757d;
+  --pass: #28a745;
+  
   /* Dark spine */
   --spine: #1B1A18;
   --spine2: #2A2926;
@@ -1121,8 +1246,14 @@ APP_CSS = """
   /* UI tokens */
   --radius: 18px;
   --radiusSm: 12px;
+  --radiusXs: 8px;
   --border: rgba(42,41,38,0.12);
   --shadow: 0 10px 30px rgba(27,26,24,0.10);
+  --shadow-sm: 0 4px 12px rgba(27,26,24,0.08);
+  --shadow-hover: 0 8px 24px rgba(27,26,24,0.12);
+  
+  /* Animation */
+  --transition: all 0.2s ease;
 }
 
 /* Noir mode */
@@ -1132,8 +1263,10 @@ body[data-theme="noir"] {
   --panel2: #2A2926;
   --text: #FAF8F4;
   --text2: #FAF8F4;
+  --muted: rgba(250,248,244,0.6);
   --border: rgba(250,248,244,0.14);
   --shadow: 0 12px 36px rgba(0,0,0,0.35);
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.25);
   --spine: #121110;
   --spine2: #1B1A18;
 }
@@ -1142,30 +1275,33 @@ body[data-theme="noir"] {
 .gradio-container {
   background: var(--bg) !important;
   color: var(--text2) !important;
-  max-width: 1200px !important;
+  max-width: 1280px !important;
   margin: 0 auto !important;
   font-family: 'Inter', system-ui, sans-serif !important;
 }
 
-/* Header - Enhanced professional design */
+/* =================================================================
+   HEADER - Hero section with trust signals
+   ================================================================= */
 #brand_header {
   text-align: center;
-  padding: 32px 24px 36px 24px;
-  background: linear-gradient(135deg, rgba(205,143,122,0.08) 0%, rgba(220,204,179,0.12) 50%, rgba(205,143,122,0.06) 100%);
+  padding: 40px 24px 44px 24px;
+  background: linear-gradient(145deg, rgba(205,143,122,0.06) 0%, rgba(220,204,179,0.10) 50%, rgba(205,143,122,0.04) 100%);
   border-bottom: 1px solid var(--border);
-  margin: -12px -12px 24px -12px;
+  margin: -12px -12px 28px -12px;
   border-radius: var(--radius) var(--radius) 0 0;
+  position: relative;
 }
 .header_badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--accent), #B87A65);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: white;
-  font-size: 0.75em;
+  font-size: 0.72em;
   font-weight: 700;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
-  letter-spacing: 0.08em;
-  margin-bottom: 14px;
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
   box-shadow: 0 3px 12px rgba(205,143,122,0.25);
 }
 #brand_title {
@@ -1177,48 +1313,57 @@ body[data-theme="noir"] {
   line-height: 1.1;
 }
 .header_tagline {
-  font-size: 1.1em;
+  font-size: 1.15em;
   color: var(--accent);
   font-weight: 600;
-  margin-top: 4px;
+  margin-top: 6px;
   letter-spacing: 0.02em;
 }
 #brand_subtitle {
-  font-size: 1.15em;
-  color: rgba(107, 101, 96, 0.9);
-  margin-top: 12px;
-  line-height: 1.5;
-  max-width: 600px;
+  font-size: 1.2em;
+  color: var(--muted);
+  margin-top: 14px;
+  line-height: 1.55;
+  max-width: 640px;
   margin-left: auto;
   margin-right: auto;
 }
 .header_features {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  margin-top: 18px;
+  gap: 14px;
+  margin-top: 22px;
   flex-wrap: wrap;
 }
 .feature_tag {
-  font-size: 0.85em;
-  color: rgba(107,101,96,0.75);
-  padding: 6px 12px;
-  background: rgba(255,255,255,0.5);
+  font-size: 0.82em;
+  color: var(--muted);
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--border);
   border-radius: 999px;
   font-weight: 500;
+  transition: var(--transition);
+}
+.feature_tag:hover {
+  background: rgba(255,255,255,0.8);
+  transform: translateY(-1px);
 }
 body[data-theme="noir"] #brand_header {
-  background: linear-gradient(135deg, rgba(205,143,122,0.12) 0%, rgba(42,41,38,0.8) 50%, rgba(205,143,122,0.08) 100%);
+  background: linear-gradient(145deg, rgba(205,143,122,0.10) 0%, rgba(42,41,38,0.7) 50%, rgba(205,143,122,0.06) 100%);
 }
 body[data-theme="noir"] #brand_subtitle {
   color: rgba(250,248,244,0.7);
 }
 body[data-theme="noir"] .feature_tag {
-  background: rgba(42,41,38,0.6);
-  color: rgba(250,248,244,0.7);
+  background: rgba(42,41,38,0.65);
+  color: rgba(250,248,244,0.75);
+  border-color: rgba(250,248,244,0.12);
 }
 
-/* Theme toggle pill */
+/* =================================================================
+   THEME TOGGLE - Ivory/Noir mode switch
+   ================================================================= */
 #mode_toggle {
   display: flex;
   justify-content: center;
@@ -1229,15 +1374,15 @@ body[data-theme="noir"] .feature_tag {
   border: 1px solid var(--border) !important;
   border-radius: 999px !important;
   padding: 5px 8px !important;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
 }
 #mode_toggle label {
-  padding: 8px 20px !important;
+  padding: 8px 22px !important;
   border-radius: 999px !important;
   font-weight: 600 !important;
-  font-size: 0.9em !important;
+  font-size: 0.88em !important;
   cursor: pointer !important;
-  transition: all 0.25s ease !important;
+  transition: var(--transition) !important;
 }
 #mode_toggle input:checked + label {
   background: var(--accent) !important;
@@ -1246,6 +1391,66 @@ body[data-theme="noir"] .feature_tag {
 }
 body[data-theme="noir"] #mode_toggle .wrap {
   background: var(--spine2) !important;
+}
+
+/* =================================================================
+   REVIEW MODE SELECTOR - Quick/Deep/Compliance lens
+   ================================================================= */
+#review_mode_container {
+  margin-bottom: 18px;
+}
+#review_mode_container .label-wrap {
+  display: none !important;
+}
+.review_mode_header {
+  color: var(--accent);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+#review_mode .wrap {
+  display: flex !important;
+  gap: 10px !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+#review_mode label {
+  flex: 1 !important;
+  text-align: center !important;
+  padding: 14px 12px !important;
+  background: rgba(250,248,244,0.06) !important;
+  border: 1px solid rgba(250,248,244,0.15) !important;
+  border-radius: var(--radiusSm) !important;
+  color: rgba(250,248,244,0.85) !important;
+  font-weight: 600 !important;
+  font-size: 0.9em !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+}
+#review_mode label:hover {
+  background: rgba(250,248,244,0.12) !important;
+  border-color: rgba(250,248,244,0.25) !important;
+}
+#review_mode input:checked + label {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark)) !important;
+  border-color: var(--accent) !important;
+  color: white !important;
+  box-shadow: 0 4px 14px rgba(205,143,122,0.35) !important;
+}
+.mode_descriptions {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(250,248,244,0.05);
+  border-radius: var(--radiusXs);
+  color: rgba(250,248,244,0.6);
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+.mode_descriptions strong {
+  color: rgba(250,248,244,0.85);
 }
 
 /* Two-panel layout */
@@ -1448,9 +1653,11 @@ body[data-theme="noir"] #mode_toggle .wrap {
   margin-top: 4px !important;
 }
 
-/* RIGHT: Light results panel */
+/* =================================================================
+   RIGHT PANEL - Results canvas (light theme default)
+   ================================================================= */
 #right_panel {
-  background: rgba(231,220,206,0.4) !important;
+  background: rgba(231,220,206,0.35) !important;
   border: 1px solid var(--border) !important;
   border-left: none !important;
   border-radius: 0 var(--radius) var(--radius) 0 !important;
@@ -1458,17 +1665,17 @@ body[data-theme="noir"] #mode_toggle .wrap {
   min-height: 520px !important;
 }
 body[data-theme="noir"] #right_panel {
-  background: rgba(42,41,38,0.55) !important;
+  background: rgba(42,41,38,0.5) !important;
 }
 #right_panel .block, #right_panel .form {
   background: transparent !important;
   border: none !important;
 }
 
-/* Right panel labels - larger for accessibility */
+/* Results header labels */
 .results_label {
   color: var(--accent);
-  font-size: 0.85em;
+  font-size: 0.8em;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 6px;
@@ -1477,8 +1684,8 @@ body[data-theme="noir"] #right_panel {
 .results_title {
   color: var(--text);
   font-weight: 700;
-  font-size: 1.35em;
-  margin-bottom: 20px;
+  font-size: 1.4em;
+  margin-bottom: 22px;
   line-height: 1.3;
 }
 body[data-theme="noir"] .results_label {
@@ -1488,145 +1695,493 @@ body[data-theme="noir"] .results_title {
   color: var(--text);
 }
 
-/* Empty state - enhanced */
+/* =================================================================
+   EMPTY STATE - Welcoming, instructional
+   ================================================================= */
 #empty_state {
-  background: rgba(250,248,244,0.75);
-  border: 2px dashed rgba(42,41,38,0.2);
+  background: linear-gradient(145deg, rgba(250,248,244,0.8), rgba(231,220,206,0.5));
+  border: 2px dashed rgba(42,41,38,0.18);
   border-radius: var(--radiusSm);
-  padding: 48px 28px;
+  padding: 52px 32px;
   text-align: center;
 }
 #empty_state .empty_icon {
-  font-size: 2.5em;
-  margin-bottom: 14px;
+  font-size: 2.8em;
+  margin-bottom: 16px;
 }
 #empty_state .empty_title {
   font-weight: 700;
-  font-size: 1.2em;
+  font-size: 1.25em;
   color: var(--text);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 #empty_state .empty_text {
-  color: rgba(27,26,24,0.7);
-  font-size: 1em;
-  line-height: 1.5;
-  margin-bottom: 16px;
+  color: var(--muted);
+  font-size: 1.02em;
+  line-height: 1.6;
+  margin-bottom: 18px;
 }
 #empty_state .empty_hint {
   color: var(--accent);
   font-size: 0.95em;
-  font-weight: 500;
+  font-weight: 600;
 }
 body[data-theme="noir"] #empty_state {
-  background: rgba(42,41,38,0.65);
-  border-color: rgba(250,248,244,0.15);
+  background: linear-gradient(145deg, rgba(42,41,38,0.7), rgba(27,26,24,0.6));
+  border-color: rgba(250,248,244,0.12);
 }
 body[data-theme="noir"] #empty_state .empty_title {
   color: var(--text);
 }
 body[data-theme="noir"] #empty_state .empty_text {
-  color: rgba(250,248,244,0.65);
+  color: rgba(250,248,244,0.6);
 }
 
-/* Verdict card */
+/* =================================================================
+   VERDICT CARD - Premium summary with trust signals
+   ================================================================= */
 #verdict_card {
-  background: rgba(250,248,244,0.85);
+  background: linear-gradient(145deg, rgba(250,248,244,0.95), rgba(231,220,206,0.8));
   border: 1px solid var(--border);
   border-radius: var(--radiusSm);
-  padding: 24px;
-  margin-bottom: 18px;
+  padding: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 body[data-theme="noir"] #verdict_card {
-  background: rgba(42,41,38,0.75);
+  background: linear-gradient(145deg, rgba(42,41,38,0.85), rgba(27,26,24,0.75));
 }
 
-/* Verdict pill - larger for accessibility */
+.verdict_header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.verdict_icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+}
+.verdict_icon.block { background: rgba(220,53,69,0.15); }
+.verdict_icon.review { background: rgba(205,143,122,0.2); }
+.verdict_icon.pass { background: rgba(40,167,69,0.15); }
+
+.verdict_main {
+  flex: 1;
+}
 .verdict_pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 18px;
+  gap: 8px;
+  padding: 6px 14px;
   border-radius: 999px;
   font-weight: 700;
-  font-size: 0.9em;
+  font-size: 0.78em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
 }
-.verdict_pill.block { background: rgba(220,53,69,0.18); color: #dc3545; }
-.verdict_pill.review { background: rgba(205,143,122,0.22); color: #B87D6A; }
-.verdict_pill.pass { background: rgba(40,167,69,0.18); color: #28a745; }
-.verdict_dot {
+.verdict_pill.block { background: rgba(220,53,69,0.16); color: var(--critical); }
+.verdict_pill.review { background: rgba(205,143,122,0.2); color: var(--accent-dark); }
+.verdict_pill.pass { background: rgba(40,167,69,0.16); color: var(--pass); }
+
+.verdict_headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35em;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.3;
+}
+.verdict_subtext {
+  color: var(--muted);
+  font-size: 0.92em;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* =================================================================
+   SEVERITY COUNTERS - Quick scan metrics
+   ================================================================= */
+.severity_counters {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  background: rgba(0,0,0,0.02);
+}
+body[data-theme="noir"] .severity_counters {
+  background: rgba(0,0,0,0.15);
+}
+.severity_counter {
+  flex: 1;
+  padding: 16px 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  transition: var(--transition);
+}
+.severity_counter:last-child {
+  border-right: none;
+}
+.severity_counter:hover {
+  background: rgba(0,0,0,0.03);
+}
+.counter_value {
+  font-size: 1.6em;
+  font-weight: 700;
+  line-height: 1;
+}
+.counter_value.critical { color: var(--critical); }
+.counter_value.high { color: var(--high); }
+.counter_value.medium { color: var(--medium); }
+.counter_value.low { color: var(--low); }
+.counter_label {
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* =================================================================
+   TOP FIXES - Quick wins for all personas
+   ================================================================= */
+.top_fixes {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.top_fixes_title {
+  font-weight: 700;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.top_fix {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusXs);
+  margin-bottom: 10px;
+  transition: var(--transition);
+}
+.top_fix:hover {
+  background: rgba(255,255,255,0.75);
+  box-shadow: var(--shadow-sm);
+}
+body[data-theme="noir"] .top_fix {
+  background: rgba(42,41,38,0.5);
+}
+body[data-theme="noir"] .top_fix:hover {
+  background: rgba(42,41,38,0.7);
+}
+.fix_number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 0.75em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.fix_content {
+  flex: 1;
+}
+.fix_title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95em;
+  margin-bottom: 4px;
+}
+.fix_meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8em;
+  color: var(--muted);
+}
+.fix_severity {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.fix_severity.critical { background: rgba(220,53,69,0.12); color: var(--critical); }
+.fix_severity.high { background: rgba(230,119,0,0.12); color: var(--high); }
+
+/* =================================================================
+   TRUST SIGNALS - Scope and confidence visibility
+   ================================================================= */
+.trust_signals {
+  padding: 16px 24px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: rgba(0,0,0,0.02);
+  font-size: 0.82em;
+  color: var(--muted);
+}
+body[data-theme="noir"] .trust_signals {
+  background: rgba(0,0,0,0.1);
+}
+.trust_signal {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trust_signal strong {
+  color: var(--text);
+}
+
+/* =================================================================
+   FINDINGS TABLE - Structured, scannable
+   ================================================================= */
+.findings_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  margin: 16px 0;
+}
+.findings_table th {
+  text-align: left;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.03);
+  border-bottom: 2px solid var(--border);
+  font-weight: 700;
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.findings_table td {
+  padding: 14px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.findings_table tr:hover {
+  background: rgba(205,143,122,0.04);
+}
+.severity_badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.78em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.severity_badge.critical { background: rgba(220,53,69,0.14); color: var(--critical); }
+.severity_badge.high { background: rgba(230,119,0,0.14); color: var(--high); }
+.severity_badge.medium { background: rgba(255,193,7,0.18); color: #856404; }
+.severity_badge.low { background: rgba(108,117,125,0.14); color: var(--low); }
+
+.confidence_bar {
+  width: 60px;
+  height: 6px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.confidence_fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+/* =================================================================
+   FINDING CARDS - Expandable detail cards
+   ================================================================= */
+.finding_card {
+  background: rgba(250,248,244,0.7);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusSm);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: var(--transition);
+}
+.finding_card:hover {
+  box-shadow: var(--shadow-sm);
+}
+body[data-theme="noir"] .finding_card {
+  background: rgba(42,41,38,0.6);
+}
+.finding_card_header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.finding_card_header:hover {
+  background: rgba(0,0,0,0.02);
+}
+.finding_severity_dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
-.verdict_dot.block { background: #dc3545; }
-.verdict_dot.review { background: var(--accent); }
-.verdict_dot.pass { background: #28a745; }
+.finding_severity_dot.critical { background: var(--critical); }
+.finding_severity_dot.high { background: var(--high); }
+.finding_severity_dot.medium { background: var(--medium); }
+.finding_severity_dot.low { background: var(--low); }
 
-/* Tabs - larger text */
+.finding_card_content {
+  padding: 0 20px 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.finding_section {
+  margin-top: 16px;
+}
+.finding_section_title {
+  font-weight: 700;
+  font-size: 0.78em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.finding_evidence {
+  background: var(--spine2);
+  color: var(--spineText);
+  padding: 14px 16px;
+  border-radius: var(--radiusXs);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+.finding_recommendation {
+  background: rgba(40,167,69,0.08);
+  border-left: 3px solid var(--pass);
+  padding: 14px 16px;
+  border-radius: 0 var(--radiusXs) var(--radiusXs) 0;
+  line-height: 1.6;
+}
+.finding_tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.finding_tag {
+  font-size: 0.75em;
+  padding: 4px 10px;
+  background: rgba(205,143,122,0.12);
+  color: var(--accent-dark);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* =================================================================
+   TABS - Persona-based navigation
+   ================================================================= */
 #right_panel .tabs {
-  margin-top: 10px;
+  margin-top: 12px;
+}
+#right_panel .tab-nav {
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
 }
 #right_panel .tab-nav button {
-  color: var(--text) !important;
-  font-weight: 600 !important;
-  font-size: 1em !important;
-  padding: 12px 20px !important;
-  border-radius: var(--radiusSm) var(--radiusSm) 0 0 !important;
-  transition: all 0.2s ease !important;
-}
-#right_panel .tab-nav button:hover {
-  background: rgba(205,143,122,0.1) !important;
-}
-#right_panel .tab-nav button.selected {
-  background: rgba(250,248,244,0.7) !important;
-  box-shadow: 0 -2px 0 var(--accent) inset !important;
-}
-body[data-theme="noir"] #right_panel .tab-nav button.selected {
-  background: rgba(42,41,38,0.85) !important;
-}
-
-/* Export button - 3D style */
-#export_btn button {
-  background: linear-gradient(180deg, #4A9F5E 0%, #28a745 50%, #1E7B34 100%) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 12px !important;
-  padding: 12px 20px !important;
+  color: var(--muted) !important;
   font-weight: 600 !important;
   font-size: 0.95em !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 3px 0 #1A6B2E, 0 4px 10px rgba(40,167,69,0.25) !important;
-  margin-top: 12px !important;
+  padding: 14px 22px !important;
+  border-radius: var(--radiusSm) var(--radiusSm) 0 0 !important;
+  transition: var(--transition) !important;
+  border: none !important;
+  background: transparent !important;
 }
-#export_btn button:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 0 #1A6B2E, 0 6px 14px rgba(40,167,69,0.3) !important;
+#right_panel .tab-nav button:hover {
+  background: rgba(205,143,122,0.08) !important;
+  color: var(--text) !important;
 }
-#export_btn button:active {
-  transform: translateY(1px) !important;
-  box-shadow: 0 2px 0 #1A6B2E, 0 2px 6px rgba(40,167,69,0.2) !important;
+#right_panel .tab-nav button.selected {
+  background: rgba(250,248,244,0.8) !important;
+  color: var(--text) !important;
+  box-shadow: inset 0 -3px 0 var(--accent) !important;
+}
+body[data-theme="noir"] #right_panel .tab-nav button.selected {
+  background: rgba(42,41,38,0.8) !important;
 }
 
-/* Footer */
+/* =================================================================
+   EXPORT BUTTONS - Download/copy actions
+   ================================================================= */
+.export_buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+#export_btn button, #export_md_btn button {
+  background: linear-gradient(180deg, #4A9F5E 0%, var(--pass) 50%, #1E7B34 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: var(--radiusXs) !important;
+  padding: 12px 20px !important;
+  font-weight: 600 !important;
+  font-size: 0.9em !important;
+  cursor: pointer !important;
+  transition: var(--transition) !important;
+  box-shadow: 0 3px 0 #1A6B2E, 0 4px 10px rgba(40,167,69,0.2) !important;
+}
+#export_btn button:hover, #export_md_btn button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 0 #1A6B2E, 0 6px 14px rgba(40,167,69,0.25) !important;
+}
+#export_btn button:active, #export_md_btn button:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 0 #1A6B2E, 0 2px 6px rgba(40,167,69,0.15) !important;
+}
+
+/* =================================================================
+   FOOTER - Minimal, trust-forward
+   ================================================================= */
 .footer {
   text-align: center;
-  padding: 24px 0;
-  margin-top: 32px;
+  padding: 28px 0;
+  margin-top: 36px;
   border-top: 1px solid var(--border);
+}
+.footer_links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 12px;
 }
 .footer a {
   color: var(--accent);
   text-decoration: none;
+  font-size: 0.88em;
+  font-weight: 500;
+  transition: var(--transition);
+}
+.footer a:hover {
+  color: var(--accent-dark);
 }
 .footer p {
-  font-size: 0.8em;
-  color: rgba(107,101,96,0.7);
+  font-size: 0.78em;
+  color: var(--muted);
+  opacity: 0.7;
 }
 body[data-theme="noir"] .footer p {
-  color: rgba(250,248,244,0.5);
+  color: rgba(250,248,244,0.45);
 }
 
 /* =================================================================
@@ -1926,17 +2481,17 @@ def get_frankie_loader(run_id: str = "") -> str:
 
 
 with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
-    # Header
+    # Header - Hero section with trust signals
     gr.HTML("""
     <div id="brand_header">
         <div class="header_badge">🛡️ AI-POWERED SECURITY</div>
         <div id="brand_title">Code Review Agent</div>
         <div class="header_tagline">Frankie</div>
-        <div id="brand_subtitle">Your AI security companion that catches vulnerabilities before they become problems</div>
+        <div id="brand_subtitle">Catch security flaws before they ship. Multi-pass review with OWASP/CWE mapping, blast radius analysis, and audit-ready output.</div>
         <div class="header_features">
-            <span class="feature_tag">✓ Beginner Friendly</span>
-            <span class="feature_tag">✓ Industry Standards</span>
-            <span class="feature_tag">✓ Instant Analysis</span>
+            <span class="feature_tag">✓ OWASP 2025 Mapping</span>
+            <span class="feature_tag">✓ Blast Radius Analysis</span>
+            <span class="feature_tag">✓ Audit-Ready Verdicts</span>
         </div>
     </div>
     """)
@@ -1967,20 +2522,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         # =====================================================
         with gr.Column(scale=4, elem_id="left_spine"):
             gr.HTML(
-                '<div class="spine_label">STEP 1 — YOUR CODE</div><div class="spine_title">Paste or type your code below</div><div class="spine_hint">Works with Python, JavaScript, and most programming languages</div>'
+                '<div class="spine_label">STEP 1 — YOUR CODE</div><div class="spine_title">Paste or type your code below</div><div class="spine_hint">Works with Python, JavaScript, TypeScript, Go, and most languages</div>'
             )
 
             code = gr.Code(
-                value="", language="python", label="", lines=14, show_label=False
+                value="", language="python", label="", lines=12, show_label=False
             )
-
-            gr.HTML(
-                '<div class="spine_label" style="margin-top: 20px;">STEP 2 — RUN ANALYSIS</div><div class="spine_hint">Click to have Frankie analyze your code for security issues</div>'
-            )
-
-            with gr.Row(elem_id="action_buttons"):
-                btn = gr.Button("🔍 Analyze My Code", elem_id="review_btn", scale=1)
-                sample_btn = gr.Button("📝 Try Example", elem_id="sample_btn", scale=1)
 
             ctx = gr.Textbox(
                 label="File name (helps with context)",
@@ -1988,6 +2535,33 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 lines=1,
                 elem_id="filename_box",
             )
+
+            # Review Mode selector - Quick/Deep/Compliance lens
+            gr.HTML(
+                '<div id="review_mode_container"><div class="review_mode_header">Review Mode</div></div>'
+            )
+            review_mode = gr.Radio(
+                choices=["⚡ Quick", "🔬 Deep", "📋 Compliance"],
+                value="🔬 Deep",
+                label="",
+                elem_id="review_mode",
+                interactive=True,
+            )
+            gr.HTML("""
+            <div class="mode_descriptions">
+                <strong>Quick:</strong> Fast scan for critical issues (2-5s)<br>
+                <strong>Deep:</strong> Full security gate with blast radius (default)<br>
+                <strong>Compliance:</strong> PII/GDPR lens for audit workflows
+            </div>
+            """)
+
+            gr.HTML(
+                '<div class="spine_label" style="margin-top: 18px;">STEP 2 — RUN ANALYSIS</div>'
+            )
+
+            with gr.Row(elem_id="action_buttons"):
+                btn = gr.Button("🔍 Analyze My Code", elem_id="review_btn", scale=1)
+                sample_btn = gr.Button("📝 Try Example", elem_id="sample_btn", scale=1)
 
             # Quick examples for testing - clickable samples
             gr.Examples(
@@ -1998,10 +2572,10 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             )
 
             with gr.Accordion(
-                "⚙️ Advanced Settings (Optional)", open=False, elem_id="customize_acc"
+                "⚙️ Fine-Tune Categories (Optional)", open=False, elem_id="customize_acc"
             ):
                 gr.HTML(
-                    '<div class="beginner_tip">🎯 <strong>New to code review?</strong> Leave these as-is — the defaults work great for most code.</div>'
+                    '<div class="beginner_tip">🎯 <strong>New to security review?</strong> The defaults work great. Expand this only if you need specific checks.</div>'
                 )
                 gr.HTML(
                     '<div class="config_section_title">What should Frankie look for?</div>'
@@ -2010,23 +2584,23 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                     sec = gr.Checkbox(
                         label="🔐 Security Vulnerabilities",
                         value=True,
-                        info="Find hacking risks like SQL injection, XSS",
+                        info="SQL injection, XSS, SSRF, prompt injection",
                     )
                     comp = gr.Checkbox(
-                        label="📋 Best Practices",
+                        label="📋 Compliance & Privacy",
                         value=True,
-                        info="Check coding standards and guidelines",
+                        info="PII exposure, GDPR, audit gaps",
                     )
                 with gr.Row():
                     logic = gr.Checkbox(
                         label="🧠 Logic Errors",
                         value=False,
-                        info="Find bugs in your code flow",
+                        info="Race conditions, null handling, exceptions",
                     )
                     perf = gr.Checkbox(
                         label="⚡ Performance Issues",
                         value=False,
-                        info="Find slow or inefficient code",
+                        info="N+1 queries, memory leaks, blocking I/O",
                     )
 
         # =====================================================
@@ -2041,39 +2615,42 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             <div id="empty_state">
                 <div class="empty_icon">🔍</div>
                 <div class="empty_title">Ready to analyze your code</div>
-                <div class="empty_text">Paste your code on the left, then click <strong>Analyze My Code</strong></div>
-                <div class="empty_hint">💡 New here? Click "Try Example" to see how it works!</div>
+                <div class="empty_text">Paste code on the left, choose your review mode, then click <strong>Analyze My Code</strong></div>
+                <div class="empty_hint">💡 New here? Click "Try Example" to see Frankie in action</div>
             </div>
             """)
 
             summ = gr.HTML("", elem_id="verdict_card_container")
 
             with gr.Tabs():
-                with gr.Tab("Overview"):
+                with gr.Tab("📊 Overview", id="tab_overview"):
                     det = gr.Markdown("")
-                with gr.Tab("Fixes"):
+                with gr.Tab("🔧 Fixes", id="tab_fixes"):
                     fixes_tab = gr.Markdown(
                         "*Suggested fixes will appear after review*"
                     )
-                with gr.Tab("Advanced"):
+                with gr.Tab("📋 Audit", id="tab_audit"):
                     advanced_tab = gr.Markdown(
-                        "*Decision records and audit data will appear after review*"
+                        "*Decision records and compliance data will appear after review*"
                     )
+                    with gr.Row():
+                        export_btn = gr.Button(
+                            "📥 Export JSON", visible=False, elem_id="export_btn"
+                        )
+                        export_md_btn = gr.Button(
+                            "📄 Export Markdown", visible=False, elem_id="export_md_btn"
+                        )
                     audit_json = gr.JSON(label="Audit Record (JSON)", visible=False)
-                    export_btn = gr.Button(
-                        "📥 Export Audit JSON", visible=False, elem_id="export_btn"
-                    )
 
-    # Footer
+    # Footer with trust signals
     gr.HTML("""
     <div class="footer">
-        <p>
+        <div class="footer_links">
             <a href="https://github.com/adarian-dewberry/code-review-agent">GitHub</a>
-            <span style="margin: 0 12px; opacity: 0.4;">·</span>
-            <a href="https://github.com/adarian-dewberry/code-review-agent/blob/main/POLICIES.md">Policy v1</a>
-            <span style="margin: 0 12px; opacity: 0.4;">·</span>
-            Human review always recommended
-        </p>
+            <a href="https://github.com/adarian-dewberry/code-review-agent/blob/main/POLICIES.md">Policy v2</a>
+            <a href="https://github.com/adarian-dewberry/code-review-agent/blob/main/SECURITY.md">Trust & Safety</a>
+        </div>
+        <p>Human review always recommended · Your code is never stored</p>
     </div>
     """)
 
@@ -2081,7 +2658,18 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     sample_btn.click(fn=load_sample, outputs=[code, ctx])
 
     # Wire up review button - show Frankie during review, hide empty state when results arrive
-    def run_with_frankie(code_val, sec_val, comp_val, logic_val, perf_val, ctx_val):
+    def run_with_frankie(
+        code_val, sec_val, comp_val, logic_val, perf_val, ctx_val, review_mode_val
+    ):
+        # Adjust categories based on review mode
+        # Quick mode: security only, fast
+        # Deep mode: security + compliance (default)
+        # Compliance mode: compliance focus with security
+        if "Quick" in review_mode_val:
+            sec_val, comp_val, logic_val, perf_val = True, False, False, False
+        elif "Compliance" in review_mode_val:
+            sec_val, comp_val, logic_val, perf_val = True, True, False, False
+
         # First yield: show Frankie loader, hide export controls
         frankie_html = get_frankie_loader()
         yield (
@@ -2090,6 +2678,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             "*Frankie is reviewing your code...*",  # det
             gr.update(value=None, visible=False),  # audit_json
             gr.update(visible=False),  # export_btn
+            gr.update(visible=False),  # export_md_btn
         )
 
         # Run the actual review
@@ -2107,12 +2696,13 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             det_result,  # det
             gr.update(value=audit_record, visible=True),  # audit_json
             gr.update(visible=True),  # export_btn
+            gr.update(visible=True),  # export_md_btn
         )
 
     btn.click(
         fn=run_with_frankie,
-        inputs=[code, sec, comp, logic, perf, ctx],
-        outputs=[empty_state, summ, det, audit_json, export_btn],
+        inputs=[code, sec, comp, logic, perf, ctx, review_mode],
+        outputs=[empty_state, summ, det, audit_json, export_btn, export_md_btn],
         api_name="review",
     )
 
