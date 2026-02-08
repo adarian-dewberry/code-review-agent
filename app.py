@@ -2319,6 +2319,388 @@ body[data-theme="noir"] #frankie_loader {
     animation: none !important;
   }
 }
+
+/* =================================================================
+   ACCESSIBILITY IMPROVEMENTS
+   - High contrast text
+   - Visible focus states
+   - Dropdown/accordion indicators
+   ================================================================= */
+
+/* Focus states for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+button:focus-visible, 
+input:focus-visible, 
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(205,143,122,0.3) !important;
+}
+
+/* Ensure minimum contrast on text */
+.gradio-container, .gradio-container * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accordion dropdown indicator - clearly visible chevron */
+.gradio-accordion .label-wrap {
+  position: relative !important;
+}
+.gradio-accordion .label-wrap::after {
+  content: "▼" !important;
+  position: absolute !important;
+  right: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.8em !important;
+  color: var(--accent) !important;
+  transition: transform 0.2s ease !important;
+}
+.gradio-accordion.open .label-wrap::after {
+  transform: translateY(-50%) rotate(180deg) !important;
+}
+#customize_acc .label-wrap::after {
+  color: var(--accent) !important;
+  font-weight: bold !important;
+}
+
+/* Ensure dropdown/select elements have visible borders and indicators */
+.gradio-container select,
+.gradio-container .dropdown {
+  border: 2px solid var(--border) !important;
+  border-radius: var(--radiusSm) !important;
+  padding-right: 36px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CD8F7A' d='M2 4l4 4 4-4'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+.gradio-container select:hover,
+.gradio-container .dropdown:hover {
+  border-color: var(--accent) !important;
+}
+
+/* Radio buttons as clear pill selectors */
+#review_mode label {
+  position: relative !important;
+}
+#review_mode input:checked + label::before {
+  content: "✓" !important;
+  margin-right: 6px !important;
+  font-weight: bold !important;
+}
+
+/* Checkbox visibility improvements */
+.gradio-container input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+.gradio-container input[type="checkbox"]:checked {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Improve button visibility in both modes */
+#review_btn button,
+#sample_btn button {
+  min-height: 48px !important;  /* Touch target size */
+  font-size: var(--font-lg) !important;
+}
+
+/* Noir mode accessibility fixes */
+body[data-theme="noir"] .gradio-container {
+  color: #FAF8F4 !important;
+}
+body[data-theme="noir"] .muted,
+body[data-theme="noir"] .text2 {
+  color: rgba(250,248,244,0.8) !important;
+}
+body[data-theme="noir"] select,
+body[data-theme="noir"] .dropdown {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CD8F7A' d='M2 4l4 4 4-4'/%3E%3C/svg%3E") !important;
+  color: #FAF8F4 !important;
+}
+body[data-theme="noir"] .spine_hint,
+body[data-theme="noir"] .mode_descriptions {
+  color: rgba(250,248,244,0.75) !important;
+}
+
+/* =================================================================
+   MOBILE RESPONSIVE - iOS and Android friendly
+   ================================================================= */
+
+/* Tablet breakpoint */
+@media screen and (max-width: 1024px) {
+  .gradio-container {
+    max-width: 100% !important;
+    padding: 0 12px !important;
+  }
+  
+  #shell {
+    flex-direction: column !important;
+  }
+  
+  #left_spine,
+  #right_panel {
+    border-radius: var(--radius) !important;
+    margin-bottom: 16px !important;
+  }
+  
+  #left_spine {
+    border-right: none !important;
+  }
+  
+  #right_panel {
+    border-left: 1px solid var(--border) !important;
+  }
+  
+  .header_features {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+}
+
+/* Mobile breakpoint */
+@media screen and (max-width: 768px) {
+  :root {
+    --font-base: 1rem;
+    --font-lg: 1.125rem;
+    --font-xl: 1.25rem;
+    --font-2xl: 1.375rem;
+  }
+  
+  .gradio-container {
+    padding: 0 8px !important;
+  }
+  
+  #brand_header {
+    padding: 20px 16px 24px 16px !important;
+    margin: -8px -8px 16px -8px !important;
+  }
+  
+  #brand_title {
+    font-size: 1.75em !important;
+  }
+  
+  #brand_subtitle {
+    font-size: var(--font-base) !important;
+  }
+  
+  .header_features {
+    gap: 8px !important;
+  }
+  
+  .feature_tag {
+    font-size: var(--font-xs) !important;
+    padding: 4px 10px !important;
+  }
+  
+  #left_spine,
+  #right_panel {
+    padding: 16px !important;
+  }
+  
+  /* Stack review mode buttons vertically on mobile */
+  #review_mode .wrap {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  #review_mode label {
+    padding: 14px 12px !important;
+  }
+  
+  /* Stack action buttons */
+  #action_buttons {
+    flex-direction: column !important;
+  }
+  
+  #action_buttons > div {
+    width: 100% !important;
+  }
+  
+  /* Larger touch targets */
+  #review_btn button,
+  #sample_btn button {
+    min-height: 52px !important;
+    font-size: var(--font-lg) !important;
+    padding: 16px 20px !important;
+  }
+  
+  /* Findings table: horizontal scroll */
+  .findings_table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Severity counters: 2x2 grid on mobile */
+  .severity_counters {
+    flex-wrap: wrap !important;
+  }
+  
+  .severity_counter {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  
+  .severity_counter:nth-child(3),
+  .severity_counter:nth-child(4) {
+    border-bottom: none !important;
+  }
+  
+  .severity_counter:nth-child(2),
+  .severity_counter:nth-child(4) {
+    border-right: none !important;
+  }
+  
+  /* Top fixes: full width */
+  .top_fix {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .fix_number {
+    align-self: flex-start !important;
+  }
+  
+  /* Trust signals: wrap nicely */
+  .trust_signals {
+    justify-content: center !important;
+    gap: 10px !important;
+  }
+  
+  /* Tabs: scrollable on mobile */
+  #right_panel .tab-nav {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-wrap: nowrap !important;
+  }
+  
+  #right_panel .tab-nav button {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    padding: 12px 14px !important;
+  }
+  
+  /* Code editor: better mobile height */
+  #left_spine textarea,
+  #left_spine .cm-editor {
+    min-height: 150px !important;
+    max-height: 250px !important;
+  }
+  
+  /* Frankie loader: smaller on mobile */
+  #frankie_loader {
+    padding: 32px 24px !important;
+    max-width: 90% !important;
+    margin: 16px !important;
+  }
+  
+  .frankie_container {
+    width: 100px !important;
+    height: 68px !important;
+  }
+  
+  /* Footer: stacked links */
+  .footer_links {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  
+  .footer a {
+    margin: 0 6px !important;
+  }
+}
+
+/* Small phone breakpoint */
+@media screen and (max-width: 480px) {
+  :root {
+    --font-base: 0.9375rem;
+    --font-sm: 0.8125rem;
+  }
+  
+  #brand_title {
+    font-size: 1.5em !important;
+  }
+  
+  .header_tagline {
+    font-size: var(--font-base) !important;
+  }
+  
+  /* Single column severity counters on very small screens */
+  .severity_counter {
+    flex: 1 1 50% !important;
+  }
+  
+  /* Compact verdict card */
+  .verdict_header {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+  }
+  
+  .verdict_main {
+    text-align: center !important;
+  }
+  
+  /* Accordion: ensure tap target */
+  #customize_acc .label-wrap {
+    padding: 14px 40px 14px 14px !important;
+    min-height: 48px !important;
+  }
+}
+
+/* iOS Safari fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Fix for iOS input zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  
+  /* iOS safe area for notched devices */
+  .gradio-container {
+    padding-left: max(12px, env(safe-area-inset-left)) !important;
+    padding-right: max(12px, env(safe-area-inset-right)) !important;
+  }
+  
+  .footer {
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: rgba(0,0,0,0.4);
+  }
+  
+  body[data-theme="noir"] {
+    --border: rgba(255,255,255,0.4);
+  }
+  
+  .severity_badge,
+  .fix_severity,
+  .verdict_pill {
+    border: 2px solid currentColor !important;
+  }
+  
+  button, [role="button"] {
+    border: 2px solid currentColor !important;
+  }
+}
 """
 
 # Sample code for demo
