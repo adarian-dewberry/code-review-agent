@@ -2357,82 +2357,57 @@ body[data-theme="noir"] #frankie_loader {
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: frankieTrot 0.7s ease-in-out infinite;
+  animation: frankieBreathes 3s ease-in-out infinite;
 }
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
 }
 
-/* Frankie animations */
-.frankie_silhouette svg .front-leg-1 {
-  transform-origin: 55px 60px;
-  animation: frankieLegFront1 0.7s ease-in-out infinite;
+/* Frankie animations - subtle and calm */
+.frankie_silhouette svg .frankie-tail {
+  transform-origin: 40px 60px;
+  animation: frankieTailSway 4s ease-in-out infinite;
 }
-.frankie_silhouette svg .front-leg-2 {
-  transform-origin: 62px 58px;
-  animation: frankieLegFront2 0.7s ease-in-out infinite;
-}
-.frankie_silhouette svg .back-leg-1 {
-  transform-origin: 25px 62px;
-  animation: frankieLegBack1 0.7s ease-in-out infinite;
-}
-.frankie_silhouette svg .back-leg-2 {
-  transform-origin: 32px 60px;
-  animation: frankieLegBack2 0.7s ease-in-out infinite;
-}
-.frankie_silhouette svg .tail {
-  transform-origin: 15px 45px;
-  animation: frankieTailWag 0.5s ease-in-out infinite;
-}
-.frankie_silhouette svg .ball {
-  animation: frankieBallBounce 1s ease-in-out infinite;
+
+.frankie_silhouette svg .frankie-eye {
+  animation: frankieObserves 5s ease-in-out infinite;
+  transform-origin: 108px 36px;
 }
 
 .frankie_glow {
   position: absolute;
-  bottom: -10px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 70%;
-  height: 18px;
-  background: radial-gradient(ellipse, rgba(205,143,122,0.25), transparent 70%);
-  animation: frankieGlow 0.7s ease-in-out infinite;
+  width: 75%;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(205,143,122,0.2), transparent 75%);
+  animation: frankieGlowPulse 4s ease-in-out infinite;
 }
 
-@keyframes frankieTrot {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+/* Animations - professional, calm presence */
+@keyframes frankieBreathes {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-2px) scaleY(1.02); }
 }
-@keyframes frankieLegFront1 {
-  0%, 100% { transform: rotate(-12deg); }
-  50% { transform: rotate(12deg); }
+
+@keyframes frankieTailSway {
+  0%, 100% { transform: rotate(-8deg); }
+  25% { transform: rotate(0deg); }
+  50% { transform: rotate(8deg); }
+  75% { transform: rotate(0deg); }
 }
-@keyframes frankieLegFront2 {
-  0%, 100% { transform: rotate(12deg); }
-  50% { transform: rotate(-12deg); }
+
+@keyframes frankieObserves {
+  0%, 15%, 85%, 100% { opacity: 1; }
+  18%, 82% { opacity: 0.3; }
+  20%, 80% { opacity: 1; }
 }
-@keyframes frankieLegBack1 {
-  0%, 100% { transform: rotate(10deg); }
-  50% { transform: rotate(-10deg); }
-}
-@keyframes frankieLegBack2 {
-  0%, 100% { transform: rotate(-10deg); }
-  50% { transform: rotate(10deg); }
-}
-@keyframes frankieTailWag {
-  0%, 100% { transform: rotate(-6deg); }
-  50% { transform: rotate(6deg); }
-}
-@keyframes frankieBallBounce {
-  0%, 100% { transform: translateY(0) translateX(0); }
-  25% { transform: translateY(-10px) translateX(2px); }
-  50% { transform: translateY(0) translateX(4px); }
-  75% { transform: translateY(-6px) translateX(2px); }
-}
-@keyframes frankieGlow {
-  0%, 100% { opacity: 0.5; transform: translateX(-50%) scaleX(1); }
-  50% { opacity: 0.7; transform: translateX(-50%) scaleX(1.08); }
+
+@keyframes frankieGlowPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scaleX(0.95); }
+  50% { opacity: 0.8; transform: translateX(-50%) scaleX(1.05); }
 }
 
 .frankie_title {
@@ -2464,12 +2439,8 @@ body[data-theme="noir"] #frankie_loader {
 /* Reduced motion: static Frankie */
 @media (prefers-reduced-motion: reduce) {
   .frankie_silhouette,
-  .frankie_silhouette svg .front-leg-1,
-  .frankie_silhouette svg .front-leg-2,
-  .frankie_silhouette svg .back-leg-1,
-  .frankie_silhouette svg .back-leg-2,
-  .frankie_silhouette svg .tail,
-  .frankie_silhouette svg .ball,
+  .frankie_silhouette svg .frankie-tail,
+  .frankie_silhouette svg .frankie-eye,
   .frankie_glow {
     animation: none !important;
   }
@@ -2937,66 +2908,52 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     frankie_line = pick_frankie_line(run_id)
 
-    # Inline SVG of trotting Alaskan Malamute with ball
-    # Side profile in motion with animated legs, wagging tail, and bouncing ball
-    # Wrapped with aria-live for accessibility
+    # Breed-accurate Alaskan Malamute silhouette
+    # Clean, observant presence - calm and professional
+    # Silent witness to the review process
     frankie_svg = """
-    <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Ball (terracotta, bouncing) -->
-      <circle class="ball" cx="125" cy="75" r="10" fill="#CD8F7A"/>
-      <path class="ball" d="M120 72 Q125 68 130 72 M120 78 Q125 82 130 78" stroke="#B87A65" stroke-width="1.5" fill="none"/>
-
-      <!-- Body (horizontal for trotting) -->
-      <ellipse cx="55" cy="50" rx="28" ry="18" fill="#2A2926"/>
-
-      <!-- Chest/front body -->
-      <ellipse cx="75" cy="48" rx="14" ry="14" fill="#2A2926"/>
-
-      <!-- Fluffy chest ruff -->
-      <path d="M82 42 Q88 50 82 58 Q78 52 82 42" fill="#3D3B38"/>
-
-      <!-- Neck -->
-      <path d="M80 38 L88 28 L92 32 L86 44 Z" fill="#2A2926"/>
-
-      <!-- Head -->
-      <ellipse cx="94" cy="26" rx="12" ry="10" fill="#2A2926"/>
-
-      <!-- Snout -->
-      <ellipse cx="104" cy="28" rx="8" ry="5" fill="#2A2926"/>
-      <ellipse cx="110" cy="27" rx="3" ry="2" fill="#1A1918"/>
-
-      <!-- Ears (alert, perky) -->
-      <path d="M88 18 L84 6 L92 14 Z" fill="#2A2926"/>
-      <path d="M96 16 L100 4 L102 14 Z" fill="#2A2926"/>
-      <path d="M89 16 L86 10 L91 14 Z" fill="#3D3B38"/>
-      <path d="M97 14 L99 8 L100 13 Z" fill="#3D3B38"/>
-
-      <!-- Eye -->
-      <circle cx="96" cy="24" r="2.5" fill="#1A1918"/>
-      <circle cx="97" cy="23" r="1" fill="#4A4845"/>
-
-      <!-- Collar -->
-      <path d="M84 36 Q88 34 92 36 Q92 40 88 42 Q84 40 84 36" fill="#CD8F7A"/>
-      <circle cx="88" cy="42" r="3" fill="#CD8F7A"/>
-      <circle cx="88" cy="42" r="1.5" fill="#B87A65"/>
-
-      <!-- Tail (fluffy, wagging) -->
-      <path class="tail" d="M22 45 Q10 35 8 25 Q6 18 12 15 Q18 14 22 20 Q20 28 24 38" fill="#2A2926"/>
-      <path class="tail" d="M14 18 Q18 16 20 20 Q16 22 14 18" fill="#3D3B38"/>
-
-      <!-- Back legs (animated) -->
-      <path class="back-leg-1" d="M28 58 L22 78 L18 90 L24 90 L30 78 L32 62" fill="#2A2926"/>
-      <path class="back-leg-2" d="M38 56 L42 75 L44 90 L50 90 L46 75 L40 58" fill="#2A2926"/>
-
-      <!-- Front legs (animated) -->
-      <path class="front-leg-1" d="M68 58 L64 75 L62 90 L68 90 L72 75 L72 60" fill="#2A2926"/>
-      <path class="front-leg-2" d="M78 55 L82 72 L84 90 L90 90 L86 72 L80 56" fill="#2A2926"/>
-
-      <!-- Paws (little detail) -->
-      <ellipse class="back-leg-1" cx="21" cy="90" rx="5" ry="3" fill="#2A2926"/>
-      <ellipse class="back-leg-2" cx="47" cy="90" rx="5" ry="3" fill="#2A2926"/>
-      <ellipse class="front-leg-1" cx="65" cy="90" rx="5" ry="3" fill="#2A2926"/>
-      <ellipse class="front-leg-2" cx="87" cy="90" rx="5" ry="3" fill="#2A2926"/>
+    <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Silhouette approach: clean lines, no unnecessary details -->
+      
+      <!-- Back legs (solid, grounded stance) -->
+      <path d="M 55 75 L 50 105 L 50 115 L 62 115 L 62 105 L 60 75" fill="#2A2926" stroke="none"/>
+      <path d="M 85 75 L 92 105 L 92 115 L 104 115 L 104 105 L 95 75" fill="#2A2926" stroke="none"/>
+      
+      <!-- Body (large, broad chest - breed characteristic) -->
+      <ellipse cx="70" cy="65" rx="32" ry="22" fill="#2A2926"/>
+      
+      <!-- Chest (deep and pronounced) -->
+      <ellipse cx="85" cy="62" rx="20" ry="24" fill="#2A2926"/>
+      
+      <!-- Neck (thick, strong) -->
+      <path d="M 88 50 L 96 42 L 100 44 L 94 52 Z" fill="#2A2926"/>
+      
+      <!-- Head (alert but calm) -->
+      <ellipse cx="105" cy="38" rx="14" ry="13" fill="#2A2926"/>
+      
+      <!-- Snout (proportionate, not exaggerated) -->
+      <ellipse cx="118" cy="40" rx="9" ry="6" fill="#2A2926"/>
+      <path d="M 125 40 L 128 40 L 128 41 L 125 41 Z" fill="#1A1918"/>
+      
+      <!-- Ears (alert triangles, breed-standard) -->
+      <path d="M 96 28 L 90 12 L 98 26 Z" fill="#2A2926"/>
+      <path d="M 108 26 L 114 10 L 114 26 Z" fill="#2A2926"/>
+      <path d="M 97 26 L 93 18 L 99 25 Z" fill="#3D3B38"/>
+      <path d="M 110 24 L 114 15 L 115 24 Z" fill="#3D3B38"/>
+      
+      <!-- Eye (observant, calm - single blink animation) -->
+      <circle class="frankie-eye" cx="108" cy="36" r="3" fill="#1A1918"/>
+      <circle cx="109" cy="35" r="1.2" fill="#FAF8F4" opacity="0.6"/>
+      
+      <!-- Tail (curled over back - breed characteristic) -->
+      <path class="frankie-tail" d="M 40 60 Q 25 50 20 35 Q 18 25 24 20 Q 32 18 38 28 Q 42 40 45 55" 
+            fill="none" stroke="#2A2926" stroke-width="14" stroke-linecap="round"/>
+      <path class="frankie-tail" d="M 40 60 Q 25 50 20 35 Q 18 25 24 20 Q 32 18 38 28 Q 42 40 45 55" 
+            fill="none" stroke="#3D3B38" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+      
+      <!-- Front legs (strong, grounded) -->
+      <path d="M 75 85 L 72 108 L 72 115 L 84 115 L 84 108 L 82 85" fill="#2A2926"/>
+      <path d="M 95 86 L 100 107 L 100 115 L 112 115 L 112 107 L 108 86" fill="#2A2926"/>
     </svg>
     """
 
