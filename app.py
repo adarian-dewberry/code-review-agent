@@ -2301,8 +2301,8 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
 }
 
 /* =================================================================
-   FRANKIE INLINE - Sentinel positioning within results area
-   Appears inline with results, shrinks/repositions as results populate
+   FRANKIE LOADING MODAL - Professional GRC-grade loading overlay
+   Large centered modal with high-quality 3D Malamute animation
    ================================================================= */
 #frankie_overlay {
   position: fixed;
@@ -2310,80 +2310,153 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
   left: 0;
   right: 0;
   bottom: 0;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: stretch;
-  z-index: 99;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
   opacity: 1;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+  transition: opacity 0.4s ease;
+  pointer-events: auto;
 }
 
 #frankie_inline_container {
-  position: absolute;
-  right: 24px;
-  bottom: 24px;
-  width: 200px;
-  height: 140px;
-  pointer-events: none;
+  position: relative;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  pointer-events: auto;
   transition: all 0.4s ease;
+  animation: modalSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 #frankie_loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px 16px 16px;
+  justify-content: flex-start;
+  padding: 48px 32px 40px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(27,26,24,0.95) 0%, rgba(42,41,38,0.85) 100%);
-  border: 1px solid rgba(205,143,122,0.2);
-  border-radius: 12px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, rgba(20,19,18,0.98) 0%, rgba(35,33,30,0.96) 100%);
+  border: 1.5px solid rgba(205,143,122,0.25);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.1);
   width: 100%;
-  height: 100%;
-  margin: 0;
   position: relative;
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
 }
 
 body[data-theme="dark-mode"] #frankie_loader {
-  background: linear-gradient(135deg, rgba(12,11,10,0.97) 0%, rgba(30,28,25,0.90) 100%);
-  border: 1px solid rgba(205,143,122,0.15);
+  background: linear-gradient(135deg, rgba(12,11,10,0.98) 0%, rgba(28,26,23,0.96) 100%);
+  border: 1.5px solid rgba(205,143,122,0.2);
 }
 
 .frankie_container {
   position: relative;
-  width: 140px;
-  height: 90px;
-  margin-bottom: 16px;
+  width: 280px;
+  height: 320px;
+  margin: 0 auto 32px;
   overflow: visible;
   flex-shrink: 0;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
 }
 
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: frankieScanning 2.5s ease-in-out infinite;
+  animation: frankieBreathing 4s ease-in-out infinite;
 }
+
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
 }
 
-/* Sentinel animations - active scanning state */
-@keyframes frankieScanning {
-  0%, 100% { transform: translateY(0) scaleY(1); opacity: 1; }
-  50% { transform: translateY(-1px) scaleY(1.01); opacity: 1; }
+/* ===== PROFESSIONAL LOADING ANIMATIONS ===== */
+
+/* Malamute breathing animation - gentle, calming motion */
+@keyframes frankieBreathing {
+  0%, 100% { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: translateY(-8px) scale(1.02); 
+    opacity: 0.98; 
+  }
 }
 
-/* Frankie animations - subtle and alert */
+/* Ball balancing - playful spin and wobble */
+.frankie-ball {
+  animation: 
+    ballSpin 3s linear infinite,
+    ballWobble 4s ease-in-out infinite;
+  transform-origin: 100px 45px;
+}
+
+@keyframes ballSpin {
+  0% { transform: rotateZ(0deg); }
+  100% { transform: rotateZ(360deg); }
+}
+
+@keyframes ballWobble {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(3px) translateY(-2px); }
+  50% { transform: translateX(0) translateY(2px); }
+  75% { transform: translateX(-3px) translateY(-1px); }
+}
+
+/* Tail wag - happy, playful motion */
+.frankie-tail-wag {
+  animation: tailWag 3.5s ease-in-out infinite;
+  transform-origin: 50px 110px;
+}
+
+@keyframes tailWag {
+  0%, 100% { transform: rotateZ(0deg); }
+  25% { transform: rotateZ(15deg); }
+  50% { transform: rotateZ(-12deg); }
+  75% { transform: rotateZ(10deg); }
+}
+
+/* Respects reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .frankie_silhouette,
+  .frankie-ball,
+  .frankie-tail-wag {
+    animation: none !important;
+  }
+  
+  #frankie_inline_container {
+    animation: none !important;
+  }
+}
+
+/* Frankie scanning eye - subtle intensity */
 .frankie_silhouette svg .frankie-scanning-eye {
-  animation: frankieIntenseFocus 2.5s ease-in-out infinite;
+  animation: eyeShimmer 2.8s ease-in-out infinite;
   transform-origin: center;
+}
+
+@keyframes eyeShimmer {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 1; }
 }
 
 .frankie_silhouette svg .frankie-alert-tail {
@@ -2423,60 +2496,86 @@ body[data-theme="dark-mode"] #frankie_loader {
 
 .frankie_title {
   font-weight: 700;
-  color: #FAF8F4;
-  font-size: 0.95em;
-  margin-bottom: 6px;
-  letter-spacing: 0.3px;
+  font-size: 1.4rem;
+  color: #FFD700;
+  margin-bottom: 12px;
+  letter-spacing: 0.8px;
+  text-transform: none;
 }
 
 .frankie_line {
-  color: #D8C5B2;
-  font-size: 0.8em;
-  font-style: normal;
+  color: #E8DFD5;
+  font-size: 1.05rem;
   font-weight: 500;
-  max-width: 280px;
-  line-height: 1.4;
-  margin-bottom: 4px;
+  max-width: 420px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  letter-spacing: 0.3px;
 }
 
 .frankie_hint {
-  color: #9F9791;
-  font-size: 0.75em;
-  margin-top: 4px;
-  opacity: 0.9;
+  color: #A8A0A0;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  opacity: 0.85;
   font-weight: 400;
+  letter-spacing: 0.2px;
 }
 
-/* Reduced motion: static Frankie */
-@media (prefers-reduced-motion: reduce) {
-  .frankie_silhouette,
-  .frankie_silhouette svg .frankie-scanning-eye,
-  .frankie_silhouette svg .frankie-alert-tail,
-  .frankie_glow {
-    animation: none !important;
-  }
+/* Progress bar container - under text */
+.frankie_progress_section {
+  width: 100%;
+  margin-top: 20px;
 }
 
-/* Mobile: Frankie repositions to bottom-left on small screens */
+.frankie_progress_bar {
+  height: 6px;
+  background: rgba(205,143,122,0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(205,143,122,0.2);
+}
+
+.frankie_progress_fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFD700 0%, #FFC700 50%, #FFB700 100%);
+  border-radius: 3px;
+  animation: progressPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(255,215,0,0.5);
+}
+
+@keyframes progressPulse {
+  0%, 100% { width: 20%; }
+  50% { width: 85%; }
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
   #frankie_inline_container {
-    right: auto;
-    left: 16px;
-    bottom: 16px;
-    width: 160px;
-    height: 110px;
+    width: 90vw;
+    max-width: 480px;
+  }
+  
+  #frankie_loader {
+    padding: 32px 24px 32px;
+  }
+  
+  .frankie_container {
+    width: 200px;
+    height: 240px;
+    margin-bottom: 24px;
   }
   
   .frankie_title {
-    font-size: 0.85em;
+    font-size: 1.2rem;
   }
   
   .frankie_line {
-    font-size: 0.75em;
+    font-size: 0.95rem;
   }
   
   .frankie_hint {
-    font-size: 0.7em;
+    font-size: 0.85rem;
   }
 }
 
@@ -2497,55 +2596,46 @@ body[data-theme="dark-mode"] #frankie_loader {
   50% { transform: scale(1.02) translateX(2px); }
 }
 
+/* Modal state: SCANNING (initial loading state) */
 #frankie_inline_container.frankie-state-scanning .frankie_title {
   color: #FFD700;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
+  animation: titleGlow 2s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 8px rgba(255, 215, 0, 0.2); }
+  50% { text-shadow: 0 0 16px rgba(255, 215, 0, 0.4); }
 }
 
 #frankie_inline_container.frankie-state-scanning .frankie_silhouette {
-  animation: frankieScanning 2s ease-in-out infinite !important;
+  animation: frankieBreathing 4s ease-in-out infinite !important;
 }
 
-/* State: FOUND (results appearing) */
+/* Modal state: FOUND (results appearing) */
 #frankie_inline_container.frankie-state-found {
-  animation: frankieFoundShift 0.6s ease-out forwards;
-}
-
-@keyframes frankieFoundShift {
-  0% { transform: translateX(0) scale(1); }
-  100% { transform: translateX(20px) scale(0.95); }
+  animation: none;
 }
 
 #frankie_inline_container.frankie-state-found .frankie_title {
-  color: #C9A961;
+  color: #FFD700;
 }
 
 #frankie_inline_container.frankie-state-found .frankie_silhouette {
-  animation: frankieAlert 1.2s ease-in-out infinite !important;
+  animation: frankieBreathing 4s ease-in-out infinite !important;
 }
 
-@keyframes frankieAlert {
-  0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(-3px); }
-  75% { transform: translateY(-2px); }
-}
-
-/* State: MONITORING (review complete, watchful) */
+/* Modal state: MONITORING (review complete, watchful) */
 #frankie_inline_container.frankie-state-monitoring {
-  animation: frankieMonitoringIdle 1.5s ease-in-out infinite;
-}
-
-@keyframes frankieMonitoringIdle {
-  0%, 100% { transform: translateX(20px) scale(0.9); }
-  50% { transform: translateX(22px) scale(0.92); }
+  animation: none;
 }
 
 #frankie_inline_container.frankie-state-monitoring .frankie_title {
-  color: #B8A898;
+  color: #FFD700;
 }
 
 #frankie_inline_container.frankie-state-monitoring .frankie_silhouette {
-  animation: frankieMonitoring 2s ease-in-out infinite !important;
+  animation: frankieBreathing 4s ease-in-out infinite !important;
 }
 
 @keyframes frankieMonitoring {
@@ -2553,7 +2643,7 @@ body[data-theme="dark-mode"] #frankie_loader {
   50% { transform: scaleX(1.01); }
 }
 
-/* State transition: Hidden (when overlay closes) */
+/* Modal hidden state (when overlay closes) */
 #frankie_overlay.frankie-hidden {
   opacity: 0;
   pointer-events: none;
@@ -3022,78 +3112,94 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     frankie_line = pick_frankie_line(run_id)
 
-    # Breed-accurate Alaskan Malamute silhouette
-    # Clean, observant presence - calm and professional
-    # Silent witness to the review process
+    # Breed-accurate Alaskan Malamute silhouette with ball balancing
+    # High-quality 3D-styled rendering for professional GRC aesthetic
     frankie_svg = """
-    <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Alaskan Malamute - Sentinel scanning for security gaps -->
+    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="ballGradient" cx="35%" cy="35%">
+          <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1" />
+        </radialGradient>
+        <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#7A8B8B;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#4A5B5B;stop-opacity:1" />
+        </linearGradient>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.3"/>
+        </filter>
+      </defs>
       
-      <!-- Back legs -->
-      <path d="M 45 85 L 40 115 L 50 115 L 52 85 Q 50 87 45 85" fill="#5A6B6B"/>
-      <path d="M 75 88 L 72 115 L 82 115 L 85 88 Q 82 89 75 88" fill="#5A6B6B"/>
-      
-      <!-- Body - strong malamute physique -->
-      <ellipse cx="55" cy="72" rx="28" ry="24" fill="#6B7D7D"/>
-      <ellipse cx="55" cy="72" rx="26" ry="22" fill="#8FA0A0"/>
-      
-      <!-- Chest - white/light markings typical of malamutes -->
-      <ellipse cx="62" cy="68" rx="18" ry="22" fill="#F5F0E8"/>
-      <path d="M 58 75 L 65 75 L 68 88 L 55 88 Z" fill="#F5F0E8"/>
-      
-      <!-- Front left leg -->
-      <path d="M 50 88 L 48 115 L 58 115 L 60 88 Q 56 89 50 88" fill="#5A6B6B"/>
-      
-      <!-- Front right leg -->
-      <path d="M 72 87 L 70 115 L 80 115 L 82 87 Q 78 88 72 87" fill="#5A6B6B"/>
-      
-      <!-- Neck (connecting to head) -->
-      <ellipse cx="68" cy="52" rx="14" ry="18" fill="#8FA0A0"/>
-      <path d="M 65 52 L 72 52 L 74 60 L 63 60 Z" fill="#F5F0E8"/>
-      
-      <!-- Head - proper malamute skull shape -->
-      <ellipse cx="82" cy="35" rx="16" ry="18" fill="#8FA0A0"/>
-      <ellipse cx="82" cy="35" rx="14" ry="16" fill="#6B7D7D"/>
-      
-      <!-- Face white blaze (characteristic malamute marking) -->
-      <ellipse cx="82" cy="38" rx="8" ry="10" fill="#F5F0E8"/>
-      
-      <!-- Snout - prominent malamute muzzle -->
-      <ellipse cx="95" cy="40" rx="11" ry="9" fill="#8FA0A0"/>
-      <ellipse cx="98" cy="40" rx="8" ry="7" fill="#F5F0E8"/>
-      <ellipse cx="103" cy="40" rx="3" ry="2.5" fill="#3A3A3A"/>
-      
-      <!-- Nose -->
-      <ellipse cx="103" cy="39" rx="2.5" ry="1.8" fill="#1A1A1A"/>
-      
-      <!-- Eyes (alert, scanning) - spaced for intelligent expression -->
-      <circle class="frankie-scanning-eye" cx="78" cy="30" r="3.2" fill="#1A1A1A"/>
-      <circle cx="79" cy="29" r="1.2" fill="#FFFFFF"/>
-      
-      <circle class="frankie-scanning-eye" cx="86" cy="28" r="3" fill="#1A1A1A"/>
-      <circle cx="87" cy="27" r="1.1" fill="#FFFFFF"/>
-      
-      <!-- Left ear - large malamute ear, perked forward alert -->
-      <g transform="translate(70, 18)">
-        <ellipse cx="0" cy="0" rx="7" ry="14" fill="#5A6B6B"/>
-        <ellipse cx="0.5" cy="1" rx="5" ry="11" fill="#8FA0A0"/>
-        <path d="M -3 5 L 3 5 L 2 10 L -2 10 Z" fill="#F5F0E8" opacity="0.7"/>
+      <!-- Ball balanced on nose (center-top of head) -->
+      <g class="frankie-ball" transform="translate(100, 45)">
+        <circle cx="0" cy="0" r="18" fill="url(#ballGradient)" filter="url(#shadow)"/>
+        <circle cx="6" cy="-8" r="6" fill="#FF9999" opacity="0.6"/>
+        <circle cx="8" cy="-6" r="2" fill="#FFFFFF" opacity="0.8"/>
       </g>
       
-      <!-- Right ear - large malamute ear, perked forward alert -->
-      <g transform="translate(94, 16)">
-        <ellipse cx="0" cy="0" rx="7" ry="15" fill="#5A6B6B"/>
-        <ellipse cx="-0.5" cy="1" rx="5" ry="12" fill="#8FA0A0"/>
-        <path d="M -3 6 L 3 6 L 2 11 L -2 11 Z" fill="#F5F0E8" opacity="0.7"/>
+      <!-- Back legs (strong, sturdy) -->
+      <ellipse cx="70" cy="180" rx="16" ry="35" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      <ellipse cx="130" cy="180" rx="16" ry="35" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      <ellipse cx="70" cy="210" rx="14" ry="8" fill="#5A6B6B"/>
+      <ellipse cx="130" cy="210" rx="14" ry="8" fill="#5A6B6B"/>
+      
+      <!-- Body - massive, sturdy malamute build -->
+      <ellipse cx="100" cy="130" rx="48" ry="52" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      
+      <!-- Chest white markings -->
+      <ellipse cx="100" cy="115" rx="32" ry="38" fill="#E8DFD5" opacity="0.95"/>
+      <ellipse cx="100" cy="140" rx="24" ry="28" fill="#F5F0E8" opacity="0.8"/>
+      
+      <!-- Front legs (powerful stance) -->
+      <ellipse cx="80" cy="175" rx="14" ry="38" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      <ellipse cx="120" cy="175" rx="14" ry="38" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      <ellipse cx="80" cy="210" rx="12" ry="8" fill="#5A6B6B"/>
+      <ellipse cx="120" cy="210" rx="12" ry="8" fill="#5A6B6B"/>
+      
+      <!-- Neck bridge -->
+      <path d="M 90 90 Q 95 75 100 70 Q 105 75 110 90 Q 105 95 100 98 Q 95 95 90 90" fill="#6B7D7D" filter="url(#shadow)"/>
+      <path d="M 92 88 Q 97 78 100 72 Q 103 78 108 88" fill="#E8DFD5" opacity="0.7"/>
+      
+      <!-- Head - proper malamute proportions -->
+      <ellipse cx="100" cy="55" rx="28" ry="32" fill="url(#bodyGradient)" filter="url(#shadow)"/>
+      
+      <!-- Face white blaze -->
+      <ellipse cx="100" cy="60" rx="18" ry="22" fill="#E8DFD5" opacity="0.95"/>
+      
+      <!-- Snout - prominent muzzle -->
+      <ellipse cx="116" cy="68" rx="18" ry="14" fill="#7A8B8B" filter="url(#shadow)"/>
+      <ellipse cx="122" cy="68" rx="13" ry="11" fill="#E8DFD5" opacity="0.9"/>
+      <circle cx="130" cy="68" r="4.5" fill="#2A2926"/>
+      <circle cx="130" cy="67" r="2.5" fill="#1A1A1A"/>
+      
+      <!-- Eyes - warm, intelligent expression -->
+      <circle cx="92" cy="45" r="5" fill="#1A1A1A" filter="url(#shadow)"/>
+      <circle cx="93" cy="43" r="2" fill="#FFFFFF" opacity="0.9"/>
+      
+      <circle cx="108" cy="42" r="5" fill="#1A1A1A" filter="url(#shadow)"/>
+      <circle cx="109" cy="40" r="2" fill="#FFFFFF" opacity="0.9"/>
+      
+      <!-- Left ear - large, fluffy malamute ear -->
+      <g transform="translate(78, 25)">
+        <ellipse cx="0" cy="0" rx="12" ry="28" fill="#5A6B6B" filter="url(#shadow)"/>
+        <ellipse cx="0.5" cy="1" rx="8" ry="22" fill="#7A8B8B"/>
+        <path d="M -5 8 L 6 8 L 4 20 L -4 20 Z" fill="#E8DFD5" opacity="0.6"/>
       </g>
       
-      <!-- Tail - thick, powerful malamute tail, alert curve upward -->
-      <path class="frankie-alert-tail" 
-            d="M 35 70 Q 25 50 28 25 Q 32 15 42 12 Q 50 10 52 30 Q 52 55 50 75"
-            fill="none" stroke="#5A6B6B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-      <path class="frankie-alert-tail" 
-            d="M 35 70 Q 25 50 28 25 Q 32 15 42 12 Q 50 10 52 30 Q 52 55 50 75"
-            fill="none" stroke="#8FA0A0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+      <!-- Right ear - large, fluffy malamute ear -->
+      <g transform="translate(122, 22)">
+        <ellipse cx="0" cy="0" rx="12" ry="28" fill="#5A6B6B" filter="url(#shadow)"/>
+        <ellipse cx="-0.5" cy="1" rx="8" ry="22" fill="#7A8B8B"/>
+        <path d="M -6 10 L 5 10 L 3 22 L -5 22 Z" fill="#E8DFD5" opacity="0.6"/>
+      </g>
+      
+      <!-- Tail - thick, bushy, curled malamute tail in play position -->
+      <g class="frankie-tail-wag">
+        <path d="M 50 110 Q 35 95 32 65 Q 30 40 42 28 Q 52 18 62 22 Q 68 45 70 75 Q 68 105 65 125" 
+              fill="none" stroke="#5A6B6B" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+        <path d="M 50 110 Q 35 95 32 65 Q 30 40 42 28 Q 52 18 62 22 Q 68 45 70 75 Q 68 105 65 125" 
+              fill="none" stroke="#8FA0A0" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+      </g>
     </svg>
     """
 
@@ -3101,13 +3207,17 @@ def get_frankie_loader(run_id: str = "") -> str:
     <div id="frankie_overlay">
         <div id="frankie_inline_container">
             <div id="frankie_loader">
-                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie is scanning">
+                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie is sniffing out vulnerabilities">
                     <div class="frankie_silhouette">{frankie_svg}</div>
-                    <div class="frankie_glow"></div>
                 </div>
-                <div class="frankie_title">Analyzing...</div>
+                <div class="frankie_title">Sniffing Out Vulnerabilities</div>
                 <div class="frankie_line">{frankie_line}</div>
-                <div class="frankie_hint">Finding gaps</div>
+                <div class="frankie_progress_section">
+                    <div class="frankie_progress_bar">
+                        <div class="frankie_progress_fill"></div>
+                    </div>
+                </div>
+                <div class="frankie_hint">Frankie is analyzing your code...</div>
             </div>
         </div>
     </div>
