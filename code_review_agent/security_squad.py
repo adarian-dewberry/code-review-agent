@@ -60,12 +60,16 @@ class SASTAgent:
                     start = getattr(node, "lineno", None)
                     end = getattr(node, "end_lineno", None)
                     if start and end:
-                        functions.append({"name": node.name, "start": start, "end": end})
+                        functions.append(
+                            {"name": node.name, "start": start, "end": end}
+                        )
         except SyntaxError:
             pass
         return functions
 
-    def _function_for_line(self, functions: List[dict], line: Optional[int]) -> Optional[str]:
+    def _function_for_line(
+        self, functions: List[dict], line: Optional[int]
+    ) -> Optional[str]:
         """Return function name for line if available."""
         if not line:
             return None
@@ -131,13 +135,14 @@ class SASTAgent:
     def analyze(self, code: str, file_path: Optional[str] = None) -> List[ThreatModel]:
         """Run SAST analysis and return STRIDE-mapped threats."""
         import tempfile
+
         threats = []
         function_index = self._build_function_index(code)
         temp_file_created = False
 
         # Write code to temp file for scanning
         if not file_path:
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
                 f.write(code)
                 file_path = f.name
                 temp_file_created = True
@@ -164,7 +169,9 @@ class SASTAgent:
 
                 threat = ThreatModel(
                     stride_category=stride_cat,
-                    description=finding.get("extra", {}).get("message", "Security issue detected"),
+                    description=finding.get("extra", {}).get(
+                        "message", "Security issue detected"
+                    ),
                     dread_score=dread,
                     affected_components=[component],
                     cwe_id=finding.get("extra", {}).get("metadata", {}).get("cwe"),
@@ -278,7 +285,7 @@ class DASTAgent:
                         dread_score=DREADScore(6, 9, 5, 7, 8),
                         affected_components=["API endpoints"],
                         mitigation="Restrict CORS to specific trusted origins",
-                        owasp_id="A05:2021 - Security Misconfiguration",
+                        owasp_id="A05:2025 - Security Misconfiguration",
                     )
                 )
 
@@ -306,7 +313,9 @@ class SCAAgent:
         self.role = "Dependency Security Expert"
         self.tools = ["safety", "nvd-api"]
 
-    def scan_dependencies(self, requirements_file: str = "requirements.txt") -> List[ThreatModel]:
+    def scan_dependencies(
+        self, requirements_file: str = "requirements.txt"
+    ) -> List[ThreatModel]:
         """Scan dependencies for known vulnerabilities."""
         threats = []
 
@@ -371,10 +380,14 @@ class SDLChampionAgent:
         # Determine SDL phase readiness
         if critical > 0:
             current_phase = SDLPhase.A3_SECURE_CODING
-            recommendation = "DO_NOT_MERGE - Critical threats must be resolved before A4 Testing"
+            recommendation = (
+                "DO_NOT_MERGE - Critical threats must be resolved before A4 Testing"
+            )
         elif high > 0:
             current_phase = SDLPhase.A4_TESTING
-            recommendation = "MERGE_WITH_CAUTION - High-risk threats require mitigation plan"
+            recommendation = (
+                "MERGE_WITH_CAUTION - High-risk threats require mitigation plan"
+            )
         else:
             current_phase = SDLPhase.A5_RELEASE
             recommendation = "APPROVED - Ready for security sign-off"
@@ -423,10 +436,18 @@ class SDLChampionAgent:
                     f"- DREAD Score: {threat.dread_score.total_score}/50 (Risk: {threat.dread_score.risk_level})"
                 )
                 lines.append(f"  - Damage: {threat.dread_score.damage}/10")
-                lines.append(f"  - Reproducibility: {threat.dread_score.reproducibility}/10")
-                lines.append(f"  - Exploitability: {threat.dread_score.exploitability}/10")
-                lines.append(f"  - Affected Users: {threat.dread_score.affected_users}/10")
-                lines.append(f"  - Discoverability: {threat.dread_score.discoverability}/10")
+                lines.append(
+                    f"  - Reproducibility: {threat.dread_score.reproducibility}/10"
+                )
+                lines.append(
+                    f"  - Exploitability: {threat.dread_score.exploitability}/10"
+                )
+                lines.append(
+                    f"  - Affected Users: {threat.dread_score.affected_users}/10"
+                )
+                lines.append(
+                    f"  - Discoverability: {threat.dread_score.discoverability}/10"
+                )
 
                 if threat.mitigation:
                     lines.append(f"- Mitigation: {threat.mitigation}")
@@ -448,7 +469,9 @@ class SecuritySquad:
         self.sca_agent = SCAAgent()
         self.sdl_champion = SDLChampionAgent(api_key)
 
-    def _build_bsimm_dashboard(self, sast_count: int, dast_count: int, sca_count: int) -> Dict:
+    def _build_bsimm_dashboard(
+        self, sast_count: int, dast_count: int, sca_count: int
+    ) -> Dict:
         """Build BSIMM maturity metrics dashboard."""
         activities = default_bsimm_activities()
 
@@ -475,7 +498,9 @@ class SecuritySquad:
         for domain, stats in domain_summary.items():
             total = stats["total"]
             implemented = stats["implemented"]
-            stats["completion_percent"] = round((implemented / total) * 100, 1) if total else 0.0
+            stats["completion_percent"] = (
+                round((implemented / total) * 100, 1) if total else 0.0
+            )
 
         return {
             "activities": [a.model_dump() for a in activities],

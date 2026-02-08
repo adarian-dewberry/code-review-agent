@@ -37,7 +37,7 @@ SAMPLE_OUTPUT = textwrap.dedent(
 
     ## Security Review
     ### CRITICAL
-    - SQL injection vulnerability (line 6) | OWASP A03:2021 - Injection, CWE-89
+    - SQL injection vulnerability (line 6) | OWASP A03:2025 - Injection, CWE-89
       Risk: Attacker can extract entire database by manipulating vendor_name parameter
       Risk Level: CRITICAL
       Fix: Use parameterized queries and avoid string interpolation
@@ -55,7 +55,9 @@ with st.sidebar:
     api_key = st.text_input("ANTHROPIC_API_KEY", type="password")
     use_demo = st.checkbox("Demo mode (no API calls)", value=True)
     st.markdown("---")
-    st.markdown("**Tip**: Use demo mode to explore output without sending code to an LLM.")
+    st.markdown(
+        "**Tip**: Use demo mode to explore output without sending code to an LLM."
+    )
 
 st.subheader("Paste AI-generated code")
 code_input = st.text_area("Code", value=SAMPLE_CODE, height=280)
