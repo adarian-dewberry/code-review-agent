@@ -366,19 +366,19 @@ def select_easter_egg(verdict: str, confidence: float, audience: str) -> str | N
 # Only select from predefined copy in EASTER_EGGS or UI_COPY.
 UI_COPY = {
     "BLOCK": {
-        "headline": "Unsafe to merge or deploy",
-        "subtext": "This code contains high-risk patterns that are commonly exploited.",
+        "headline": "⚠️ Unsafe to merge",
+        "subtext": "This code contains patterns that pose security risks and should be revised before merging.",
         "confidence_text": "High confidence",
         "alt_subtext": None,  # No jokes allowed
     },
     "REVIEW_REQUIRED": {
-        "headline": "Human review recommended",
-        "subtext": "Some patterns could become risky depending on how this code is used.",
+        "headline": "⚠️ Review recommended",
+        "subtext": "Some patterns could become risky depending on how this code is used. Human review is recommended.",
         "confidence_text": "Medium-High confidence",
         "alt_subtext": None,  # Easter egg can replace this
     },
     "PASS": {
-        "headline": "No issues found",
+        "headline": "✅ No issues found",
         "subtext": "This code follows safe patterns based on the signals we checked.",
         "confidence_text": "High confidence",
         "alt_subtext": None,  # Easter egg can replace this
@@ -881,9 +881,9 @@ Analyze the code and return findings as JSON per the schema. Include line number
         # Verdict display config
         verdict_config = {
             "BLOCK": {
-                "icon": "🚫",
+                "icon": "⚠️",
                 "css_class": "block",
-                "dot_color": "#dc3545",
+                "dot_color": "#FF9800",
             },
             "REVIEW_REQUIRED": {
                 "icon": "⚠️",
@@ -1024,7 +1024,7 @@ This code follows safe patterns based on the signals we checked.
             for i, f in enumerate(sorted_findings[:3]):  # Top 3 for overview
                 sev = f.get("severity", "MEDIUM")
                 border_color = {
-                    "CRITICAL": "#dc3545",
+                    "CRITICAL": "#FF9800",
                     "HIGH": "#e67700",
                     "MEDIUM": "#ffc107",
                     "LOW": "#6c757d",
@@ -1057,6 +1057,20 @@ This code follows safe patterns based on the signals we checked.
             if len(findings) > 3:
                 details += f"\n*+ {len(findings) - 3} more finding{'s' if len(findings) - 3 != 1 else ''} below*\n"
 
+            # Add "What was checked" context to all findings
+            details += """
+<div style="background: rgba(32,201,51,0.08); border-left: 3px solid #28a745; padding: 16px; border-radius: 0 8px 8px 0; margin: 16px 0;">
+
+**What was checked:**
+- SQL injection patterns
+- Cross-site scripting (XSS)
+- Hardcoded secrets
+- Prompt injection (for LLM code)
+- Access control issues
+
+</div>
+"""
+
             # Layer 2: Findings Table (Intermediate - scannable)
             details += "\n---\n\n## 📋 All Findings\n\n"
 
@@ -1067,8 +1081,7 @@ This code follows safe patterns based on the signals we checked.
 <th>Severity</th>
 <th>Title</th>
 <th>Location</th>
-<th>CWE/OWASP</th>
-<th>Confidence</th>
+<th title="Likelihood this issue is a true positive">Confidence</th>
 </tr>
 </thead>
 <tbody>
@@ -1081,9 +1094,6 @@ This code follows safe patterns based on the signals we checked.
                     f"Line {f.get('line')}" if f.get("line") else "—"
                 )
                 safe_location = html.escape(str(location))
-                owasp = f.get("owasp", "")
-                cwe = f.get("cwe", "")
-                mapping = owasp if owasp else cwe if cwe else "—"
                 conf = f.get("confidence", 0)
                 conf_pct = int(conf * 100)
 
@@ -1091,8 +1101,7 @@ This code follows safe patterns based on the signals we checked.
 <td><span class="severity_badge {sev_lower}">{sev}</span></td>
 <td><strong>{safe_title}</strong></td>
 <td><code>{safe_location}</code></td>
-<td>{mapping}</td>
-<td><div class="confidence_bar"><div class="confidence_fill" style="width: {conf_pct}%"></div></div> {conf_pct}%</td>
+<td><div class="confidence_bar"><div class="confidence_fill" style="width: {conf_pct}%"></div></div> <span title="{conf_pct}% confidence in this finding">{conf_pct}%</span></td>
 </tr>
 """
             details += "</tbody></table>\n\n"
@@ -2913,6 +2922,7 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     # Inline SVG of trotting Alaskan Malamute with ball
     # Side profile in motion with animated legs, wagging tail, and bouncing ball
+    # Wrapped with aria-live for accessibility
     frankie_svg = """
     <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <!-- Ball (terracotta, bouncing) -->
@@ -2975,7 +2985,7 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     return f"""
     <div id="frankie_loader">
-        <div class="frankie_container">
+        <div class="frankie_container" aria-live="polite" aria-label="Code review in progress">
             <div class="frankie_silhouette">{frankie_svg}</div>
             <div class="frankie_glow"></div>
         </div>
