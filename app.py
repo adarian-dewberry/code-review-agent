@@ -987,7 +987,7 @@ Analyze the code and return findings as JSON per the schema. Include line number
         <span class="trust_signal">📊 <strong>{len(findings)}</strong> finding{"s" if len(findings) != 1 else ""}</span>
         <span class="trust_signal">📁 <strong>1</strong> file analyzed</span>
         <span class="trust_signal">🎯 <strong>{base_copy["confidence_text"]}</strong></span>
-        {"<span class='trust_signal'>💥 <strong>High Blast Radius</strong></span>" if has_high_blast else ""}
+        {"<span class='trust_signal' title='This vulnerability could affect multiple parts of the system or have cascading effects'>💥 <strong>High Blast Radius</strong></span>" if has_high_blast else ""}
     </div>
 </div>
 <p style="font-size: 0.78em; color: #A89F91; margin-top: 10px; text-align: center;">
