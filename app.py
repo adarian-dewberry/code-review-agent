@@ -2369,18 +2369,19 @@ body[data-theme="dark-mode"] #frankie_loader {
 
 .frankie_container {
   position: relative;
-  width: 280px;
-  height: 320px;
+  width: 300px;
+  height: auto;
   margin: 0 auto 32px;
   overflow: visible;
   flex-shrink: 0;
   filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  animation: frankieBounce 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
 
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: frankieBreathing 4s ease-in-out infinite;
+  animation: none;
 }
 
 .frankie_silhouette svg {
@@ -2390,14 +2391,14 @@ body[data-theme="dark-mode"] #frankie_loader {
 
 /* ===== PROFESSIONAL LOADING ANIMATIONS ===== */
 
-/* Malamute breathing animation - gentle, calming motion */
-@keyframes frankieBreathing {
+/* Bounce animation for play bow - playful, energetic motion */
+@keyframes frankieBounce {
   0%, 100% { 
-    transform: translateY(0) scale(1); 
+    transform: translateY(0); 
     opacity: 1; 
   }
   50% { 
-    transform: translateY(-8px) scale(1.02); 
+    transform: translateY(-12px); 
     opacity: 0.98; 
   }
 }
@@ -2407,7 +2408,7 @@ body[data-theme="dark-mode"] #frankie_loader {
   animation: 
     ballSpin 3s linear infinite,
     ballWobble 4s ease-in-out infinite;
-  transform-origin: 100px 45px;
+  transform-origin: 178px 88px;
 }
 
 @keyframes ballSpin {
@@ -2425,19 +2426,19 @@ body[data-theme="dark-mode"] #frankie_loader {
 /* Tail wag - happy, playful motion */
 .frankie-tail-wag {
   animation: tailWag 3.5s ease-in-out infinite;
-  transform-origin: 50px 110px;
+  transform-origin: 80px 95px;
 }
 
 @keyframes tailWag {
   0%, 100% { transform: rotateZ(0deg); }
-  25% { transform: rotateZ(15deg); }
-  50% { transform: rotateZ(-12deg); }
-  75% { transform: rotateZ(10deg); }
+  25% { transform: rotateZ(18deg); }
+  50% { transform: rotateZ(-15deg); }
+  75% { transform: rotateZ(12deg); }
 }
 
 /* Respects reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .frankie_silhouette,
+  .frankie_container,
   .frankie-ball,
   .frankie-tail-wag {
     animation: none !important;
@@ -2561,8 +2562,8 @@ body[data-theme="dark-mode"] #frankie_loader {
   }
   
   .frankie_container {
-    width: 200px;
-    height: 240px;
+    width: 250px;
+    height: auto;
     margin-bottom: 24px;
   }
   
@@ -2609,7 +2610,7 @@ body[data-theme="dark-mode"] #frankie_loader {
 }
 
 #frankie_inline_container.frankie-state-scanning .frankie_silhouette {
-  animation: frankieBreathing 4s ease-in-out infinite !important;
+  animation: none !important;
 }
 
 /* Modal state: FOUND (results appearing) */
@@ -2622,7 +2623,7 @@ body[data-theme="dark-mode"] #frankie_loader {
 }
 
 #frankie_inline_container.frankie-state-found .frankie_silhouette {
-  animation: frankieBreathing 4s ease-in-out infinite !important;
+  animation: none !important;
 }
 
 /* Modal state: MONITORING (review complete, watchful) */
@@ -2635,7 +2636,7 @@ body[data-theme="dark-mode"] #frankie_loader {
 }
 
 #frankie_inline_container.frankie-state-monitoring .frankie_silhouette {
-  animation: frankieBreathing 4s ease-in-out infinite !important;
+  animation: none !important;
 }
 
 @keyframes frankieMonitoring {
@@ -3115,90 +3116,148 @@ def get_frankie_loader(run_id: str = "") -> str:
     # Breed-accurate Alaskan Malamute silhouette with ball balancing
     # High-quality 3D-styled rendering for professional GRC aesthetic
     frankie_svg = """
-    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 300 360" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
+        <!-- Gradients for realistic fluffy coat -->
+        <radialGradient id="coatLight" cx="40%" cy="30%">
+          <stop offset="0%" style="stop-color:#A8B8B8;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#6A7A7A;stop-opacity:1" />
+        </radialGradient>
+        <radialGradient id="coatDark" cx="35%" cy="35%">
+          <stop offset="0%" style="stop-color:#7A8A8A;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#4A5A5A;stop-opacity:1" />
+        </radialGradient>
+        <linearGradient id="chestGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.95" />
+          <stop offset="100%" style="stop-color:#E5DDD3;stop-opacity:0.9" />
+        </linearGradient>
         <radialGradient id="ballGradient" cx="35%" cy="35%">
-          <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+          <stop offset="0%" style="stop-color:#FF7777;stop-opacity:1" />
           <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1" />
         </radialGradient>
-        <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#7A8B8B;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#4A5B5B;stop-opacity:1" />
-        </linearGradient>
+        <filter id="fluff" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
+        </filter>
         <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.3"/>
+          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.25"/>
         </filter>
       </defs>
+
+      <!-- PLAY BOW STANCE: Front legs down, rump up, playful position -->
       
-      <!-- Ball balanced on nose (center-top of head) -->
-      <g class="frankie-ball" transform="translate(100, 45)">
-        <circle cx="0" cy="0" r="18" fill="url(#ballGradient)" filter="url(#shadow)"/>
-        <circle cx="6" cy="-8" r="6" fill="#FF9999" opacity="0.6"/>
-        <circle cx="8" cy="-6" r="2" fill="#FFFFFF" opacity="0.8"/>
+      <!-- Back legs (up and back, play bow position) -->
+      <ellipse cx="80" cy="120" rx="18" ry="42" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <ellipse cx="150" cy="125" rx="18" ry="40" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <!-- Back paws -->
+      <ellipse cx="80" cy="165" rx="16" ry="10" fill="#5A6A6A"/>
+      <ellipse cx="150" cy="168" rx="16" ry="10" fill="#5A6A6A"/>
+      
+      <!-- Rump (elevated, play bow) -->
+      <ellipse cx="115" cy="100" rx="52" ry="48" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <ellipse cx="115" cy="95" rx="48" ry="44" fill="url(#coatLight)" opacity="0.8"/>
+      
+      <!-- Back white marking -->
+      <ellipse cx="120" cy="110" rx="32" ry="28" fill="#F0E8DC" opacity="0.7"/>
+      
+      <!-- Thick, powerful chest and neck area -->
+      <ellipse cx="115" cy="180" rx="56" ry="50" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <ellipse cx="115" cy="175" rx="52" ry="46" fill="url(#coatLight)"/>
+      
+      <!-- White chest blaze (characteristic malamute marking) -->
+      <ellipse cx="120" cy="185" rx="38" ry="42" fill="url(#chestGradient)"/>
+      <!-- Inner white chest -->
+      <ellipse cx="115" cy="195" rx="28" ry="32" fill="#FAFAF8" opacity="0.9"/>
+      
+      <!-- Thick neck - substantial and powerful -->
+      <path d="M 95 160 Q 90 140 95 120 Q 100 110 115 115 Q 130 110 135 120 Q 140 140 135 160 Q 130 168 115 170 Q 100 168 95 160" 
+            fill="url(#coatDark)" filter="url(#shadow)"/>
+      <path d="M 98 162 Q 93 142 98 122 Q 102 113 115 117 Q 128 113 132 122 Q 137 142 132 162 Q 128 168 115 169 Q 102 168 98 162" 
+            fill="url(#coatLight)" opacity="0.85"/>
+      
+      <!-- BROAD HEAD - Massive skull structure -->
+      <ellipse cx="115" cy="85" rx="48" ry="52" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <ellipse cx="115" cy="82" rx="44" ry="48" fill="url(#coatLight)"/>
+      
+      <!-- Face white blaze - broad forehead marking -->
+      <ellipse cx="115" cy="75" rx="32" ry="38" fill="#F5EDEF" opacity="0.9"/>
+      
+      <!-- Snout - prominent, thick muzzle -->
+      <ellipse cx="148" cy="95" rx="28" ry="22" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <ellipse cx="152" cy="95" rx="23" ry="18" fill="url(#coatLight)"/>
+      <!-- Muzzle tip -->
+      <ellipse cx="170" cy="95" rx="16" ry="14" fill="#F0E8DC" opacity="0.95"/>
+      <!-- Nose -->
+      <ellipse cx="180" cy="94" rx="6" ry="5" fill="#2A2926"/>
+      <circle cx="181" cy="93" r="2.5" fill="#1A1A1A"/>
+      
+      <!-- Eyes - warm, intelligent, set wide apart -->
+      <circle cx="100" cy="65" r="6" fill="#1A1A1A" filter="url(#shadow)"/>
+      <circle cx="101" cy="63" r="2.2" fill="#FFFFFF" opacity="0.9"/>
+      
+      <circle cx="132" cy="62" r="6" fill="#1A1A1A" filter="url(#shadow)"/>
+      <circle cx="133" cy="60" r="2.2" fill="#FFFFFF" opacity="0.9"/>
+      
+      <!-- EARS - Small, triangular, upright, well-furred -->
+      <!-- Left ear -->
+      <g transform="translate(78, 35)">
+        <!-- Outer ear -->
+        <path d="M 0 0 L -8 -32 L -2 -2 Z" fill="#5A6A6A" filter="url(#shadow)"/>
+        <!-- Inner ear fur -->
+        <path d="M -1 -2 L -6 -24 L -2 -3 Z" fill="#7A8A8A" opacity="0.9"/>
+        <!-- Inner ear pink -->
+        <path d="M -2 -4 L -5 -18 L -2 -5 Z" fill="#D9A8A8" opacity="0.6"/>
+        <!-- Ear fluff texture -->
+        <circle cx="-4" cy="-15" r="1.5" fill="#8A9A9A" opacity="0.7"/>
+        <circle cx="-3" cy="-10" r="1.2" fill="#8A9A9A" opacity="0.6"/>
       </g>
       
-      <!-- Back legs (strong, sturdy) -->
-      <ellipse cx="70" cy="180" rx="16" ry="35" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      <ellipse cx="130" cy="180" rx="16" ry="35" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      <ellipse cx="70" cy="210" rx="14" ry="8" fill="#5A6B6B"/>
-      <ellipse cx="130" cy="210" rx="14" ry="8" fill="#5A6B6B"/>
-      
-      <!-- Body - massive, sturdy malamute build -->
-      <ellipse cx="100" cy="130" rx="48" ry="52" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      
-      <!-- Chest white markings -->
-      <ellipse cx="100" cy="115" rx="32" ry="38" fill="#E8DFD5" opacity="0.95"/>
-      <ellipse cx="100" cy="140" rx="24" ry="28" fill="#F5F0E8" opacity="0.8"/>
-      
-      <!-- Front legs (powerful stance) -->
-      <ellipse cx="80" cy="175" rx="14" ry="38" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      <ellipse cx="120" cy="175" rx="14" ry="38" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      <ellipse cx="80" cy="210" rx="12" ry="8" fill="#5A6B6B"/>
-      <ellipse cx="120" cy="210" rx="12" ry="8" fill="#5A6B6B"/>
-      
-      <!-- Neck bridge -->
-      <path d="M 90 90 Q 95 75 100 70 Q 105 75 110 90 Q 105 95 100 98 Q 95 95 90 90" fill="#6B7D7D" filter="url(#shadow)"/>
-      <path d="M 92 88 Q 97 78 100 72 Q 103 78 108 88" fill="#E8DFD5" opacity="0.7"/>
-      
-      <!-- Head - proper malamute proportions -->
-      <ellipse cx="100" cy="55" rx="28" ry="32" fill="url(#bodyGradient)" filter="url(#shadow)"/>
-      
-      <!-- Face white blaze -->
-      <ellipse cx="100" cy="60" rx="18" ry="22" fill="#E8DFD5" opacity="0.95"/>
-      
-      <!-- Snout - prominent muzzle -->
-      <ellipse cx="116" cy="68" rx="18" ry="14" fill="#7A8B8B" filter="url(#shadow)"/>
-      <ellipse cx="122" cy="68" rx="13" ry="11" fill="#E8DFD5" opacity="0.9"/>
-      <circle cx="130" cy="68" r="4.5" fill="#2A2926"/>
-      <circle cx="130" cy="67" r="2.5" fill="#1A1A1A"/>
-      
-      <!-- Eyes - warm, intelligent expression -->
-      <circle cx="92" cy="45" r="5" fill="#1A1A1A" filter="url(#shadow)"/>
-      <circle cx="93" cy="43" r="2" fill="#FFFFFF" opacity="0.9"/>
-      
-      <circle cx="108" cy="42" r="5" fill="#1A1A1A" filter="url(#shadow)"/>
-      <circle cx="109" cy="40" r="2" fill="#FFFFFF" opacity="0.9"/>
-      
-      <!-- Left ear - large, fluffy malamute ear -->
-      <g transform="translate(78, 25)">
-        <ellipse cx="0" cy="0" rx="12" ry="28" fill="#5A6B6B" filter="url(#shadow)"/>
-        <ellipse cx="0.5" cy="1" rx="8" ry="22" fill="#7A8B8B"/>
-        <path d="M -5 8 L 6 8 L 4 20 L -4 20 Z" fill="#E8DFD5" opacity="0.6"/>
+      <!-- Right ear -->
+      <g transform="translate(152, 32)">
+        <!-- Outer ear -->
+        <path d="M 0 0 L 8 -34 L 2 -2 Z" fill="#5A6A6A" filter="url(#shadow)"/>
+        <!-- Inner ear fur -->
+        <path d="M 1 -2 L 6 -26 L 2 -3 Z" fill="#7A8A8A" opacity="0.9"/>
+        <!-- Inner ear pink -->
+        <path d="M 2 -4 L 5 -20 L 2 -5 Z" fill="#D9A8A8" opacity="0.6"/>
+        <!-- Ear fluff texture -->
+        <circle cx="4" cy="-17" r="1.5" fill="#8A9A9A" opacity="0.7"/>
+        <circle cx="3" cy="-12" r="1.2" fill="#8A9A9A" opacity="0.6"/>
       </g>
       
-      <!-- Right ear - large, fluffy malamute ear -->
-      <g transform="translate(122, 22)">
-        <ellipse cx="0" cy="0" rx="12" ry="28" fill="#5A6B6B" filter="url(#shadow)"/>
-        <ellipse cx="-0.5" cy="1" rx="8" ry="22" fill="#7A8B8B"/>
-        <path d="M -6 10 L 5 10 L 3 22 L -5 22 Z" fill="#E8DFD5" opacity="0.6"/>
+      <!-- BUSHY TAIL - Plume-like, curls gracefully over back -->
+      <g class="frankie-tail-wag" transform="translate(80, 95)">
+        <!-- Tail outer (dark, shadow) -->
+        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
+              fill="none" stroke="#5A6A6A" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+        <!-- Tail middle (light) -->
+        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
+              fill="none" stroke="#9AAAA9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+        <!-- Tail highlight (white) -->
+        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
+              fill="none" stroke="#D8CDBE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
       </g>
       
-      <!-- Tail - thick, bushy, curled malamute tail in play position -->
-      <g class="frankie-tail-wag">
-        <path d="M 50 110 Q 35 95 32 65 Q 30 40 42 28 Q 52 18 62 22 Q 68 45 70 75 Q 68 105 65 125" 
-              fill="none" stroke="#5A6B6B" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
-        <path d="M 50 110 Q 35 95 32 65 Q 30 40 42 28 Q 52 18 62 22 Q 68 45 70 75 Q 68 105 65 125" 
-              fill="none" stroke="#8FA0A0" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+      <!-- Front left leg (down, play bow) - extended forward and down -->
+      <ellipse cx="70" cy="240" rx="16" ry="48" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <!-- Front left paw -->
+      <ellipse cx="70" cy="290" rx="14" ry="9" fill="#5A6A6A"/>
+      
+      <!-- Front right leg (down, play bow) - extended forward and down -->
+      <ellipse cx="140" cy="245" rx="16" ry="46" fill="url(#coatDark)" filter="url(#shadow)"/>
+      <!-- Front right paw -->
+      <ellipse cx="140" cy="293" rx="14" ry="9" fill="#5A6A6A"/>
+      
+      <!-- Fluffy texture overlays for realistic fur -->
+      <circle cx="90" cy="100" r="3" fill="#9AAAA9" opacity="0.4" filter="url(#fluff)"/>
+      <circle cx="140" cy="105" r="2.5" fill="#9AAAA9" opacity="0.35" filter="url(#fluff)"/>
+      <circle cx="100" cy="140" r="2.8" fill="#9AAAA9" opacity="0.35" filter="url(#fluff)"/>
+      <circle cx="130" cy="145" r="3" fill="#9AAAA9" opacity="0.4" filter="url(#fluff)"/>
+      
+      <!-- Ball balanced on nose (optional, small) -->
+      <g class="frankie-ball" opacity="0.8">
+        <circle cx="178" cy="88" r="12" fill="url(#ballGradient)" filter="url(#shadow)"/>
+        <circle cx="183" cy="82" r="4" fill="#FF9999" opacity="0.7"/>
+        <circle cx="185" cy="80" r="1.5" fill="#FFFFFF" opacity="0.8"/>
       </g>
     </svg>
     """
