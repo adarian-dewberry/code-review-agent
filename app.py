@@ -2387,60 +2387,94 @@ body[data-theme="dark-mode"] #frankie_loader {
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
+  animation: dogHeadTilt 2.8s ease-in-out infinite;
+  transform-origin: 170px 120px;
+}
+
+/* Separate red ball element */
+.frankie_ball {
+  position: absolute;
+  top: 15px;
+  left: 120px;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle at 30% 30%, #FF9999, #CC0000);
+  border-radius: 50%;
+  box-shadow: 
+    0 4px 12px rgba(204, 0, 0, 0.4),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3);
+  animation: ballBounce 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  z-index: 10;
 }
 
 /* ===== PROFESSIONAL LOADING ANIMATIONS ===== */
 
-/* Bounce animation for play bow - playful, energetic motion */
+/* Container bounce for play bow effect */
 @keyframes frankieBounce {
   0%, 100% { 
-    transform: translateY(0); 
-    opacity: 1; 
+    transform: translateY(0);
   }
   50% { 
-    transform: translateY(-12px); 
-    opacity: 0.98; 
+    transform: translateY(-8px);
   }
 }
 
-/* Ball balancing - playful spin and wobble */
-.frankie-ball {
-  animation: 
-    ballSpin 3s linear infinite,
-    ballWobble 4s ease-in-out infinite;
-  transform-origin: 178px 88px;
+/* Dog head tilt - synchronized with ball bounce */
+@keyframes dogHeadTilt {
+  0%, 100% { 
+    transform: rotateZ(0deg); 
+  }
+  25% { 
+    transform: rotateZ(-3deg); 
+  }
+  50% { 
+    transform: rotateZ(0deg); 
+  }
+  75% { 
+    transform: rotateZ(3deg); 
+  }
 }
 
-@keyframes ballSpin {
-  0% { transform: rotateZ(0deg); }
-  100% { transform: rotateZ(360deg); }
+/* Ball bounce - playful, energetic bouncing */
+@keyframes ballBounce {
+  0% { 
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  40% { 
+    transform: translateY(-60px) scale(1.05);
+    opacity: 1;
+  }
+  50% { 
+    transform: translateY(-70px) scale(1);
+    opacity: 0.98;
+  }
+  100% { 
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
-@keyframes ballWobble {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(3px) translateY(-2px); }
-  50% { transform: translateX(0) translateY(2px); }
-  75% { transform: translateX(-3px) translateY(-1px); }
-}
-
-/* Tail wag - happy, playful motion */
-.frankie-tail-wag {
+/* Tail wag - happy, playful motion -->
+.frankie-tail {
   animation: tailWag 3.5s ease-in-out infinite;
-  transform-origin: 80px 95px;
+  transform-origin: 110px 160px;
 }
 
 @keyframes tailWag {
   0%, 100% { transform: rotateZ(0deg); }
-  25% { transform: rotateZ(18deg); }
-  50% { transform: rotateZ(-15deg); }
-  75% { transform: rotateZ(12deg); }
+  25% { transform: rotateZ(22deg); }
+  50% { transform: rotateZ(-18deg); }
+  75% { transform: rotateZ(15deg); }
 }
 
 /* Respects reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .frankie_container,
-  .frankie-ball,
-  .frankie-tail-wag {
+  .frankie_ball,
+  .frankie-tail,
+  .frankie_silhouette svg {
     animation: none !important;
   }
   
@@ -2523,31 +2557,44 @@ body[data-theme="dark-mode"] #frankie_loader {
   letter-spacing: 0.2px;
 }
 
-/* Progress bar container - under text */
+/* Progress bar container - sleek gold-and-charcoal design */
 .frankie_progress_section {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .frankie_progress_bar {
-  height: 6px;
-  background: rgba(205,143,122,0.15);
-  border-radius: 3px;
+  height: 8px;
+  background: linear-gradient(90deg, #2A2926 0%, #3A3A36 50%, #2A2926 100%);
+  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(205,143,122,0.2);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 8px rgba(0, 0, 0, 0.3);
+  position: relative;
 }
 
 .frankie_progress_fill {
   height: 100%;
-  background: linear-gradient(90deg, #FFD700 0%, #FFC700 50%, #FFB700 100%);
+  background: linear-gradient(90deg, 
+    #FFE44D 0%, 
+    #FFD700 25%, 
+    #FFC700 50%, 
+    #FFD700 75%, 
+    #FFE44D 100%);
   border-radius: 3px;
-  animation: progressPulse 2s ease-in-out infinite;
-  box-shadow: 0 0 12px rgba(255,215,0,0.5);
+  animation: progressPulse 2.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  box-shadow: 
+    0 0 16px rgba(255, 215, 0, 0.6),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+  position: relative;
 }
 
 @keyframes progressPulse {
-  0%, 100% { width: 20%; }
-  50% { width: 85%; }
+  0%, 100% { width: 15%; opacity: 0.7; }
+  50% { width: 90%; opacity: 1; }
 }
 
 /* Mobile responsive */
@@ -2642,6 +2689,13 @@ body[data-theme="dark-mode"] #frankie_loader {
 @keyframes frankieMonitoring {
   0%, 100% { transform: scaleX(1); }
   50% { transform: scaleX(1.01); }
+}
+
+/* Modal default state - always start visible */
+#frankie_overlay {
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.4s ease;
 }
 
 /* Modal hidden state (when overlay closes) */
@@ -3113,170 +3167,146 @@ def get_frankie_loader(run_id: str = "") -> str:
 
     frankie_line = pick_frankie_line(run_id)
 
-    # Breed-accurate Alaskan Malamute silhouette with ball balancing
-    # High-quality 3D-styled rendering for professional GRC aesthetic
+    # Professional 3D-styled Alaskan Malamute hero asset
+    # High-quality SVG with realistic fur, anatomy, and presence
     frankie_svg = """
-    <svg viewBox="0 0 300 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 400 420" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Gradients for realistic fluffy coat -->
-        <radialGradient id="coatLight" cx="40%" cy="30%">
-          <stop offset="0%" style="stop-color:#A8B8B8;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#6A7A7A;stop-opacity:1" />
-        </radialGradient>
-        <radialGradient id="coatDark" cx="35%" cy="35%">
-          <stop offset="0%" style="stop-color:#7A8A8A;stop-opacity:1" />
+        <!-- Fur gradient layers for 3D effect -->
+        <linearGradient id="coatGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#9BA8A8;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#6B7A7A;stop-opacity:1" />
           <stop offset="100%" style="stop-color:#4A5A5A;stop-opacity:1" />
-        </radialGradient>
-        <linearGradient id="chestGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.95" />
-          <stop offset="100%" style="stop-color:#E5DDD3;stop-opacity:0.9" />
         </linearGradient>
-        <radialGradient id="ballGradient" cx="35%" cy="35%">
-          <stop offset="0%" style="stop-color:#FF7777;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1" />
+        <radialGradient id="bodyShine" cx="35%" cy="25%">
+          <stop offset="0%" style="stop-color:#B8C5C5;stop-opacity:0.6" />
+          <stop offset="100%" style="stop-color:#5A6A6A;stop-opacity:0" />
         </radialGradient>
-        <filter id="fluff" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5"/>
+        <linearGradient id="whiteChest" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#E5E0D8;stop-opacity:0.95" />
+        </linearGradient>
+        <filter id="deepShadow">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.4"/>
         </filter>
-        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.25"/>
+        <filter id="lightShadow">
+          <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.2"/>
         </filter>
       </defs>
 
-      <!-- PLAY BOW STANCE: Front legs down, rump up, playful position -->
-      
-      <!-- Back legs (up and back, play bow position) -->
-      <ellipse cx="80" cy="120" rx="18" ry="42" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <ellipse cx="150" cy="125" rx="18" ry="40" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <!-- Back paws -->
-      <ellipse cx="80" cy="165" rx="16" ry="10" fill="#5A6A6A"/>
-      <ellipse cx="150" cy="168" rx="16" ry="10" fill="#5A6A6A"/>
-      
-      <!-- Rump (elevated, play bow) -->
-      <ellipse cx="115" cy="100" rx="52" ry="48" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <ellipse cx="115" cy="95" rx="48" ry="44" fill="url(#coatLight)" opacity="0.8"/>
-      
-      <!-- Back white marking -->
-      <ellipse cx="120" cy="110" rx="32" ry="28" fill="#F0E8DC" opacity="0.7"/>
-      
-      <!-- Thick, powerful chest and neck area -->
-      <ellipse cx="115" cy="180" rx="56" ry="50" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <ellipse cx="115" cy="175" rx="52" ry="46" fill="url(#coatLight)"/>
-      
-      <!-- White chest blaze (characteristic malamute marking) -->
-      <ellipse cx="120" cy="185" rx="38" ry="42" fill="url(#chestGradient)"/>
-      <!-- Inner white chest -->
-      <ellipse cx="115" cy="195" rx="28" ry="32" fill="#FAFAF8" opacity="0.9"/>
-      
-      <!-- Thick neck - substantial and powerful -->
-      <path d="M 95 160 Q 90 140 95 120 Q 100 110 115 115 Q 130 110 135 120 Q 140 140 135 160 Q 130 168 115 170 Q 100 168 95 160" 
-            fill="url(#coatDark)" filter="url(#shadow)"/>
-      <path d="M 98 162 Q 93 142 98 122 Q 102 113 115 117 Q 128 113 132 122 Q 137 142 132 162 Q 128 168 115 169 Q 102 168 98 162" 
-            fill="url(#coatLight)" opacity="0.85"/>
-      
-      <!-- BROAD HEAD - Massive skull structure -->
-      <ellipse cx="115" cy="85" rx="48" ry="52" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <ellipse cx="115" cy="82" rx="44" ry="48" fill="url(#coatLight)"/>
-      
-      <!-- Face white blaze - broad forehead marking -->
-      <ellipse cx="115" cy="75" rx="32" ry="38" fill="#F5EDEF" opacity="0.9"/>
-      
-      <!-- Snout - prominent, thick muzzle -->
-      <ellipse cx="148" cy="95" rx="28" ry="22" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <ellipse cx="152" cy="95" rx="23" ry="18" fill="url(#coatLight)"/>
-      <!-- Muzzle tip -->
-      <ellipse cx="170" cy="95" rx="16" ry="14" fill="#F0E8DC" opacity="0.95"/>
+      <!-- Back legs (rump up, play bow position) -->
+      <ellipse cx="120" cy="220" rx="22" ry="55" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="220" cy="230" rx="22" ry="52" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <!-- Back paw pads -->
+      <ellipse cx="120" cy="275" rx="18" ry="12" fill="#5A6A6A"/>
+      <ellipse cx="220" cy="282" rx="18" ry="12" fill="#5A6A6A"/>
+
+      <!-- Rear haunch (rounded, fluffy) -->
+      <ellipse cx="170" cy="180" rx="70" ry="75" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="170" cy="175" rx="64" ry="68" fill="url(#bodyShine)"/>
+
+      <!-- White rump marking -->
+      <ellipse cx="180" cy="200" rx="45" ry="50" fill="url(#whiteChest)" opacity="0.75"/>
+
+      <!-- Main body/chest area (broad, powerful) -->
+      <ellipse cx="170" cy="280" rx="90" ry="80" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="170" cy="275" rx="85" ry="75" fill="url(#bodyShine)"/>
+
+      <!-- Prominent white chest blaze -->
+      <ellipse cx="175" cy="295" rx="60" ry="65" fill="url(#whiteChest)"/>
+      <ellipse cx="175" cy="310" rx="45" ry="50" fill="#FFFFFF" opacity="0.95"/>
+
+      <!-- Thick neck connecting to head (muscular) -->
+      <path d="M 120 250 Q 115 220 125 190 Q 140 170 170 175 Q 200 170 215 190 Q 225 220 220 250 Q 210 265 170 270 Q 130 265 120 250" 
+            fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+
+      <!-- BROAD MALAMUTE HEAD (the focal point) -->
+      <ellipse cx="170" cy="120" rx="75" ry="85" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="170" cy="115" rx="70" ry="80" fill="url(#bodyShine)"/>
+
+      <!-- Face white blaze / white mask -->
+      <ellipse cx="170" cy="100" rx="52" ry="62" fill="url(#whiteChest)" opacity="0.95"/>
+      <ellipse cx="170" cy="110" rx="40" ry="50" fill="#FFFFFF" opacity="0.9"/>
+
+      <!-- Prominent snout - thick, powerful muzzle -->
+      <ellipse cx="225" cy="140" rx="45" ry="35" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="235" cy="140" rx="38" ry="30" fill="#7A8A8A"/>
+      <!-- Muzzle tip with white marking -->
+      <ellipse cx="265" cy="140" rx="28" ry="24" fill="url(#whiteChest)" opacity="0.9"/>
       <!-- Nose -->
-      <ellipse cx="180" cy="94" rx="6" ry="5" fill="#2A2926"/>
-      <circle cx="181" cy="93" r="2.5" fill="#1A1A1A"/>
-      
-      <!-- Eyes - warm, intelligent, set wide apart -->
-      <circle cx="100" cy="65" r="6" fill="#1A1A1A" filter="url(#shadow)"/>
-      <circle cx="101" cy="63" r="2.2" fill="#FFFFFF" opacity="0.9"/>
-      
-      <circle cx="132" cy="62" r="6" fill="#1A1A1A" filter="url(#shadow)"/>
-      <circle cx="133" cy="60" r="2.2" fill="#FFFFFF" opacity="0.9"/>
-      
+      <ellipse cx="285" cy="138" rx="8" ry="7" fill="#2A2926"/>
+      <circle cx="286" cy="136" r="3.5" fill="#1A1A1A"/>
+
+      <!-- EYES - Intelligent, warm expression, wide-set -->
+      <circle cx="135" cy="85" r="9" fill="#1A1A1A" filter="url(#lightShadow)"/>
+      <circle cx="137" cy="82" r="3.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="138" cy="81" r="1.5" fill="#000000"/>
+
+      <circle cx="205" cy="80" r="9" fill="#1A1A1A" filter="url(#lightShadow)"/>
+      <circle cx="207" cy="77" r="3.5" fill="#FFFFFF" opacity="0.95"/>
+      <circle cx="208" cy="76" r="1.5" fill="#000000"/>
+
       <!-- EARS - Small, triangular, upright, well-furred -->
       <!-- Left ear -->
-      <g transform="translate(78, 35)">
-        <!-- Outer ear -->
-        <path d="M 0 0 L -8 -32 L -2 -2 Z" fill="#5A6A6A" filter="url(#shadow)"/>
-        <!-- Inner ear fur -->
-        <path d="M -1 -2 L -6 -24 L -2 -3 Z" fill="#7A8A8A" opacity="0.9"/>
-        <!-- Inner ear pink -->
-        <path d="M -2 -4 L -5 -18 L -2 -5 Z" fill="#D9A8A8" opacity="0.6"/>
-        <!-- Ear fluff texture -->
-        <circle cx="-4" cy="-15" r="1.5" fill="#8A9A9A" opacity="0.7"/>
-        <circle cx="-3" cy="-10" r="1.2" fill="#8A9A9A" opacity="0.6"/>
+      <g transform="translate(105, 50)">
+        <path d="M 0 0 L -12 -48 L -3 -2 Z" fill="#5A6A6A" filter="url(#deepShadow)"/>
+        <path d="M -1 -1 L -10 -42 L -2 -1.5 Z" fill="#7A8A8A" opacity="0.95"/>
+        <path d="M -2 -2 L -8 -32 L -2 -2.5 Z" fill="#D5A8A8" opacity="0.5"/>
       </g>
-      
+
       <!-- Right ear -->
-      <g transform="translate(152, 32)">
-        <!-- Outer ear -->
-        <path d="M 0 0 L 8 -34 L 2 -2 Z" fill="#5A6A6A" filter="url(#shadow)"/>
-        <!-- Inner ear fur -->
-        <path d="M 1 -2 L 6 -26 L 2 -3 Z" fill="#7A8A8A" opacity="0.9"/>
-        <!-- Inner ear pink -->
-        <path d="M 2 -4 L 5 -20 L 2 -5 Z" fill="#D9A8A8" opacity="0.6"/>
-        <!-- Ear fluff texture -->
-        <circle cx="4" cy="-17" r="1.5" fill="#8A9A9A" opacity="0.7"/>
-        <circle cx="3" cy="-12" r="1.2" fill="#8A9A9A" opacity="0.6"/>
+      <g transform="translate(235, 48)">
+        <path d="M 0 0 L 12 -50 L 3 -2 Z" fill="#5A6A6A" filter="url(#deepShadow)"/>
+        <path d="M 1 -1 L 10 -44 L 2 -1.5 Z" fill="#7A8A8A" opacity="0.95"/>
+        <path d="M 2 -2 L 8 -34 L 2 -2.5 Z" fill="#D5A8A8" opacity="0.5"/>
       </g>
-      
-      <!-- BUSHY TAIL - Plume-like, curls gracefully over back -->
-      <g class="frankie-tail-wag" transform="translate(80, 95)">
-        <!-- Tail outer (dark, shadow) -->
-        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
-              fill="none" stroke="#5A6A6A" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
-        <!-- Tail middle (light) -->
-        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
-              fill="none" stroke="#9AAAA9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
-        <!-- Tail highlight (white) -->
-        <path d="M 0 0 Q -25 -15 -35 -50 Q -42 -85 -20 -120 Q 0 -135 25 -115 Q 35 -95 32 -60 Q 28 -20 25 15" 
-              fill="none" stroke="#D8CDBE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+      <!-- BUSHY PLUME TAIL - Thick, fluffy, curling over back -->
+      <g class="frankie-tail" transform="translate(110, 160)">
+        <!-- Outer shadow layer -->
+        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
+              fill="none" stroke="#4A5A5A" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" filter="url(#deepShadow)"/>
+        <!-- Main coat layer -->
+        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
+              fill="none" stroke="#8BA5A5" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Highlight/white layer -->
+        <path d="M 0 0 Q -40 -25 -55 -80 Q -65 -140 -25 -185 Q 10 -210 45 -175 Q 65 -145 58 -85 Q 50 -25 45 40" 
+              fill="none" stroke="#D8D0C8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
       </g>
-      
-      <!-- Front left leg (down, play bow) - extended forward and down -->
-      <ellipse cx="70" cy="240" rx="16" ry="48" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <!-- Front left paw -->
-      <ellipse cx="70" cy="290" rx="14" ry="9" fill="#5A6A6A"/>
-      
-      <!-- Front right leg (down, play bow) - extended forward and down -->
-      <ellipse cx="140" cy="245" rx="16" ry="46" fill="url(#coatDark)" filter="url(#shadow)"/>
-      <!-- Front right paw -->
-      <ellipse cx="140" cy="293" rx="14" ry="9" fill="#5A6A6A"/>
-      
-      <!-- Fluffy texture overlays for realistic fur -->
-      <circle cx="90" cy="100" r="3" fill="#9AAAA9" opacity="0.4" filter="url(#fluff)"/>
-      <circle cx="140" cy="105" r="2.5" fill="#9AAAA9" opacity="0.35" filter="url(#fluff)"/>
-      <circle cx="100" cy="140" r="2.8" fill="#9AAAA9" opacity="0.35" filter="url(#fluff)"/>
-      <circle cx="130" cy="145" r="3" fill="#9AAAA9" opacity="0.4" filter="url(#fluff)"/>
-      
-      <!-- Ball balanced on nose (optional, small) -->
-      <g class="frankie-ball" opacity="0.8">
-        <circle cx="178" cy="88" r="12" fill="url(#ballGradient)" filter="url(#shadow)"/>
-        <circle cx="183" cy="82" r="4" fill="#FF9999" opacity="0.7"/>
-        <circle cx="185" cy="80" r="1.5" fill="#FFFFFF" opacity="0.8"/>
-      </g>
+
+      <!-- Front legs (extended forward and down, play bow) -->
+      <ellipse cx="110" cy="350" rx="20" ry="60" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <ellipse cx="225" cy="360" rx="20" ry="58" fill="url(#coatGradient)" filter="url(#deepShadow)"/>
+      <!-- Front paws -->
+      <ellipse cx="110" cy="410" rx="16" ry="10" fill="#5A6A6A"/>
+      <ellipse cx="225" cy="418" rx="16" ry="10" fill="#5A6A6A"/>
+
+      <!-- Fur texture detail elements -->
+      <circle cx="130" cy="160" r="4" fill="#9BA8A8" opacity="0.3" filter="url(#lightShadow)"/>
+      <circle cx="210" cy="170" r="3.5" fill="#9BA8A8" opacity="0.25"/>
+      <circle cx="150" cy="240" r="3" fill="#9BA8A8" opacity="0.2"/>
+      <circle cx="190" cy="250" r="3.5" fill="#9BA8A8" opacity="0.25"/>
     </svg>
     """
 
     return f"""
-    <div id="frankie_overlay">
-        <div id="frankie_inline_container">
+    <div id="frankie_overlay" style="display: flex; opacity: 1;">
+        <div id="frankie_inline_container" class="frankie-state-scanning">
             <div id="frankie_loader">
-                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie is sniffing out vulnerabilities">
+                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's got his eye on it">
+                    <!-- Ball bouncing in front of dog -->
+                    <div class="frankie_ball"></div>
+                    <!-- Dog SVG -->
                     <div class="frankie_silhouette">{frankie_svg}</div>
                 </div>
-                <div class="frankie_title">Sniffing Out Vulnerabilities</div>
+                <div class="frankie_title">Frankie's Got His Eye on It</div>
                 <div class="frankie_line">{frankie_line}</div>
                 <div class="frankie_progress_section">
                     <div class="frankie_progress_bar">
                         <div class="frankie_progress_fill"></div>
                     </div>
                 </div>
-                <div class="frankie_hint">Frankie is analyzing your code...</div>
+                <div class="frankie_hint">Just a moment...</div>
             </div>
         </div>
     </div>
@@ -3310,7 +3340,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             if (!container || !overlay) return;
             
             // Remove all state classes
-            container.className = container.className.replace(/frankie-state-\w+/g, '').trim();
+            container.className = container.className.replace(/frankie-state-\\w+/g, '').trim();
             
             // Add new state class
             if (state === 'scanning') {
@@ -3628,10 +3658,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
 
         # First yield: show Frankie loader in scanning state, hide export controls
         frankie_html = get_frankie_loader()
+        # Trigger JS to ensure modal visibility and animation
+        frankie_script = "<script>if(window.frankieState) { window.frankieState.setFrankieState('scanning'); console.log('Frankie scanning started'); } else { console.log('frankieState not ready'); }</script>"
         yield (
             "",  # empty_state
-            frankie_html,  # summ
-            "<script>window.frankieState.setFrankieState('scanning');</script>",  # det - trigger scanning state
+            frankie_html + frankie_script,  # summ - combined HTML and script
+            "",  # det - clear details
             "*Generating fix recommendations...*",  # fixes_tab
             gr.update(value=None, visible=False),  # audit_json
             gr.update(visible=False),  # export_btn
