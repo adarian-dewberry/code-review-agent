@@ -2301,8 +2301,8 @@ body[data-theme="noir"] .error-banner .error-content code {
 }
 
 /* =================================================================
-   FRANKIE OVERLAY - Full-screen processing state
-   Appears centered, locks scroll, dims background
+   FRANKIE INLINE - Sentinel positioning within results area
+   Appears inline with results, shrinks/repositions as results populate
    ================================================================= */
 #frankie_overlay {
   position: fixed;
@@ -2310,19 +2310,27 @@ body[data-theme="noir"] .error-banner .error-content code {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(27,26,24,0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+  align-items: stretch;
+  justify-content: stretch;
+  z-index: 99;
   opacity: 1;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
-body[data-theme="noir"] #frankie_overlay {
-  background: rgba(12,11,10,0.9);
+
+#frankie_inline_container {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: 200px;
+  height: 140px;
+  pointer-events: none;
+  transition: all 0.4s ease;
 }
 
 #frankie_loader {
@@ -2330,26 +2338,28 @@ body[data-theme="noir"] #frankie_overlay {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 56px 40px 48px;
+  padding: 24px 16px 16px;
   text-align: center;
-  background: linear-gradient(135deg, var(--bg) 0%, rgba(216,197,178,0.15) 100%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-  min-height: 320px;
+  background: linear-gradient(135deg, rgba(27,26,24,0.95) 0%, rgba(42,41,38,0.85) 100%);
+  border: 1px solid rgba(205,143,122,0.2);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
   width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
+  height: 100%;
+  margin: 0;
+  position: relative;
 }
+
 body[data-theme="noir"] #frankie_loader {
-  background: linear-gradient(135deg, var(--panel) 0%, rgba(42,41,38,0.5) 100%);
+  background: linear-gradient(135deg, rgba(12,11,10,0.97) 0%, rgba(30,28,25,0.90) 100%);
+  border: 1px solid rgba(205,143,122,0.15);
 }
 
 .frankie_container {
   position: relative;
-  width: 160px;
-  height: 110px;
-  margin-bottom: 28px;
+  width: 140px;
+  height: 90px;
+  margin-bottom: 16px;
   overflow: visible;
   flex-shrink: 0;
 }
@@ -2357,52 +2367,53 @@ body[data-theme="noir"] #frankie_loader {
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: frankieBreathes 3s ease-in-out infinite;
+  animation: frankieScanning 2.5s ease-in-out infinite;
 }
 .frankie_silhouette svg {
   width: 100%;
   height: 100%;
 }
 
-/* Frankie animations - subtle and calm */
-.frankie_silhouette svg .frankie-tail {
-  transform-origin: 40px 60px;
-  animation: frankieTailSway 4s ease-in-out infinite;
+/* Sentinel animations - active scanning state */
+@keyframes frankieScanning {
+  0%, 100% { transform: translateY(0) scaleY(1); opacity: 1; }
+  50% { transform: translateY(-1px) scaleY(1.01); opacity: 1; }
 }
 
-.frankie_silhouette svg .frankie-eye {
-  animation: frankieObserves 5s ease-in-out infinite;
-  transform-origin: 108px 36px;
+/* Frankie animations - subtle and alert */
+.frankie_silhouette svg .frankie-scanning-eye {
+  animation: frankieIntenseFocus 2.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.frankie_silhouette svg .frankie-alert-tail {
+  transform-origin: 35px 65px;
+  animation: frankieAlertTail 3s ease-in-out infinite;
 }
 
 .frankie_glow {
   position: absolute;
-  bottom: -12px;
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 75%;
-  height: 20px;
-  background: radial-gradient(ellipse, rgba(205,143,122,0.2), transparent 75%);
+  width: 70%;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(205,143,122,0.15), transparent 75%);
   animation: frankieGlowPulse 4s ease-in-out infinite;
 }
 
-/* Animations - professional, calm presence */
-@keyframes frankieBreathes {
-  0%, 100% { transform: translateY(0) scaleY(1); }
-  50% { transform: translateY(-2px) scaleY(1.02); }
+/* Sentinel animations - active scanning state */
+@keyframes frankieIntenseFocus {
+  0%, 100% { opacity: 0.85; }
+  40% { opacity: 1; }
+  60% { opacity: 0.8; }
 }
 
-@keyframes frankieTailSway {
-  0%, 100% { transform: rotate(-8deg); }
-  25% { transform: rotate(0deg); }
+@keyframes frankieAlertTail {
+  0%, 100% { transform: rotate(-5deg); }
+  25% { transform: rotate(3deg); }
   50% { transform: rotate(8deg); }
-  75% { transform: rotate(0deg); }
-}
-
-@keyframes frankieObserves {
-  0%, 15%, 85%, 100% { opacity: 1; }
-  18%, 82% { opacity: 0.3; }
-  20%, 80% { opacity: 1; }
+  75% { transform: rotate(2deg); }
 }
 
 @keyframes frankieGlowPulse {
@@ -2412,38 +2423,141 @@ body[data-theme="noir"] #frankie_loader {
 
 .frankie_title {
   font-weight: 700;
-  color: var(--text);
-  font-size: 1.25em;
-  margin-bottom: 12px;
+  color: #FAF8F4;
+  font-size: 0.95em;
+  margin-bottom: 6px;
   letter-spacing: 0.3px;
 }
 
 .frankie_line {
-  color: var(--text2);
-  font-size: 0.95em;
+  color: #D8C5B2;
+  font-size: 0.8em;
   font-style: normal;
   font-weight: 500;
-  max-width: 300px;
-  line-height: 1.5;
-  margin-bottom: 12px;
+  max-width: 280px;
+  line-height: 1.4;
+  margin-bottom: 4px;
 }
 
 .frankie_hint {
-  color: var(--muted);
-  font-size: 0.85em;
-  margin-top: 8px;
-  opacity: 0.8;
+  color: #9F9791;
+  font-size: 0.75em;
+  margin-top: 4px;
+  opacity: 0.9;
   font-weight: 400;
 }
 
 /* Reduced motion: static Frankie */
 @media (prefers-reduced-motion: reduce) {
   .frankie_silhouette,
-  .frankie_silhouette svg .frankie-tail,
-  .frankie_silhouette svg .frankie-eye,
+  .frankie_silhouette svg .frankie-scanning-eye,
+  .frankie_silhouette svg .frankie-alert-tail,
   .frankie_glow {
     animation: none !important;
   }
+}
+
+/* Mobile: Frankie repositions to bottom-left on small screens */
+@media (max-width: 768px) {
+  #frankie_inline_container {
+    right: auto;
+    left: 16px;
+    bottom: 16px;
+    width: 160px;
+    height: 110px;
+  }
+  
+  .frankie_title {
+    font-size: 0.85em;
+  }
+  
+  .frankie_line {
+    font-size: 0.75em;
+  }
+  
+  .frankie_hint {
+    font-size: 0.7em;
+  }
+}
+
+/* =================================================================
+   FRANKIE STATE ANIMATIONS - Sentinel behavioral states
+   Scanning: Active search for vulnerabilities
+   Found: Results discovered, shifting focus
+   Monitoring: Review complete, watchful presence
+   ================================================================= */
+
+/* State: SCANNING (active vulnerability search) */
+#frankie_inline_container.frankie-state-scanning {
+  animation: frankieScanningPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes frankieScanningPulse {
+  0%, 100% { transform: scale(1) translateX(0); }
+  50% { transform: scale(1.02) translateX(2px); }
+}
+
+#frankie_inline_container.frankie-state-scanning .frankie_title {
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+#frankie_inline_container.frankie-state-scanning .frankie_silhouette {
+  animation: frankieScanning 2s ease-in-out infinite !important;
+}
+
+/* State: FOUND (results appearing) */
+#frankie_inline_container.frankie-state-found {
+  animation: frankieFoundShift 0.6s ease-out forwards;
+}
+
+@keyframes frankieFoundShift {
+  0% { transform: translateX(0) scale(1); }
+  100% { transform: translateX(20px) scale(0.95); }
+}
+
+#frankie_inline_container.frankie-state-found .frankie_title {
+  color: #C9A961;
+}
+
+#frankie_inline_container.frankie-state-found .frankie_silhouette {
+  animation: frankieAlert 1.2s ease-in-out infinite !important;
+}
+
+@keyframes frankieAlert {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-3px); }
+  75% { transform: translateY(-2px); }
+}
+
+/* State: MONITORING (review complete, watchful) */
+#frankie_inline_container.frankie-state-monitoring {
+  animation: frankieMonitoringIdle 1.5s ease-in-out infinite;
+}
+
+@keyframes frankieMonitoringIdle {
+  0%, 100% { transform: translateX(20px) scale(0.9); }
+  50% { transform: translateX(22px) scale(0.92); }
+}
+
+#frankie_inline_container.frankie-state-monitoring .frankie_title {
+  color: #B8A898;
+}
+
+#frankie_inline_container.frankie-state-monitoring .frankie_silhouette {
+  animation: frankieMonitoring 2s ease-in-out infinite !important;
+}
+
+@keyframes frankieMonitoring {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.01); }
+}
+
+/* State transition: Hidden (when overlay closes) */
+#frankie_overlay.frankie-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
 }
 
 /* =================================================================
@@ -2913,59 +3027,80 @@ def get_frankie_loader(run_id: str = "") -> str:
     # Silent witness to the review process
     frankie_svg = """
     <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Silhouette approach: clean lines, no unnecessary details -->
+      <!-- SENTINEL POSTURE: Alert, leaning forward into active scanning -->
+      <!-- Metaphor: Escape artist finding gaps in security - focused intensity -->
       
-      <!-- Back legs (solid, grounded stance) -->
-      <path d="M 55 75 L 50 105 L 50 115 L 62 115 L 62 105 L 60 75" fill="#2A2926" stroke="none"/>
-      <path d="M 85 75 L 92 105 L 92 115 L 104 115 L 104 105 L 95 75" fill="#2A2926" stroke="none"/>
+      <!-- Back legs (dynamic stance, ready to launch into next scan) -->
+      <path d="M 55 78 L 50 105 L 50 115 L 62 115 L 62 105 L 60 78" fill="#2A2926" stroke="none"/>
+      <path d="M 82 80 L 88 105 L 88 115 L 100 115 L 100 105 L 92 80" fill="#2A2926" stroke="none"/>
       
-      <!-- Body (large, broad chest - breed characteristic) -->
-      <ellipse cx="70" cy="65" rx="32" ry="22" fill="#2A2926"/>
+      <!-- Body (compact, alert lean forward) -->
+      <ellipse cx="65" cy="70" rx="30" ry="20" fill="#2A2926"/>
       
-      <!-- Chest (deep and pronounced) -->
-      <ellipse cx="85" cy="62" rx="20" ry="24" fill="#2A2926"/>
+      <!-- Chest (extended forward - active engagement posture) -->
+      <ellipse cx="80" cy="65" rx="22" ry="26" fill="#2A2926"/>
       
-      <!-- Neck (thick, strong) -->
-      <path d="M 88 50 L 96 42 L 100 44 L 94 52 Z" fill="#2A2926"/>
+      <!-- Neck (bridge to rotated head - scanning angle) -->
+      <path d="M 85 48 L 100 35 L 104 38 L 92 50 Z" fill="#2A2926"/>
       
-      <!-- Head (alert but calm) -->
-      <ellipse cx="105" cy="38" rx="14" ry="13" fill="#2A2926"/>
+      <!-- Head (rotated -22° toward gap discovery - intense focus angle) -->
+      <g transform="translate(115, 28) rotate(-22)">
+        <ellipse cx="0" cy="0" rx="14" ry="13" fill="#2A2926"/>
+      </g>
       
-      <!-- Snout (proportionate, not exaggerated) -->
-      <ellipse cx="118" cy="40" rx="9" ry="6" fill="#2A2926"/>
-      <path d="M 125 40 L 128 40 L 128 41 L 125 41 Z" fill="#1A1918"/>
+      <!-- Snout (angled toward vulnerability - escape artist finding the weak point) -->
+      <g transform="translate(115, 28) rotate(-22)">
+        <ellipse cx="13" cy="2" rx="9" ry="6" fill="#2A2926"/>
+        <path d="M 20 2 L 23 2 L 23 3 L 20 3 Z" fill="#1A1918"/>
+      </g>
       
-      <!-- Ears (alert triangles, breed-standard) -->
-      <path d="M 96 28 L 90 12 L 98 26 Z" fill="#2A2926"/>
-      <path d="M 108 26 L 114 10 L 114 26 Z" fill="#2A2926"/>
-      <path d="M 97 26 L 93 18 L 99 25 Z" fill="#3D3B38"/>
-      <path d="M 110 24 L 114 15 L 115 24 Z" fill="#3D3B38"/>
+      <!-- Eyes (both visible - heightened alertness for scanning) -->
+      <g transform="translate(115, 28) rotate(-22)">
+        <!-- Primary eye (intense focus point) -->
+        <circle class="frankie-scanning-eye" cx="8" cy="-1" r="3.5" fill="#1A1918"/>
+        <circle cx="9.2" cy="-2" r="1.4" fill="#FAF8F4" opacity="0.85"/>
+        <!-- Secondary eye (peripheral awareness) -->
+        <circle class="frankie-scanning-eye" cx="12" cy="-2" r="2.5" fill="#1A1918" opacity="0.75"/>
+        <circle cx="12.8" cy="-3" r="0.9" fill="#FAF8F4" opacity="0.65"/>
+      </g>
       
-      <!-- Eye (observant, calm - single blink animation) -->
-      <circle class="frankie-eye" cx="108" cy="36" r="3" fill="#1A1918"/>
-      <circle cx="109" cy="35" r="1.2" fill="#FAF8F4" opacity="0.6"/>
+      <!-- Ears (fully perked forward - active listening for gaps/anomalies) -->
+      <!-- Left ear (forward alert) -->
+      <g transform="translate(115, 28) rotate(-22)">
+        <path d="M -7 -10 L -14 -28 L -5 -11 Z" fill="#2A2926"/>
+        <path d="M -6.5 -10.5 L -12 -24 L -5 -11 Z" fill="#3D3B38"/>
+      </g>
+      <!-- Right ear (forward alert) -->
+      <g transform="translate(115, 28) rotate(-22)">
+        <path d="M 7 -11 L 15 -30 L 9 -9 Z" fill="#2A2926"/>
+        <path d="M 7.5 -11 L 14 -27 L 9 -10 Z" fill="#3D3B38"/>
+      </g>
       
-      <!-- Tail (curled over back - breed characteristic) -->
-      <path class="frankie-tail" d="M 40 60 Q 25 50 20 35 Q 18 25 24 20 Q 32 18 38 28 Q 42 40 45 55" 
+      <!-- Tail (alert curve - elevated kinetic energy, searching momentum) -->
+      <path class="frankie-alert-tail" d="M 35 65 Q 20 52 12 30 Q 8 14 20 8 Q 35 2 44 22 Q 52 48 55 72" 
             fill="none" stroke="#2A2926" stroke-width="14" stroke-linecap="round"/>
-      <path class="frankie-tail" d="M 40 60 Q 25 50 20 35 Q 18 25 24 20 Q 32 18 38 28 Q 42 40 45 55" 
+      <path class="frankie-alert-tail" d="M 35 65 Q 20 52 12 30 Q 8 14 20 8 Q 35 2 44 22 Q 52 48 55 72" 
             fill="none" stroke="#3D3B38" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
       
-      <!-- Front legs (strong, grounded) -->
-      <path d="M 75 85 L 72 108 L 72 115 L 84 115 L 84 108 L 82 85" fill="#2A2926"/>
-      <path d="M 95 86 L 100 107 L 100 115 L 112 115 L 112 107 L 108 86" fill="#2A2926"/>
+      <!-- Front legs (forward reach - poised to investigate findings) -->
+      <path d="M 70 88 L 68 108 L 68 115 L 80 115 L 80 108 L 78 88" fill="#2A2926"/>
+      <path d="M 92 89 L 97 108 L 97 115 L 109 115 L 109 108 L 105 89" fill="#2A2926"/>
     </svg>
     """
 
     return f"""
-    <div id="frankie_loader">
-        <div class="frankie_container" aria-live="polite" aria-label="Code review in progress">
-            <div class="frankie_silhouette">{frankie_svg}</div>
-            <div class="frankie_glow"></div>
+    <div id="frankie_overlay">
+        <div id="frankie_inline_container">
+            <div id="frankie_loader">
+                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie is scanning">
+                    <div class="frankie_silhouette">{frankie_svg}</div>
+                    <div class="frankie_glow"></div>
+                </div>
+                <div class="frankie_title">Analyzing...</div>
+                <div class="frankie_line">{frankie_line}</div>
+                <div class="frankie_hint">Finding gaps</div>
+            </div>
         </div>
-        <div class="frankie_title">Reviewing your code</div>
-        <div class="frankie_line">{frankie_line}</div>
-        <div class="frankie_hint">This usually takes a few seconds.</div>
     </div>
     """
 
@@ -2984,6 +3119,74 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             <span class="feature_tag">✓ Audit-Ready Verdicts</span>
         </div>
     </div>
+    """)
+
+    # Frankie state management script
+    gr.HTML("""
+    <script>
+    window.frankieState = {
+        currentState: 'hidden',
+        setFrankieState: function(state) {
+            const container = document.getElementById('frankie_inline_container');
+            const overlay = document.getElementById('frankie_overlay');
+            if (!container || !overlay) return;
+            
+            // Remove all state classes
+            container.className = container.className.replace(/frankie-state-\w+/g, '').trim();
+            
+            // Add new state class
+            if (state === 'scanning') {
+                container.classList.add('frankie-state-scanning');
+                overlay.classList.remove('frankie-hidden');
+                this.currentState = 'scanning';
+            } else if (state === 'found') {
+                container.classList.add('frankie-state-found');
+                overlay.classList.remove('frankie-hidden');
+                this.currentState = 'found';
+            } else if (state === 'monitoring') {
+                container.classList.add('frankie-state-monitoring');
+                overlay.classList.remove('frankie-hidden');
+                this.currentState = 'monitoring';
+            } else if (state === 'hidden') {
+                overlay.classList.add('frankie-hidden');
+                this.currentState = 'hidden';
+            }
+        },
+        transitionToFound: function() {
+            setTimeout(() => this.setFrankieState('found'), 500);
+        },
+        transitionToMonitoring: function() {
+            setTimeout(() => this.setFrankieState('monitoring'), 1500);
+        },
+        hide: function() {
+            this.setFrankieState('hidden');
+        }
+    };
+    
+    // Watch for verdict card appearance to trigger state transitions
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                const verdictCard = document.getElementById('verdict_card_container');
+                if (verdictCard && verdictCard.textContent.trim() !== '' && !verdictCard.textContent.includes('Frankie')) {
+                    if (window.frankieState.currentState !== 'monitoring') {
+                        window.frankieState.transitionToFound();
+                    }
+                }
+            }
+        });
+    });
+    
+    // Observe changes to verdict card
+    const verdictContainer = document.getElementById('verdict_card_container');
+    if (verdictContainer) {
+        observer.observe(verdictContainer, { 
+            subtree: true, 
+            characterData: true, 
+            childList: true 
+        });
+    }
+    </script>
     """)
 
     # Theme toggle (Ivory / Noir)
@@ -3245,12 +3448,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         elif "Compliance" in review_mode_val:
             sec_val, comp_val, logic_val, perf_val = True, True, False, False
 
-        # First yield: show Frankie loader, hide export controls
+        # First yield: show Frankie loader in scanning state, hide export controls
         frankie_html = get_frankie_loader()
         yield (
             "",  # empty_state
             frankie_html,  # summ
-            "*Frankie is reviewing your code...*",  # det
+            "<script>window.frankieState.setFrankieState('scanning');</script>",  # det - trigger scanning state
             "*Generating fix recommendations...*",  # fixes_tab
             gr.update(value=None, visible=False),  # audit_json
             gr.update(visible=False),  # export_btn
@@ -3270,7 +3473,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             session_id,
         )
 
-        # Final yield: show results and export controls
+        # Final yield: show results, transition Frankie to monitoring, show export controls
         yield (
             "",  # empty_state
             summ_result,  # summ
