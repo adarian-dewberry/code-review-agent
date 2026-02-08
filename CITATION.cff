@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Code Review Agent"
+abstract: >-
+  An AI-powered code review tool that uses large language models
+  to analyze code for security vulnerabilities, compliance issues,
+  and risk assessment. Designed with human-in-the-loop principles
+  and aligned to OWASP Top 10:2025 and OWASP Top 10 for LLM
+  Applications:2025 frameworks.
+authors:
+  - family-names: "Dewberry"
+    given-names: "Adarian"
+    email: "adarian@adariandewberry.com"
+repository-code: "https://github.com/dewberryadarian/code-review-agent"
+url: "https://huggingface.co/spaces/adarian-dewberry/code-review-agent"
+license: MIT
+version: "0.2.2"
+date-released: "2025-06-01"
+keywords:
+  - code-review
+  - security
+  - ai
+  - llm
+  - owasp
+  - vulnerability-detection
+  - static-analysis
+  - devops
+  - devsecops
