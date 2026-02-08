@@ -141,7 +141,7 @@ class LRUCache:
     def __init__(self, max_size: int = 100, ttl_seconds: int = 3600):
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: OrderedDict[str, tuple[float, tuple[str, str]]] = OrderedDict()
+        self.cache: OrderedDict[str, tuple[float, tuple[str, str, str]]] = OrderedDict()
         self._lock = threading.Lock()
         self._hits = 0
         self._misses = 0
@@ -151,7 +151,7 @@ class LRUCache:
         content = f"{code}:{':'.join(sorted(categories))}"
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 
-    def get(self, code: str, categories: list[str]) -> tuple[str, str] | None:
+    def get(self, code: str, categories: list[str]) -> tuple[str, str, str] | None:
         """Get cached result if exists and not expired."""
         key = self._make_key(code, categories)
         now = time.time()
@@ -172,7 +172,9 @@ class LRUCache:
             self._misses += 1
             return None
 
-    def set(self, code: str, categories: list[str], value: tuple[str, str]) -> None:
+    def set(
+        self, code: str, categories: list[str], value: tuple[str, str, str]
+    ) -> None:
         """Store result in cache."""
         key = self._make_key(code, categories)
         now = time.time()
@@ -580,8 +582,12 @@ def parse_findings(text: str) -> dict[str, list[dict[str, Any]]]:
 
 def review_code(
     code: str, sec: bool, comp: bool, logic: bool, perf: bool, ctx: str = ""
-) -> tuple[str, str]:
-    """Run multi-pass code review with structured output."""
+) -> tuple[str, str, str]:
+    """Run multi-pass code review with structured output.
+
+    Returns:
+        tuple: (summary_html, details_markdown, fixes_markdown)
+    """
 
     # Rate limiting check
     if not rate_limiter.is_allowed():
@@ -590,11 +596,13 @@ def review_code(
         return (
             f"<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Rate Limit</h3><p>Too many requests. Try again in {retry_after} seconds.</p></div>",
             "",
+            "",
         )
 
     if not code or not code.strip():
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Code</h3><p>Paste code above.</p></div>",
+            "",
             "",
         )
 
@@ -602,17 +610,20 @@ def review_code(
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ Code Too Large</h3><p>Limit to 50,000 characters.</p></div>",
             "",
+            "",
         )
 
     if not any([sec, comp, logic, perf]):
         return (
             "<div style='padding:20px;border-left:5px solid orange;background:#fff9e6'><h3>⚠️ No Categories</h3><p>Select at least one.</p></div>",
             "",
+            "",
         )
 
     if not ANTHROPIC_API_KEY:
         return (
             "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ API Key Missing</h3><p>Add ANTHROPIC_API_KEY in Settings → Secrets</p></div>",
+            "",
             "",
         )
 
@@ -1143,8 +1154,46 @@ This code follows safe patterns based on the signals we checked.
         global _last_audit_record
         _last_audit_record = decision_record
 
+        # Generate Fixes tab content with consolidated recommendations
+        fixes_content = ""
+        if findings:
+            fixes_content = "## 🔧 Recommended Fixes\n\n"
+            fixes_content += (
+                "Prioritized by severity and confidence. Address these in order.\n\n"
+            )
+
+            for i, f in enumerate(sorted_findings):
+                sev = f.get("severity", "MEDIUM")
+                sev_emoji = {
+                    "CRITICAL": "🔴",
+                    "HIGH": "🟠",
+                    "MEDIUM": "🟡",
+                    "LOW": "⚪",
+                }.get(sev, "⚪")
+                safe_title = html.escape(f.get("title", "Issue"))
+                location = f.get("location") or (
+                    f"Line {f.get('line')}" if f.get("line") else "—"
+                )
+                safe_location = html.escape(str(location))
+                safe_rec = html.escape(
+                    f.get("recommendation", "Review and address this issue.")
+                )
+
+                fixes_content += f"### {sev_emoji} {i + 1}. {safe_title}\n\n"
+                fixes_content += f"**Location:** `{safe_location}`\n\n"
+                fixes_content += f"**Fix:** {safe_rec}\n\n"
+
+                # Add evidence if available
+                if f.get("evidence"):
+                    safe_evidence = html.escape(str(f.get("evidence", "")))
+                    fixes_content += f"<details>\n<summary>Show vulnerable code</summary>\n\n```\n{safe_evidence}\n```\n</details>\n\n"
+
+                fixes_content += "---\n\n"
+        else:
+            fixes_content = "## ✅ No Fixes Needed\n\nThis code follows safe patterns. No changes required based on this review."
+
         # Cache the result for future identical requests
-        result = (summary, details)
+        result = (summary, details, fixes_content)
         review_cache.set(code, cats, result)
         logger.info(f"Review complete: verdict={verdict}, findings={len(findings)}")
 
@@ -1155,12 +1204,14 @@ This code follows safe patterns based on the signals we checked.
         return (
             "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Authentication Error</h3><p>Invalid API key. Check ANTHROPIC_API_KEY in Settings → Secrets.</p></div>",
             "",
+            "",
         )
 
     except anthropic.NotFoundError as e:
         logger.error(f"Model not found: {e}")
         return (
             "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Model Not Found</h3><p>The model is not available. Try again later.</p></div>",
+            "",
             "",
         )
 
@@ -1179,12 +1230,14 @@ This code follows safe patterns based on the signals we checked.
         return (
             f"<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Connection Error</h3><p>{hint}</p></div>",
             "",
+            "",
         )
 
     except anthropic.BadRequestError as e:
         logger.error(f"Bad request error: {e}")
         return (
             "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Request Error</h3><p>The request could not be processed. Try simplifying your code.</p></div>",
+            "",
             "",
         )
 
@@ -1193,6 +1246,7 @@ This code follows safe patterns based on the signals we checked.
         logger.exception("Unexpected error during code review")
         return (
             "<div style='padding:20px;border-left:5px solid red;background:#fff5f5'><h3>❌ Error</h3><p>An unexpected error occurred. Try again or contact support if the issue persists.</p></div>",
+            "",
             "",
         )
 
@@ -2568,11 +2622,11 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                     det = gr.Markdown("")
                 with gr.Tab("🔧 Fixes", id="tab_fixes"):
                     fixes_tab = gr.Markdown(
-                        "*Suggested fixes will appear after review*"
+                        "<div style='text-align:center;color:#A89F91;padding:40px;'>\n<p style='font-size:1.25rem;'>🔧</p>\n<p><strong>Fixes will show here</strong></p>\n<p style='font-size:0.875rem;'>Run an analysis to see prioritized recommendations</p>\n</div>"
                     )
                 with gr.Tab("📋 Audit", id="tab_audit"):
                     advanced_tab = gr.Markdown(
-                        "*Decision records and compliance data will appear after review*"
+                        "<div style='text-align:center;color:#A89F91;padding:40px;'>\n<p style='font-size:1.25rem;'>📋</p>\n<p><strong>Audit data will show here</strong></p>\n<p style='font-size:0.875rem;'>Decision records and compliance data for your review</p>\n</div>"
                     )
                     with gr.Row():
                         export_btn = gr.Button(
@@ -2617,13 +2671,14 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             "",  # empty_state
             frankie_html,  # summ
             "*Frankie is reviewing your code...*",  # det
+            "*Generating fix recommendations...*",  # fixes_tab
             gr.update(value=None, visible=False),  # audit_json
             gr.update(visible=False),  # export_btn
             gr.update(visible=False),  # export_md_btn
         )
 
         # Run the actual review
-        summ_result, det_result = review_code(
+        summ_result, det_result, fixes_result = review_code(
             code_val, sec_val, comp_val, logic_val, perf_val, ctx_val
         )
 
@@ -2635,6 +2690,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             "",  # empty_state
             summ_result,  # summ
             det_result,  # det
+            fixes_result,  # fixes_tab
             gr.update(value=audit_record, visible=True),  # audit_json
             gr.update(visible=True),  # export_btn
             gr.update(visible=True),  # export_md_btn
@@ -2643,7 +2699,15 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     btn.click(
         fn=run_with_frankie,
         inputs=[code, sec, comp, logic, perf, ctx, review_mode],
-        outputs=[empty_state, summ, det, audit_json, export_btn, export_md_btn],
+        outputs=[
+            empty_state,
+            summ,
+            det,
+            fixes_tab,
+            audit_json,
+            export_btn,
+            export_md_btn,
+        ],
         api_name="review",
     )
 
