@@ -48,12 +48,10 @@ import os
 import re
 import uuid
 import random
-import tempfile
 import threading
 import time
 from collections import OrderedDict
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 
@@ -2362,48 +2360,6 @@ body[data-theme="dark-mode"] .finding_card {
 }
 
 /* =================================================================
-   EXPORT BUTTONS
-   ================================================================= */
-#export_btn button, #export_md_btn button {
-  background: linear-gradient(180deg, #4A9F5E 0%, var(--pass) 50%, #1E7B34 100%) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: var(--radiusXs) !important;
-  padding: 10px 16px !important;
-  font-weight: 600 !important;
-  font-size: var(--font-sm) !important;
-  cursor: pointer !important;
-  box-shadow: 0 2px 0 #1A6B2E, 0 3px 8px rgba(40,167,69,0.2) !important;
-}
-
-/* File download styling */
-#json_download, #md_download {
-  margin-top: 12px;
-}
-#json_download .file-preview,
-#md_download .file-preview {
-  background: var(--panel) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: var(--radiusSm) !important;
-  padding: 12px !important;
-}
-#json_download a,
-#md_download a {
-  color: var(--accent) !important;
-  font-weight: 600 !important;
-  text-decoration: none !important;
-}
-#json_download a:hover,
-#md_download a:hover {
-  text-decoration: underline !important;
-}
-body[data-theme="dark-mode"] #json_download .file-preview,
-body[data-theme="dark-mode"] #md_download .file-preview {
-  background: var(--spine2) !important;
-  border-color: rgba(250,248,244,0.15) !important;
-}
-
-/* =================================================================
    ERROR BANNERS - User-friendly error states
    ================================================================= */
 .error-banner {
@@ -3929,28 +3885,6 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                     advanced_tab = gr.Markdown(
                         "<div style='text-align:center;color:#A89F91;padding:40px;'>\n<p style='font-size:1.25rem;'>📋</p>\n<p><strong>Audit data will show here</strong></p>\n<p style='font-size:0.875rem;'>Decision records and compliance data for your review</p>\n</div>"
                     )
-                    with gr.Row():
-                        export_btn = gr.Button(
-                            "📥 Download JSON", visible=False, elem_id="export_btn"
-                        )
-                        export_md_btn = gr.Button(
-                            "📄 Download Markdown",
-                            visible=False,
-                            elem_id="export_md_btn",
-                        )
-                    with gr.Row():
-                        json_download = gr.File(
-                            label="JSON Download",
-                            visible=True,
-                            elem_id="json_download",
-                            interactive=False,
-                        )
-                        md_download = gr.File(
-                            label="Markdown Download",
-                            visible=True,
-                            elem_id="md_download",
-                            interactive=False,
-                        )
                     audit_json = gr.JSON(label="Audit Record (JSON)", visible=False)
 
     # Footer with trust signals
@@ -4000,8 +3934,6 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             summ,
             det,
             fixes_tab,
-            export_btn,
-            export_md_btn,
         ],
     )
 
@@ -4024,8 +3956,6 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             "",  # Clear details
             "",  # Clear fixes
             gr.update(value=None, visible=False),  # Clear and hide audit JSON
-            gr.update(visible=False),  # Hide export btn
-            gr.update(visible=False),  # Hide export md btn
             None,  # Clear audit state
         )
 
@@ -4039,8 +3969,6 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             det,
             fixes_tab,
             audit_json,
-            export_btn,
-            export_md_btn,
             audit_state,
         ],
     )
@@ -4092,15 +4020,13 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             session_id,
         )
 
-        # Final yield: show results, transition Frankie to monitoring, show export controls
+        # Final yield: show results, transition Frankie to monitoring
         yield (
             "",  # empty_state
             summ_result,  # summ
             det_result,  # det
             fixes_result,  # fixes_tab
             gr.update(value=audit_record, visible=bool(audit_record)),  # audit_json
-            gr.update(visible=bool(audit_record)),  # export_btn
-            gr.update(visible=bool(audit_record)),  # export_md_btn
             audit_record,  # audit_state
         )
 
@@ -4113,90 +4039,9 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             det,
             fixes_tab,
             audit_json,
-            export_btn,
-            export_md_btn,
             audit_state,
         ],
         api_name="review",
-    )
-
-    # Wire up export JSON button - creates downloadable file
-    def do_export_json(audit_record):
-        """Create a downloadable JSON file from audit record."""
-        if not audit_record:
-            return None
-
-        # Create temp file with audit data
-        decision_id = audit_record.get("decision_id", "audit")[:8]
-        filename = f"audit-{decision_id}.json"
-
-        # Create temp directory if needed
-        temp_dir = Path(tempfile.gettempdir()) / "code_review_exports"
-        temp_dir.mkdir(exist_ok=True)
-
-        filepath = temp_dir / filename
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(audit_record, f, indent=2)
-
-        return str(filepath)
-
-    export_btn.click(
-        fn=do_export_json,
-        inputs=[audit_state],
-        outputs=[json_download],
-    )
-
-    # Wire up export Markdown button - creates downloadable file
-    def do_export_markdown(audit_record):
-        """Generate markdown export and create downloadable file."""
-        if not audit_record:
-            return None, gr.update(visible=False)
-
-        md = f"""# Security Audit Report
-
-**Decision ID:** {audit_record.get("decision_id", "N/A")}
-**Timestamp:** {audit_record.get("timestamp_utc", "N/A")}
-**Verdict:** {audit_record.get("verdict", "N/A")}
-
-## Policy Information
-
-- **Version:** {audit_record.get("policy", {}).get("policy_version", "N/A")}
-- **URL:** {audit_record.get("policy", {}).get("policy_url", "N/A")}
-
-## Decision Drivers
-
-"""
-        for driver in audit_record.get("decision_drivers", []):
-            md += f"""### {driver.get("finding_id", "N/A")}: {driver.get("title", "Untitled")}
-- **Severity:** {driver.get("severity", "N/A")}
-- **Confidence:** {driver.get("confidence", 0):.0%}
-- **Location:** {driver.get("location", "N/A")}
-- **CWE:** {driver.get("cwe") or "N/A"}
-- **OWASP:** {driver.get("owasp") or "N/A"}
-
-"""
-        md += """---
-
-*Generated by Code Review Agent (Frankie)*
-"""
-
-        # Create temp file with markdown
-        decision_id = audit_record.get("decision_id", "audit")[:8]
-        filename = f"audit-{decision_id}.md"
-
-        temp_dir = Path(tempfile.gettempdir()) / "code_review_exports"
-        temp_dir.mkdir(exist_ok=True)
-
-        filepath = temp_dir / filename
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(md)
-
-        return str(filepath)
-
-    export_md_btn.click(
-        fn=do_export_markdown,
-        inputs=[audit_state],
-        outputs=[md_download],
     )
 
 
