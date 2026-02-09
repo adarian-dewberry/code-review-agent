@@ -1318,6 +1318,12 @@ APP_CSS = """
    Rule: Frankie owns processing, not output
    ================================================================= */
 
+/* Global mobile viewport fix */
+html, body {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
 :root {
   /* Light canvas (Light mode) */
   --bg: #FAF8F4;
@@ -2374,15 +2380,19 @@ body[data-theme="dark-mode"] #frankie_loader {
   position: relative;
   width: 280px;
   height: auto;
+  min-height: 120px;
   margin: 0 auto 32px;
   overflow: visible;
   flex-shrink: 0;
+  display: block;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,0.2));
 }
 
 .frankie_silhouette {
   width: 100%;
-  height: 100%;
+  height: auto;
+  min-height: 100px;
+  display: block;
   animation: frankieBreath 4s ease-in-out infinite;
 }
 
@@ -2390,7 +2400,9 @@ body[data-theme="dark-mode"] #frankie_loader {
 .frankie_mascot_svg {
   width: 100%;
   height: auto;
-  display: block;
+  min-height: 80px;
+  display: block !important;
+  visibility: visible !important;
   object-fit: contain;
 }
 
