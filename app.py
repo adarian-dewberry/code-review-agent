@@ -4243,14 +4243,6 @@ def get_health_status() -> dict[str, Any]:
     return status
 
 
-# Create a simple health endpoint using Gradio's API
-with gr.Blocks() as health_app:
-    health_output = gr.JSON(label="Health Status")
-    health_btn = gr.Button("Check Health")
-    health_btn.click(fn=get_health_status, outputs=health_output, api_name="health")
-
-
 if __name__ == "__main__":
     # Launch main demo
-    # Health endpoint available at /api/health
     demo.launch()
