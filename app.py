@@ -2043,6 +2043,44 @@ body[data-theme="dark-mode"] #right_panel .tab-nav button.selected {
   padding: 0 !important;
 }
 
+/* Markdown content styling for tabs */
+#right_panel .tabitem .prose,
+#right_panel .tabitem .markdown-body,
+#right_panel .tabitem > div {
+  color: var(--text) !important;
+}
+#right_panel .tabitem h1,
+#right_panel .tabitem h2,
+#right_panel .tabitem h3,
+#right_panel .tabitem h4,
+#right_panel .tabitem strong {
+  color: var(--text) !important;
+}
+#right_panel .tabitem p,
+#right_panel .tabitem li,
+#right_panel .tabitem td,
+#right_panel .tabitem span {
+  color: var(--text) !important;
+}
+body[data-theme="dark-mode"] #right_panel .tabitem .prose,
+body[data-theme="dark-mode"] #right_panel .tabitem .markdown-body,
+body[data-theme="dark-mode"] #right_panel .tabitem > div {
+  color: #FAF8F4 !important;
+}
+body[data-theme="dark-mode"] #right_panel .tabitem h1,
+body[data-theme="dark-mode"] #right_panel .tabitem h2,
+body[data-theme="dark-mode"] #right_panel .tabitem h3,
+body[data-theme="dark-mode"] #right_panel .tabitem h4,
+body[data-theme="dark-mode"] #right_panel .tabitem strong {
+  color: #FAF8F4 !important;
+}
+body[data-theme="dark-mode"] #right_panel .tabitem p,
+body[data-theme="dark-mode"] #right_panel .tabitem li,
+body[data-theme="dark-mode"] #right_panel .tabitem td,
+body[data-theme="dark-mode"] #right_panel .tabitem span {
+  color: rgba(250,248,244,0.9) !important;
+}
+
 /* =================================================================
    FINDINGS TABLE - Fixed columns, no wrapping
    ================================================================= */
@@ -2064,10 +2102,18 @@ body[data-theme="dark-mode"] #right_panel .tab-nav button.selected {
   color: var(--muted);
   white-space: nowrap;
 }
+body[data-theme="dark-mode"] .findings_table th {
+  background: rgba(255,255,255,0.04);
+  color: rgba(250,248,244,0.7);
+}
 .findings_table td {
   padding: 12px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  color: var(--text);
+}
+body[data-theme="dark-mode"] .findings_table td {
+  color: #FAF8F4;
 }
 .findings_table tr:hover {
   background: rgba(205,143,122,0.05);
