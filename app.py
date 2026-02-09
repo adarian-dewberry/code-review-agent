@@ -3941,13 +3941,15 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                     with gr.Row():
                         json_download = gr.File(
                             label="JSON Download",
-                            visible=False,
+                            visible=True,
                             elem_id="json_download",
+                            interactive=False,
                         )
                         md_download = gr.File(
                             label="Markdown Download",
-                            visible=False,
+                            visible=True,
                             elem_id="md_download",
+                            interactive=False,
                         )
                     audit_json = gr.JSON(label="Audit Record (JSON)", visible=False)
 
