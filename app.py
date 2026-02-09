@@ -3973,16 +3973,33 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         )
 
         # Run the actual review (now returns 4-tuple with audit_record)
-        summ_result, det_result, fixes_result, audit_record = review_code(
-            code_val,
-            sec_val,
-            comp_val,
-            logic_val,
-            perf_val,
-            ctx_val,
-            review_mode_val,
-            session_id,
-        )
+        try:
+            summ_result, det_result, fixes_result, audit_record = review_code(
+                code_val,
+                sec_val,
+                comp_val,
+                logic_val,
+                perf_val,
+                ctx_val,
+                review_mode_val,
+                session_id,
+            )
+        except Exception:
+            # Fallback demo output when API is unavailable
+            summ_result = """
+            <div id="verdict_card_container" class="verdict_card">
+                <div class="verdict_header">
+                    <div class="verdict_label">API Unavailable</div>
+                    <div class="verdict_confidence">Demo Mode</div>
+                </div>
+                <div class="verdict_summary">
+                    <p>The AI service is currently unavailable. Below is a sample analysis to show how Frankie works:</p>
+                </div>
+            </div>
+            """
+            det_result = "## Overview\n\n**Sample Analysis (Demo Mode)**\n\nWhen the service is available, Frankie will analyze your code for security vulnerabilities, compliance issues, logic errors, and performance problems."
+            fixes_result = "**Sample Fixes Not Available** - Please try again when the service is online."
+            audit_record = None
 
         # Final yield: show results (Frankie managed by state system, will auto-hide after 2 seconds)
         yield (

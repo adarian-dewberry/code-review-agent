@@ -15,11 +15,9 @@ license: mit
 
 ## What This Project Is
 
-This project is an AI-assisted security code reviewer for people who write code with the help of AI. That includes vibe coders, beginners, experienced developers, and anyone in between.
+This is an **assistive security code review tool** designed for developers working with AI-assisted coding. It helps surface common security risks without requiring deep security expertise, while producing structured outputs that security and governance teams can audit and document.
 
-It helps surface common security risks in code without requiring deep security knowledge, while also producing structured outputs that security and governance teams can review, document, and reason about.
-
-The goal is to meet developers where they are, without lowering the bar for security or accountability.
+It does not replace secure development practices, human code review, or professional security assessment. It is meant to support them.
 
 ## Why This Exists
 
@@ -93,11 +91,14 @@ These outputs are designed to support security reviews, audit evidence collectio
 
 ## Use Responsibly
 
-This tool is an assistive signal, not an authority.
+This tool is an **assistive signal, not an authority**. It:
 
-It does not guarantee that code is secure or compliant, and it should not be used as the sole basis for security decisions. Results should be reviewed by humans and considered alongside context, architecture, and threat models.
+- Does **not** guarantee code is secure or compliant
+- Should **not** be the sole basis for security decisions  
+- Must be reviewed by humans and considered alongside architecture and threat models
+- Can surface useful insights but may miss issues or misinterpret context
 
-AI-assisted analysis can surface useful insights, but it can also miss issues or misinterpret intent. This project is designed to support better conversations about risk, not replace professional judgment.
+Use it to **support** conversations about risk, not replace professional judgment.
 
 ## Design Principles
 
