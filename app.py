@@ -3741,8 +3741,8 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 const verdictCard = document.getElementById('verdict_card_container');
                 if (verdictCard && verdictCard.textContent.trim() !== '' && !verdictCard.textContent.includes('Frankie')) {
                     if (window.frankieState.currentState !== 'hidden') {
-                        // Auto-hide Frankie after 3 seconds when results appear
-                        setTimeout(() => window.frankieState.hide(), 3000);
+                        // Auto-hide Frankie after 2 seconds when results appear
+                        setTimeout(() => window.frankieState.hide(), 2000);
                     }
                 }
             }
@@ -4034,11 +4034,10 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
             session_id,
         )
 
-        # Final yield: show results with Frankie still visible (will auto-hide after 3 seconds)
+        # Final yield: show results (Frankie managed by state system, will auto-hide after 2 seconds)
         yield (
             "",  # empty_state
-            get_frankie_loader()
-            + summ_result,  # summ - keep Frankie visible with results
+            summ_result,  # summ - results without Frankie duplication
             det_result,  # det
             fixes_result,  # fixes_tab
             gr.update(value=audit_record, visible=bool(audit_record)),  # audit_json
