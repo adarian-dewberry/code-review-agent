@@ -2481,44 +2481,24 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
    FRANKIE LOADING MODAL - Professional GRC-grade loading overlay
    Large centered modal with high-quality 3D Malamute animation
    ================================================================= */
-#frankie_overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  opacity: 1;
+/* Frankie inline container - appears within results panel */
+#frankie_container_inline {
+  width: 100%;
+  display: none;
+  opacity: 0;
   transition: opacity 0.4s ease;
-  pointer-events: auto;
-  overflow: hidden;
+  animation: frankieSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
-#frankie_inline_container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 520px;
-  max-width: 90vw;
-  max-height: 85vh;
-  pointer-events: auto;
-  transition: all 0.4s ease;
-  animation: modalSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+#frankie_container_inline[style*="display: block"] {
+  display: flex !important;
+  opacity: 1;
 }
 
-@keyframes modalSlideIn {
+@keyframes frankieSlideIn {
   from {
     opacity: 0;
-    transform: scale(0.92) translateY(20px);
+    transform: scale(0.96) translateY(10px);
   }
   to {
     opacity: 1;
@@ -2526,7 +2506,7 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
   }
 }
 
-#frankie_loader {
+#frankie_loader_inline {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2894,25 +2874,20 @@ body[data-theme="dark-mode"] #frankie_loader {
 }
 
 /* Modal default state - always start hidden until needed */
-#frankie_overlay {
-  display: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
+/* Frankie state transitions */
+#frankie_container_inline.frankie-state-scanning #frankie_loader_inline {
+  animation: frankieSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
-#frankie_overlay:not(.frankie-hidden) {
-  display: flex;
-  opacity: 1;
-  pointer-events: auto;
+#frankie_container_inline.frankie-state-found #frankie_loader_inline {
+  animation: frankieSlideOut 0.4s ease 1.8s forwards;
 }
 
-/* Modal hidden state (when overlay closes) */
-#frankie_overlay.frankie-hidden {
-  display: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
+@keyframes frankieSlideOut {
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(-10px);
+  }
 }
 
 /* =================================================================
@@ -3136,30 +3111,13 @@ body[data-theme="dark-mode"] .mode_descriptions {
     padding: 12px !important;
   }
 
-  /* Frankie overlay mobile fix */
-  #frankie_overlay {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 99999 !important;
+  /* Frankie inline mobile */
+  #frankie_container_inline {
+    width: 100% !important;
+    margin-bottom: 20px !important;
   }
 
-  #frankie_inline_container {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 92vw !important;
-    max-width: 92vw !important;
-    max-height: 80vh !important;
-    margin: 0 !important;
-  }
-
-  #frankie_loader {
+  #frankie_loader_inline {
     padding: 28px 20px 24px !important;
     width: 100% !important;
     box-sizing: border-box !important;
@@ -3334,16 +3292,12 @@ body[data-theme="dark-mode"] .mode_descriptions {
   }
 
   /* Frankie loader mobile compact */
-  #frankie_inline_container {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 95vw !important;
-    max-width: none !important;
+  /* Frankie inline small mobile */
+  #frankie_container_inline {
+    width: 100% !important;
   }
 
-  #frankie_loader {
+  #frankie_loader_inline {
     padding: 24px 16px 24px !important;
   }
 
@@ -3646,24 +3600,22 @@ def get_frankie_loader(run_id: str = "") -> str:
     </svg>"""
 
     return f"""
-    <div id="frankie_overlay">
-        <div id="frankie_inline_container" class="frankie-state-scanning">
-            <div id="frankie_loader">
-                <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
-                    <div class="frankie_ball"></div>
-                    <div class="frankie_silhouette">
-                        {frankie_svg}
-                    </div>
+    <div id="frankie_container_inline" class="frankie-state-scanning">
+        <div id="frankie_loader" class="frankie_loader_inline">
+            <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
+                <div class="frankie_ball"></div>
+                <div class="frankie_silhouette">
+                    {frankie_svg}
                 </div>
-                <div class="frankie_title">Frankie's got his eye on it</div>
-                <div class="frankie_line" id="frankie_loading_text">{loading_messages[0]}</div>
-                <div class="frankie_progress_section">
-                    <div class="frankie_progress_bar">
-                        <div class="frankie_progress_fill"></div>
-                    </div>
-                </div>
-                <div class="frankie_hint">Analyzing thoroughly...</div>
             </div>
+            <div class="frankie_title">Frankie's got his eye on it</div>
+            <div class="frankie_line" id="frankie_loading_text">{loading_messages[0]}</div>
+            <div class="frankie_progress_section">
+                <div class="frankie_progress_bar">
+                    <div class="frankie_progress_fill"></div>
+                </div>
+            </div>
+            <div class="frankie_hint">Analyzing thoroughly...</div>
         </div>
     </div>
     <script>
@@ -3706,36 +3658,28 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     window.frankieState = {
         currentState: 'hidden',
         setFrankieState: function(state) {
-            const container = document.getElementById('frankie_inline_container');
-            const overlay = document.getElementById('frankie_overlay');
-            if (!container || !overlay) return;
+            const container = document.getElementById('frankie_container_inline');
+            if (!container) return;
             
             // Remove all state classes
             container.className = container.className.replace(/frankie-state-\\w+/g, '').trim();
             
-            // Add new state class
+            // Add new state class and control visibility
             if (state === 'scanning') {
                 container.classList.add('frankie-state-scanning');
-                overlay.classList.remove('frankie-hidden');
+                container.style.display = 'block';
                 this.currentState = 'scanning';
             } else if (state === 'found') {
                 container.classList.add('frankie-state-found');
-                overlay.classList.remove('frankie-hidden');
+                container.style.display = 'block';
                 this.currentState = 'found';
-            } else if (state === 'monitoring') {
-                container.classList.add('frankie-state-monitoring');
-                overlay.classList.remove('frankie-hidden');
-                this.currentState = 'monitoring';
             } else if (state === 'hidden') {
-                overlay.classList.add('frankie-hidden');
+                container.style.display = 'none';
                 this.currentState = 'hidden';
             }
         },
         transitionToFound: function() {
             setTimeout(() => this.setFrankieState('found'), 500);
-        },
-        transitionToMonitoring: function() {
-            setTimeout(() => this.setFrankieState('monitoring'), 1500);
         },
         hide: function() {
             this.setFrankieState('hidden');
@@ -4015,18 +3959,16 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         elif "Compliance" in review_mode_val:
             sec_val, comp_val, logic_val, perf_val = True, True, False, False
 
-        # First yield: show Frankie loader in scanning state, hide export controls
+        # First yield: show Frankie loader in scanning state
         frankie_html = get_frankie_loader()
-        # Trigger JS to ensure modal visibility and animation
+        # Trigger JS to show Frankie
         frankie_script = "<script>if(window.frankieState) { window.frankieState.setFrankieState('scanning'); console.log('Frankie scanning started'); } else { console.log('frankieState not ready'); }</script>"
         yield (
             "",  # empty_state
-            frankie_html + frankie_script,  # summ - combined HTML and script
+            frankie_html + frankie_script,  # summ - Frankie appears inline
             "",  # det - clear details
             "*Generating fix recommendations...*",  # fixes_tab
             gr.update(value=None, visible=False),  # audit_json
-            gr.update(visible=False),  # export_btn
-            gr.update(visible=False),  # export_md_btn
             None,  # audit_state
         )
 
