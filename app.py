@@ -2845,9 +2845,22 @@ textarea:focus-visible,
 body[data-theme="dark-mode"] .gradio-container {
   color: #FAF8F4 !important;
 }
+body[data-theme="dark-mode"] .results_title,
+body[data-theme="dark-mode"] .verdict_headline,
+body[data-theme="dark-mode"] #empty_state .empty_title,
+body[data-theme="dark-mode"] .finding_title,
+body[data-theme="dark-mode"] .top_fix_title {
+  color: #FAF8F4 !important;
+}
+body[data-theme="dark-mode"] .results_label {
+  color: var(--accent) !important;
+}
 body[data-theme="dark-mode"] .muted,
-body[data-theme="dark-mode"] .text2 {
-  color: rgba(250,248,244,0.8) !important;
+body[data-theme="dark-mode"] .text2,
+body[data-theme="dark-mode"] .verdict_subtext,
+body[data-theme="dark-mode"] #empty_state .empty_text,
+body[data-theme="dark-mode"] .finding_desc {
+  color: rgba(250,248,244,0.75) !important;
 }
 body[data-theme="dark-mode"] select,
 body[data-theme="dark-mode"] .dropdown {
@@ -2857,6 +2870,19 @@ body[data-theme="dark-mode"] .dropdown {
 body[data-theme="dark-mode"] .spine_hint,
 body[data-theme="dark-mode"] .mode_descriptions {
   color: rgba(250,248,244,0.75) !important;
+}
+/* Light mode text contrast improvements */
+.results_title,
+.verdict_headline,
+#empty_state .empty_title,
+.finding_title,
+.top_fix_title {
+  color: var(--text) !important;
+}
+.verdict_subtext,
+#empty_state .empty_text,
+.finding_desc {
+  color: var(--muted) !important;
 }
 
 /* =================================================================
