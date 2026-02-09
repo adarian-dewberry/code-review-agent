@@ -2924,6 +2924,22 @@ body[data-theme="dark-mode"] .mode_descriptions {
     box-sizing: border-box !important;
   }
 
+  /* Main layout mobile fix */
+  #shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  #left_spine,
+  #right_panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+
   /* Frankie overlay mobile fix */
   #frankie_overlay {
     position: fixed !important;
@@ -2978,12 +2994,15 @@ body[data-theme="dark-mode"] .mode_descriptions {
   }
 
   #brand_header {
-    padding: 20px 16px 24px 16px !important;
-    margin: -8px -8px 16px -8px !important;
+    padding: 16px 12px 20px 12px !important;
+    margin: 0 0 12px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   #brand_title {
-    font-size: 1.75em !important;
+    font-size: 1.5em !important;
+    word-wrap: break-word !important;
   }
 
   #brand_subtitle {
@@ -2997,11 +3016,6 @@ body[data-theme="dark-mode"] .mode_descriptions {
   .feature_tag {
     font-size: var(--font-xs) !important;
     padding: 4px 10px !important;
-  }
-
-  #left_spine,
-  #right_panel {
-    padding: 16px !important;
   }
 
   /* Stack review mode buttons vertically on mobile */
