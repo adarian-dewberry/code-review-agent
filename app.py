@@ -2386,11 +2386,17 @@ body[data-theme="dark-mode"] #frankie_loader {
   animation: frankieBreath 4s ease-in-out infinite;
 }
 
-.frankie_mascot_img {
+.frankie_mascot_img,
+.frankie_mascot_svg {
   width: 100%;
   height: auto;
   display: block;
   object-fit: contain;
+}
+
+.frankie_mascot_svg .frankie-tail {
+  animation: tailWag 2s ease-in-out infinite;
+  transform-origin: 155px 150px;
 }
 
 /* Separate red ball element */
@@ -3165,7 +3171,65 @@ def get_frankie_loader(run_id: str = "") -> str:
         "Finding those gaps for you...",
     ]
 
-    mascot_data_url = f"data:image/png;base64,{FRANKIE_B64}"
+    # Inline SVG of Frankie the Alaskan Malamute - professional 3D styled mascot
+    frankie_svg = """<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="frankie_mascot_svg">
+        <defs>
+            <linearGradient id="furGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#8B7355"/>
+                <stop offset="50%" style="stop-color:#6B5344"/>
+                <stop offset="100%" style="stop-color:#4A3728"/>
+            </linearGradient>
+            <linearGradient id="chestGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#F5F5F0"/>
+                <stop offset="100%" style="stop-color:#E8E0D5"/>
+            </linearGradient>
+            <linearGradient id="noseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#2C2C2C"/>
+                <stop offset="100%" style="stop-color:#1A1A1A"/>
+            </linearGradient>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.3"/>
+            </filter>
+        </defs>
+        <!-- Body -->
+        <ellipse cx="100" cy="155" rx="55" ry="40" fill="url(#furGradient)" filter="url(#softShadow)"/>
+        <!-- Chest fur -->
+        <ellipse cx="100" cy="140" rx="35" ry="30" fill="url(#chestGradient)"/>
+        <!-- Head -->
+        <ellipse cx="100" cy="85" rx="45" ry="40" fill="url(#furGradient)" filter="url(#softShadow)"/>
+        <!-- Face mask (white) -->
+        <path d="M100 55 Q120 75 115 100 Q100 115 85 100 Q80 75 100 55" fill="url(#chestGradient)"/>
+        <!-- Left ear -->
+        <path d="M60 50 Q55 25 70 35 Q80 45 75 65 Z" fill="url(#furGradient)"/>
+        <path d="M65 48 Q62 32 72 38 Q78 46 74 58 Z" fill="#D4B5A0"/>
+        <!-- Right ear -->
+        <path d="M140 50 Q145 25 130 35 Q120 45 125 65 Z" fill="url(#furGradient)"/>
+        <path d="M135 48 Q138 32 128 38 Q122 46 126 58 Z" fill="#D4B5A0"/>
+        <!-- Eyes -->
+        <ellipse cx="80" cy="80" rx="10" ry="11" fill="#1A1A1A"/>
+        <ellipse cx="120" cy="80" rx="10" ry="11" fill="#1A1A1A"/>
+        <ellipse cx="82" cy="78" rx="4" ry="5" fill="#4A3728"/>
+        <ellipse cx="122" cy="78" rx="4" ry="5" fill="#4A3728"/>
+        <circle cx="84" cy="76" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="124" cy="76" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+        <!-- Nose -->
+        <ellipse cx="100" cy="100" rx="12" ry="9" fill="url(#noseGradient)"/>
+        <ellipse cx="100" cy="98" rx="4" ry="2" fill="#444" opacity="0.5"/>
+        <!-- Mouth -->
+        <path d="M100 109 Q90 118 85 115" stroke="#3A2A1A" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M100 109 Q110 118 115 115" stroke="#3A2A1A" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Tongue (happy panting) -->
+        <ellipse cx="100" cy="120" rx="8" ry="12" fill="#E57373"/>
+        <path d="M96 118 Q100 125 104 118" stroke="#C55A5A" stroke-width="1" fill="none"/>
+        <!-- Front paws -->
+        <ellipse cx="75" cy="185" rx="18" ry="10" fill="url(#furGradient)"/>
+        <ellipse cx="125" cy="185" rx="18" ry="10" fill="url(#furGradient)"/>
+        <!-- Paw details -->
+        <ellipse cx="75" cy="188" rx="12" ry="6" fill="url(#chestGradient)"/>
+        <ellipse cx="125" cy="188" rx="12" ry="6" fill="url(#chestGradient)"/>
+        <!-- Tail (wagging) -->
+        <path class="frankie-tail" d="M155 150 Q175 130 165 110 Q160 100 170 95" stroke="url(#furGradient)" stroke-width="14" fill="none" stroke-linecap="round"/>
+    </svg>"""
 
     return f"""
     <div id="frankie_overlay" style="display: flex; opacity: 1;">
@@ -3174,7 +3238,7 @@ def get_frankie_loader(run_id: str = "") -> str:
                 <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
                     <div class="frankie_ball"></div>
                     <div class="frankie_silhouette">
-                        <img src="{mascot_data_url}" alt="Frankie the security dog" class="frankie_mascot_img" />
+                        {frankie_svg}
                     </div>
                 </div>
                 <div class="frankie_title">Frankie's got his eye on it</div>
