@@ -2487,6 +2487,8 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -2497,10 +2499,14 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
   opacity: 1;
   transition: opacity 0.4s ease;
   pointer-events: auto;
+  overflow: hidden;
 }
 
 #frankie_inline_container {
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: 520px;
   max-width: 90vw;
   max-height: 85vh;
@@ -3129,16 +3135,20 @@ body[data-theme="dark-mode"] .mode_descriptions {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100vw !important;
+    height: 100vh !important;
     z-index: 99999 !important;
   }
 
   #frankie_inline_container {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     width: 92vw !important;
     max-width: 92vw !important;
     max-height: 80vh !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
   }
 
   #frankie_loader {
@@ -3317,6 +3327,10 @@ body[data-theme="dark-mode"] .mode_descriptions {
 
   /* Frankie loader mobile compact */
   #frankie_inline_container {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     width: 95vw !important;
     max-width: none !important;
   }
