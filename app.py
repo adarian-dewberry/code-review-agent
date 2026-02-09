@@ -40,6 +40,7 @@ Copy lint rules:
 =============================================================================
 """
 
+import base64
 import hashlib
 import html
 import json
@@ -52,6 +53,7 @@ import threading
 import time
 from collections import OrderedDict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import anthropic
@@ -2375,33 +2377,77 @@ body[data-theme="dark-mode"] #frankie_loader {
   overflow: visible;
   flex-shrink: 0;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,0.2));
-  animation: frankieBreath 4s ease-in-out infinite;
 }
 
 .frankie_silhouette {
   width: 100%;
   height: 100%;
-  animation: none;
+  animation: frankieBreath 4s ease-in-out infinite;
 }
 
-.frankie_silhouette svg {
+.frankie_mascot_img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Separate red ball element */
+.frankie_ball {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  background-color: #ff3333;
+  border-radius: 50%;
+  top: 18px;
+  left: 0;
+  box-shadow: 0 4px 12px rgba(255, 51, 51, 0.4), inset 0 2px 4px rgba(255, 100, 100, 0.3);
+  animation: ballBounce 3s ease-in-out infinite;
+  z-index: 10;
+}
+
+.frankie_ball::after {
+  content: "";
+  position: absolute;
   width: 100%;
   height: 100%;
-  animation: tailWag 3.5s ease-in-out infinite;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.45), transparent 60%);
 }
-
-/* Separate red ball element - REMOVED */
-/* .frankie_ball now hidden since dog is sitting */
 
 /* ===== PROFESSIONAL LOADING ANIMATIONS ===== */
 
-/* Gentle breathing motion for sitting dog */
+@keyframes ballBounce {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(70px, -18px) scale(1.05);
+  }
+  50% {
+    transform: translate(140px, -30px) scale(1.1);
+  }
+  75% {
+    transform: translate(210px, -14px) scale(1.05);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Gentle breathing/nodding motion for sitting dog */
 @keyframes frankieBreath {
   0%, 100% { 
-    transform: translateY(0) scale(1);
+    transform: scale(1) rotateZ(0deg);
   }
-  50% { 
-    transform: translateY(-4px) scale(1.01);
+  25% {
+    transform: scale(1.02) rotateZ(-1deg);
+  }
+  50% {
+    transform: scale(1.03) rotateZ(0deg);
+  }
+  75% {
+    transform: scale(1.02) rotateZ(1deg);
   }
 }
 
@@ -2420,8 +2466,8 @@ body[data-theme="dark-mode"] #frankie_loader {
 
 /* Respects reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .frankie_container,
-  .frankie_silhouette svg {
+  .frankie_ball,
+  .frankie_silhouette {
     animation: none !important;
   }
   
@@ -3112,151 +3158,37 @@ def get_frankie_loader(run_id: str = "") -> str:
     if not run_id:
         run_id = str(int(datetime.now(timezone.utc).timestamp() * 1000))
 
-    frankie_line = pick_frankie_line(run_id)
+    loading_messages = [
+        "Frankie's catchin' the scent...",
+        "He's a thorough boy, sugar!",
+        "Finding those gaps for you...",
+    ]
 
-    # Professional Alaskan Malamute - friendly, watchful sitting pose
-    # Based on reference image: black/white coloring, warm eyes, alert ears
-    frankie_svg = """
-    <svg viewBox="0 0 380 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <!-- Gradient for dark charcoal coat -->
-        <linearGradient id="darkCoat" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#2F2F2F;stop-opacity:1" />
-          <stop offset="50%" style="stop-color:#1F1F1F;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#0F0F0F;stop-opacity:1" />
-        </linearGradient>
-        <!-- Light shine on dark coat -->
-        <radialGradient id="darkShine" cx="35%" cy="20%">
-          <stop offset="0%" style="stop-color:#555555;stop-opacity:0.4" />
-          <stop offset="100%" style="stop-color:#1F1F1F;stop-opacity:0" />
-        </radialGradient>
-        <!-- Pure white for markings -->
-        <linearGradient id="whiteMarkings" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:0.98" />
-        </linearGradient>
-        <!-- Light gray for inner ears -->
-        <linearGradient id="earInner" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#D4A5A5;stop-opacity:0.95" />
-          <stop offset="100%" style="stop-color:#C08080;stop-opacity:0.85" />
-        </linearGradient>
-        <filter id="medShadow">
-          <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-opacity="0.35"/>
-        </filter>
-        <filter id="softShadow">
-          <feDropShadow dx="0" dy="1" stdDeviation="1" flood-opacity="0.15"/>
-        </filter>
-      </defs>
+    mascot_data_url = ""
+    mascot_path = Path(__file__).parent / "media" / "frankie_mascot.png"
 
-      <!-- BODY (sitting, dark charcoal) -->
-      <ellipse cx="190" cy="260" rx="80" ry="90" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-      <ellipse cx="190" cy="255" rx="76" ry="85" fill="url(#darkShine)"/>
-
-      <!-- White chest blaze (distinctive marking) -->
-      <ellipse cx="190" cy="280" rx="55" ry="68" fill="url(#whiteMarkings)" opacity="0.98"/>
-      <ellipse cx="190" cy="295" rx="42" ry="55" fill="#FFFFFF" opacity="0.95"/>
-
-      <!-- Back legs (sitting position) -->
-      <ellipse cx="120" cy="320" rx="30" ry="75" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-      <ellipse cx="260" cy="320" rx="30" ry="75" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-
-      <!-- Back paws -->
-      <ellipse cx="120" cy="390" rx="24" ry="15" fill="#1A1A1A"/>
-      <ellipse cx="260" cy="390" rx="24" ry="15" fill="#1A1A1A"/>
-
-      <!-- Front legs (sitting, visible) -->
-      <ellipse cx="150" cy="330" rx="26" ry="70" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-      <ellipse cx="230" cy="330" rx="26" ry="70" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-
-      <!-- Front paws -->
-      <ellipse cx="150" cy="398" rx="22" ry="13" fill="#1A1A1A"/>
-      <ellipse cx="230" cy="398" rx="22" ry="13" fill="#1A1A1A"/>
-
-      <!-- Thick neck -->
-      <path d="M 140 240 Q 135 220 140 200 Q 155 180 190 185 Q 225 180 240 200 Q 245 220 240 240 Q 230 255 190 258 Q 150 255 140 240" 
-            fill="url(#darkCoat)" filter="url(#medShadow)"/>
-
-      <!-- HEAD (alert, facing forward) -->
-      <ellipse cx="190" cy="120" rx="72" ry="85" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-      <ellipse cx="190" cy="115" rx="68" ry="80" fill="url(#darkShine)"/>
-
-      <!-- White face blaze (from image: white forehead/mask area) -->
-      <ellipse cx="190" cy="105" rx="50" ry="62" fill="url(#whiteMarkings)" opacity="0.98"/>
-      <ellipse cx="190" cy="115" rx="42" ry="52" fill="#FFFFFF" opacity="0.95"/>
-
-      <!-- Snout (friendly, alert position) -->
-      <ellipse cx="235" cy="145" rx="42" ry="35" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-      <ellipse cx="244" cy="145" rx="35" ry="30" fill="#1A1A1A"/>
-      <!-- Snout white tip -->
-      <ellipse cx="268" cy="145" rx="26" ry="22" fill="url(#whiteMarkings)" opacity="0.96"/>
-      <!-- Nose -->
-      <ellipse cx="285" cy="143" rx="8" ry="7" fill="#1A1A1A" filter="url(#softShadow)"/>
-      <circle cx="286.5" cy="141" r="3" fill="#000000"/>
-
-      <!-- EYES - Big, warm, intelligent (like the image) -->
-      <!-- Left eye -->
-      <circle cx="150" cy="95" r="11" fill="#1A1A1A" filter="url(#softShadow)"/>
-      <circle cx="152" cy="91" r="4.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="153" cy="89" r="2" fill="#000000"/>
-      <circle cx="151" cy="94" r="1.5" fill="#4A4A4A" opacity="0.6"/>
-
-      <!-- Right eye -->
-      <circle cx="220" cy="90" r="11" fill="#1A1A1A" filter="url(#softShadow)"/>
-      <circle cx="222" cy="86" r="4.5" fill="#FFFFFF" opacity="0.95"/>
-      <circle cx="223" cy="84" r="2" fill="#000000"/>
-      <circle cx="221" cy="89" r="1.5" fill="#4A4A4A" opacity="0.6"/>
-
-      <!-- EARS - Alert, pointed, slightly forward (from image) -->
-      <!-- Left ear - dark outside -->
-      <g transform="translate(120, 60)">
-        <path d="M 0 0 L -16 -52 L -4 -2 Z" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-        <path d="M -1 -1 L -12 -46 L -3 -1.5 Z" fill="#2F2F2F" opacity="0.9"/>
-        <!-- Inner ear pink -->
-        <path d="M -3 -3 L -9 -36 L -3 -4 Z" fill="url(#earInner)"/>
-      </g>
-
-      <!-- Right ear - dark outside -->
-      <g transform="translate(260, 55)">
-        <path d="M 0 0 L 16 -54 L 4 -2 Z" fill="url(#darkCoat)" filter="url(#medShadow)"/>
-        <path d="M 1 -1 L 12 -48 L 3 -1.5 Z" fill="#2F2F2F" opacity="0.9"/>
-        <!-- Inner ear pink -->
-        <path d="M 3 -3 L 9 -38 L 3 -4 Z" fill="url(#earInner)"/>
-      </g>
-
-      <!-- TAIL - Fluffy, animated wag (sitting) -->
-      <g class="frankie-tail" transform="translate(135, 190)">
-        <!-- Outer shadow -->
-        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
-              fill="none" stroke="#0F0F0F" stroke-width="35" stroke-linecap="round" stroke-linejoin="round" filter="url(#medShadow)"/>
-        <!-- Main dark coat -->
-        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
-              fill="none" stroke="#2F2F2F" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
-        <!-- White highlight on tail -->
-        <path d="M 0 0 Q -30 -35 -42 -85 Q -48 -130 -18 -160 Q 18 -178 45 -150 Q 58 -125 55 -75 Q 50 -25 45 25" 
-              fill="none" stroke="#E8E0D8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
-      </g>
-
-      <!-- Subtle fur texture details for depth -->
-      <circle cx="160" cy="160" r="3" fill="#555555" opacity="0.2" filter="url(#softShadow)"/>
-      <circle cx="220" cy="155" r="3" fill="#555555" opacity="0.2" filter="url(#softShadow)"/>
-      <circle cx="175" cy="270" r="2.5" fill="#555555" opacity="0.15"/>
-      <circle cx="205" cy="275" r="2.5" fill="#555555" opacity="0.15"/>
-
-      <!-- Ground shadow -->
-      <ellipse cx="190" cy="410" rx="100" ry="10" fill="rgba(0,0,0,0.15)" filter="url(#softShadow)"/>
-    </svg>
-    """
+    try:
+        if mascot_path.exists():
+            with open(mascot_path, "rb") as img_file:
+                img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
+                mascot_data_url = f"data:image/png;base64,{img_base64}"
+        else:
+            logger.warning("Mascot image not found at %s", mascot_path)
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.error("Failed to load mascot image: %s", exc)
 
     return f"""
     <div id="frankie_overlay" style="display: flex; opacity: 1;">
         <div id="frankie_inline_container" class="frankie-state-scanning">
             <div id="frankie_loader">
                 <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
-                    <!-- Dog SVG - sitting position -->
-                    <div class="frankie_silhouette">{frankie_svg}</div>
+                    <div class="frankie_ball"></div>
+                    <div class="frankie_silhouette">
+                        <img src="{mascot_data_url}" alt="Frankie the security dog" class="frankie_mascot_img" />
+                    </div>
                 </div>
                 <div class="frankie_title">Frankie's Watching Your Code</div>
-                <div class="frankie_line">{frankie_line}</div>
+                <div class="frankie_line" id="frankie_loading_text">{loading_messages[0]}</div>
                 <div class="frankie_progress_section">
                     <div class="frankie_progress_bar">
                         <div class="frankie_progress_fill"></div>
@@ -3266,6 +3198,21 @@ def get_frankie_loader(run_id: str = "") -> str:
             </div>
         </div>
     </div>
+    <script>
+        window.frankieMessageIndex = 0;
+        window.frankieMessages = {json.dumps(loading_messages)};
+
+        function cycleFrankieMessage() {{
+            const textElement = document.getElementById("frankie_loading_text");
+            if (!textElement || !window.frankieMessages) return;
+            window.frankieMessageIndex = (window.frankieMessageIndex + 1) % window.frankieMessages.length;
+            textElement.textContent = window.frankieMessages[window.frankieMessageIndex];
+        }}
+
+        if (!window.frankieMessageInterval) {{
+            window.frankieMessageInterval = setInterval(cycleFrankieMessage, 2000);
+        }}
+    </script>
     """
 
 
