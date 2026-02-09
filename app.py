@@ -3602,7 +3602,7 @@ def get_frankie_loader(run_id: str = "") -> str:
     </svg>"""
 
     return f"""
-    <div id="frankie_container_inline" class="frankie-state-scanning">
+    <div id="frankie_container_inline" class="frankie-state-scanning" style="display: block;">
         <div id="frankie_loader" class="frankie_loader_inline">
             <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
                 <div class="frankie_ball"></div>
