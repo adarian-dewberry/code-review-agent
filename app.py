@@ -1764,6 +1764,22 @@ body[data-theme="dark-mode"] #right_panel {
   line-height: 1.2;
 }
 
+/* Right panel global text color - ensures all content inherits correct color */
+#right_panel, #right_panel * {
+  color: var(--text);
+}
+body[data-theme="dark-mode"] #right_panel,
+body[data-theme="dark-mode"] #right_panel * {
+  color: #FAF8F4;
+}
+/* Preserve specific colors that should NOT be overridden */
+#right_panel .severity_badge,
+#right_panel .counter_value,
+#right_panel .verdict_pill,
+#right_panel a {
+  color: inherit;
+}
+
 /* =================================================================
    EMPTY STATE - Clear CTA
    ================================================================= */
@@ -2079,6 +2095,115 @@ body[data-theme="dark-mode"] #right_panel .tabitem li,
 body[data-theme="dark-mode"] #right_panel .tabitem td,
 body[data-theme="dark-mode"] #right_panel .tabitem span {
   color: rgba(250,248,244,0.9) !important;
+}
+
+/* Details/Summary elements (Blast Radius, Decision Reasoning, Audit Record) */
+#right_panel details {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radiusSm);
+  padding: 0;
+  background: rgba(0,0,0,0.02);
+}
+#right_panel summary {
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(0,0,0,0.03);
+  border-radius: var(--radiusSm);
+  list-style: none;
+}
+#right_panel summary::-webkit-details-marker {
+  display: none;
+}
+#right_panel summary::before {
+  content: "▶ ";
+  font-size: 0.8em;
+  margin-right: 6px;
+  color: var(--accent);
+}
+#right_panel details[open] summary::before {
+  content: "▼ ";
+}
+#right_panel details > *:not(summary) {
+  padding: 0 16px 12px;
+  color: var(--text);
+}
+body[data-theme="dark-mode"] #right_panel details {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(250,248,244,0.15);
+}
+body[data-theme="dark-mode"] #right_panel summary {
+  color: #FAF8F4;
+  background: rgba(255,255,255,0.05);
+}
+body[data-theme="dark-mode"] #right_panel details > *:not(summary) {
+  color: rgba(250,248,244,0.9);
+}
+
+/* Code blocks in markdown content */
+#right_panel code {
+  background: rgba(0,0,0,0.06);
+  color: var(--text);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9em;
+}
+#right_panel pre {
+  background: rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--radiusSm);
+  padding: 12px 16px;
+  overflow-x: auto;
+  color: var(--text);
+}
+#right_panel pre code {
+  background: transparent;
+  padding: 0;
+}
+body[data-theme="dark-mode"] #right_panel code {
+  background: rgba(255,255,255,0.1);
+  color: #FAF8F4;
+}
+body[data-theme="dark-mode"] #right_panel pre {
+  background: rgba(0,0,0,0.3);
+  border-color: rgba(250,248,244,0.15);
+  color: #FAF8F4;
+}
+
+/* Blockquotes */
+#right_panel blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 12px 0;
+  padding: 8px 16px;
+  background: rgba(205,143,122,0.08);
+  color: var(--text);
+}
+body[data-theme="dark-mode"] #right_panel blockquote {
+  background: rgba(205,143,122,0.12);
+  color: rgba(250,248,244,0.9);
+}
+
+/* Horizontal rules */
+#right_panel hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 20px 0;
+}
+body[data-theme="dark-mode"] #right_panel hr {
+  border-color: rgba(250,248,244,0.15);
+}
+
+/* Lists */
+#right_panel ul, #right_panel ol {
+  padding-left: 24px;
+  color: var(--text);
+}
+body[data-theme="dark-mode"] #right_panel ul,
+body[data-theme="dark-mode"] #right_panel ol {
+  color: rgba(250,248,244,0.9);
 }
 
 /* =================================================================
