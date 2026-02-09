@@ -4122,7 +4122,7 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
     def do_export_json(audit_record):
         """Create a downloadable JSON file from audit record."""
         if not audit_record:
-            return None, gr.update(visible=False)
+            return None
 
         # Create temp file with audit data
         decision_id = audit_record.get("decision_id", "audit")[:8]
@@ -4136,13 +4136,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(audit_record, f, indent=2)
 
-        return str(filepath), gr.update(visible=True)
+        return str(filepath)
 
     export_btn.click(
         fn=do_export_json,
         inputs=[audit_state],
-        outputs=[json_download, json_download],
-        api_name="export_audit",
+        outputs=[json_download],
     )
 
     # Wire up export Markdown button - creates downloadable file
@@ -4190,13 +4189,12 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(md)
 
-        return str(filepath), gr.update(visible=True)
+        return str(filepath)
 
     export_md_btn.click(
         fn=do_export_markdown,
         inputs=[audit_state],
-        outputs=[md_download, md_download],
-        api_name="export_markdown",
+        outputs=[md_download],
     )
 
 
