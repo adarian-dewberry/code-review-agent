@@ -2841,13 +2841,20 @@ body[data-theme="dark-mode"] .mode_descriptions {
 
 /* Tablet breakpoint */
 @media screen and (max-width: 1024px) {
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
   .gradio-container {
     max-width: 100% !important;
     padding: 0 12px !important;
+    overflow-x: hidden !important;
   }
 
   #shell {
     flex-direction: column !important;
+    max-width: 100% !important;
   }
 
   #left_spine,
@@ -2879,8 +2886,71 @@ body[data-theme="dark-mode"] .mode_descriptions {
     --font-2xl: 1.375rem;
   }
 
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
   .gradio-container {
     padding: 0 8px !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Frankie overlay mobile fix */
+  #frankie_overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999 !important;
+  }
+
+  #frankie_inline_container {
+    width: 92vw !important;
+    max-width: 92vw !important;
+    max-height: 80vh !important;
+    margin: 0 auto !important;
+  }
+
+  #frankie_loader {
+    padding: 28px 20px 24px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .frankie_container {
+    width: 180px !important;
+    height: auto !important;
+    min-height: 100px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .frankie_silhouette,
+  .frankie_mascot_svg {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 80px !important;
+  }
+
+  .frankie_ball {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .frankie_title {
+    font-size: 1.15rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .frankie_line {
+    font-size: 0.95rem !important;
   }
 
   #brand_header {
@@ -3001,19 +3071,7 @@ body[data-theme="dark-mode"] .mode_descriptions {
     max-height: 250px !important;
   }
 
-  /* Frankie loader: smaller on mobile */
-  #frankie_loader {
-    padding: 32px 24px !important;
-    max-width: 90% !important;
-    margin: 16px !important;
-  }
-
-  .frankie_container {
-    width: 100px !important;
-    height: 68px !important;
-  }
-
-  /* Footer: stacked links */
+  /* Footer: stacked links */  /* Footer: stacked links */
   .footer_links {
     display: flex !important;
     flex-wrap: wrap !important;
