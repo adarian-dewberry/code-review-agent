@@ -2893,15 +2893,23 @@ body[data-theme="dark-mode"] #frankie_loader {
   50% { transform: scaleX(1.01); }
 }
 
-/* Modal default state - always start visible */
+/* Modal default state - always start hidden until needed */
 #frankie_overlay {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+#frankie_overlay:not(.frankie-hidden) {
+  display: flex;
   opacity: 1;
   pointer-events: auto;
-  transition: opacity 0.4s ease;
 }
 
 /* Modal hidden state (when overlay closes) */
 #frankie_overlay.frankie-hidden {
+  display: none;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.4s ease;
@@ -3638,7 +3646,7 @@ def get_frankie_loader(run_id: str = "") -> str:
     </svg>"""
 
     return f"""
-    <div id="frankie_overlay" style="display: flex; opacity: 1;">
+    <div id="frankie_overlay">
         <div id="frankie_inline_container" class="frankie-state-scanning">
             <div id="frankie_loader">
                 <div class="frankie_container" aria-live="polite" aria-label="Code review in progress - Frankie's watching your code">
