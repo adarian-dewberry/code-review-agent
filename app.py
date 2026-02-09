@@ -1322,6 +1322,12 @@ APP_CSS = """
 html, body {
   max-width: 100vw !important;
   overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+/* Prevent any element from causing horizontal overflow */
+body > *, .gradio-container > * {
+  max-width: 100% !important;
 }
 
 :root {
@@ -1400,6 +1406,12 @@ body[data-theme="dark-mode"] {
   margin: 0 auto !important;
   font-family: 'Inter', system-ui, sans-serif !important;
   font-size: var(--font-base) !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure all elements use border-box */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 /* =================================================================
@@ -3512,14 +3524,15 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
         }
     };
     
-    // Watch for verdict card appearance to trigger state transitions
+    // Watch for verdict card appearance to trigger state transitions and auto-hide
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'childList' || mutation.type === 'characterData') {
                 const verdictCard = document.getElementById('verdict_card_container');
                 if (verdictCard && verdictCard.textContent.trim() !== '' && !verdictCard.textContent.includes('Frankie')) {
-                    if (window.frankieState.currentState !== 'monitoring') {
-                        window.frankieState.transitionToFound();
+                    if (window.frankieState.currentState !== 'hidden') {
+                        // Auto-hide Frankie after 1 second when results appear
+                        setTimeout(() => window.frankieState.hide(), 1000);
                     }
                 }
             }
