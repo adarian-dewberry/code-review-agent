@@ -2474,12 +2474,28 @@ body[data-theme="dark-mode"] #frankie_loader {
 /* Respects reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .frankie_ball,
-  .frankie_silhouette {
+  .frankie_silhouette,
+  .frankie_mascot_svg,
+  .frankie_mascot_svg .frankie-tail,
+  .frankie_progress_fill {
     animation: none !important;
   }
   
   #frankie_inline_container {
     animation: none !important;
+  }
+
+  /* Static progress bar for reduced motion */
+  .frankie_progress_fill {
+    width: 50% !important;
+    opacity: 1 !important;
+  }
+
+  @keyframes modalSlideIn {
+    from, to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
@@ -3021,6 +3037,43 @@ body[data-theme="dark-mode"] .mode_descriptions {
     font-size: 1.5em !important;
   }
 
+  /* Frankie loader mobile compact */
+  #frankie_inline_container {
+    width: 95vw !important;
+    max-width: none !important;
+  }
+
+  #frankie_loader {
+    padding: 24px 16px 24px !important;
+  }
+
+  .frankie_container {
+    width: 180px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .frankie_ball {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .frankie_title {
+    font-size: 1.1rem !important;
+  }
+
+  .frankie_line {
+    font-size: 0.875rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  .frankie_progress_bar {
+    height: 6px !important;
+  }
+
+  .frankie_hint {
+    font-size: 0.8rem !important;
+  }
+
   .header_tagline {
     font-size: var(--font-base) !important;
   }
@@ -3063,6 +3116,67 @@ body[data-theme="dark-mode"] .mode_descriptions {
 
   .footer {
     padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Frankie overlay safe area */
+  #frankie_overlay {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
+
+/* Landscape mode on mobile */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  #frankie_inline_container {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  #frankie_loader {
+    padding: 16px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 16px;
+  }
+
+  .frankie_container {
+    width: 120px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .frankie_title {
+    font-size: 1rem !important;
+  }
+
+  .frankie_line {
+    font-size: 0.85rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  .frankie_progress_section {
+    margin-top: 8px !important;
+  }
+
+  .frankie_hint {
+    display: none !important;
+  }
+}
+
+/* Touch target sizing - WCAG 2.5.5 (AAA) 44x44px minimum */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  .accordion-toggle,
+  #review_mode label {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Ensure Frankie loader buttons/interactive elements are tappable */
+  #frankie_loader {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
