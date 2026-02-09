@@ -2487,12 +2487,14 @@ body[data-theme="dark-mode"] .error-banner .error-content code {
   display: none;
   opacity: 0;
   transition: opacity 0.4s ease;
-  animation: frankieSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
 #frankie_container_inline[style*="display: block"] {
   display: flex !important;
+  flex-direction: column;
+  align-items: center;
   opacity: 1;
+  animation: frankieSlideIn 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
 @keyframes frankieSlideIn {
