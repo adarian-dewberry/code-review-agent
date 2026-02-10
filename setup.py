@@ -20,9 +20,7 @@ setup(
     url="https://github.com/adarian-dewberry/code-review-agent",
     packages=find_packages(),
     include_package_data=True,
-    package_data={
-        "code_review_agent": ["prompts/*.md"]
-    },
+    package_data={"code_review_agent": ["prompts/*.md"]},
     install_requires=[
         "anthropic>=0.40.0",
         "pyyaml>=6.0",
@@ -40,6 +38,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
+            "frankie=code_review_agent.cli:main",
             "code-review=code_review_agent.cli:main",
         ]
     },
