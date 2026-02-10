@@ -119,6 +119,37 @@ jobs:
               });
             }
       
+      - name: Build Docker image for scanning
+        run: |
+          docker build -t frankie-review:latest .
+      
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'frankie-review:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Generate Trivy SBOM
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'frankie-review:latest'
+          format: 'cyclonedx'
+          output: 'sbom.json'
+      
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-container'
+      
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-report-${{ github.run_id }}
+          path: sbom.json
+          retention-days: 90
+      
       - name: Fail if critical issues
         if: failure()
         run: |
