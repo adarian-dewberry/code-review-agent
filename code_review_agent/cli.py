@@ -40,22 +40,42 @@ Examples:
 
     parser.add_argument("command", choices=["review"], help="Command to run")
 
-    parser.add_argument("file_path", nargs="?", help="Path to file to review (omit if using --stdin)")
-
-    parser.add_argument("--stdin", action="store_true", help="Read code from stdin instead of file")
-
     parser.add_argument(
-        "--ci-mode", action="store_true", help="CI/CD mode: exit with error code if critical/high issues found"
-    )
-
-    parser.add_argument("--config", type=str, help="Path to config file (default: config.yaml)")
-
-    parser.add_argument(
-        "--format", choices=["markdown", "json"], default="markdown", help="Output format (default: markdown)"
+        "file_path", nargs="?", help="Path to file to review (omit if using --stdin)"
     )
 
     parser.add_argument(
-        "--sdl-mode", action="store_true", help="Enable SDL Multi-Agent Security Squad (SAST+DAST+SCA+SDL Champion)"
+        "--stdin", action="store_true", help="Read code from stdin instead of file"
+    )
+
+    parser.add_argument(
+        "--ci-mode",
+        action="store_true",
+        help="CI/CD mode: exit with error code if critical/high issues found",
+    )
+
+    parser.add_argument(
+        "--config", type=str, help="Path to config file (default: config.yaml)"
+    )
+
+    parser.add_argument(
+        "--format",
+        choices=["markdown", "json"],
+        default="markdown",
+        help="Output format (default: markdown)",
+    )
+
+    parser.add_argument(
+        "--sdl-mode",
+        action="store_true",
+        help="Enable SDL Multi-Agent Security Squad (SAST+DAST+SCA+SDL Champion)",
+    )
+
+    parser.add_argument(
+        "--confidence-threshold",
+        type=float,
+        default=0.0,
+        help="Only report findings with confidence score >= threshold (0.0-1.0, default: 0.0 = all)",
     )
 
     args = parser.parse_args()
@@ -95,6 +115,16 @@ Examples:
     # Run review
     agent = CodeReviewAgent(config, enable_security_squad=args.sdl_mode)
     result = agent.review(code, str(file_path) if file_path else None)
+
+    # Filter findings by confidence threshold
+    if args.confidence_threshold > 0.0:
+        for category in result.detailed_findings:
+            category.findings = [
+                f
+                for f in category.findings
+                if hasattr(f, "confidence")
+                and f.confidence >= args.confidence_threshold
+            ]
 
     # Output results
     if args.format == "markdown":

@@ -15,16 +15,17 @@ license: mit
 
 # 🐺 Frankie - AI Security Code Review Agent
 
-### *Catch security flaws before they ship*
+### *Learn secure code patterns through AI-powered review*
 
+[![v2.0 Homelab Edition](https://img.shields.io/badge/v2.0-Homelab%20Edition-brightgreen.svg)](RELEASE_NOTES.md)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Gradio 5.x](https://img.shields.io/badge/gradio-5.x-orange.svg)](https://gradio.app/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HuggingFace Space](https://img.shields.io/badge/%F0%9F%A4%97-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
 
 **Multi-pass security review • OWASP 2025 mapping • Blast radius analysis • Audit-ready JSON**
 
-[🚀 Live Demo](https://huggingface.co/spaces/adarian-dewberry/code-review-agent) • [📖 Documentation](USAGE.md) • [🛡️ Policies](POLICIES.md) • [📋 Changelog](CHANGELOG.md)
+[🚀 Live Demo](https://huggingface.co/spaces/adarian-dewberry/code-review-agent) • [📖 Documentation](USAGE.md) • [🛡️ Policies](POLICIES.md) • [📋 Release Notes](RELEASE_NOTES.md)
 
 ---
 
@@ -47,11 +48,11 @@ It does not replace secure development practices, human code review, or professi
 
 ## Why This Exists
 
-AI-assisted coding has changed how software gets written. People can move faster, experiment more freely, and generate working code without always knowing when security risks are being introduced. That is not a failure of developers. It is a natural result of new tooling.
+I noticed something: a lot of developers write insecure code not because they don't care, but because they don't understand *why* something is insecure or how to fix it. They're vibing, learning as they go, trying to build things. That's not a failure—that's normal.
 
-Many existing security tools assume a level of security expertise, process maturity, or setup overhead that does not match how many people are actually building today.
+I wanted to build a tool that **explains** instead of just warns. That shows reasoning. That admits uncertainty. That helps you learn *why* something matters, not just that it's "bad."
 
-This project exists to bridge that gap. It provides clear, plain-language security feedback for developers, alongside structured and repeatable outputs that can support security review, governance workflows, and audits. No blame. No fear tactics. Just visibility and clarity.
+I also wanted to understand: how does AI actually help with this? What does a learning-focused code review look like? So I built Frankie to explore those questions.
 
 ## Who This Is For
 
@@ -74,6 +75,38 @@ At a high level, the tool follows a simple flow. Code is provided as input, the 
 The structured output can be reviewed by people, consumed by other tools, or stored for later reference.
 
 ## Quick Start
+
+**Fastest Way (Docker - 30 seconds):**
+
+```bash
+git clone https://github.com/adarian-dewberry/code-review-agent.git
+cd code-review-agent
+docker-compose up
+# Open http://localhost:7860
+```
+
+**CLI Mode:**
+
+```bash
+# Install
+pip install -r requirements.txt
+
+# Review code
+frankie review app.py
+frankie review --confidence-threshold 0.8 src/
+
+# From pipeline
+git diff | frankie review --stdin
+```
+
+**Windows (PowerShell):**
+
+```powershell
+.\frankie.ps1 review app.py
+.\frankie.ps1 docker  # or docker-compose up
+```
+
+For complete setup guides, see [HOMELAB_SETUP.md](HOMELAB_SETUP.md).
 
 Clone the repository:
 
