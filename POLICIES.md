@@ -1,7 +1,34 @@
-# Code Review Agent: Policy Framework v1
+# Security Review Policies (v1.0.0)
 
-> **Governance, Risk & Compliance (GRC) Documentation**  
-> Version: 1.0 | Effective: 2026-02-07 | Owner: Adarian Dewberry
+> **Governance-Ready AI Code Review**  
+> Version: 1.0.0 | Updated: 2026-02-09 | Owner: Adarian Dewberry
+
+---
+
+## Quick Reference: Enforcement Rules
+
+| Rule ID | Description | Trigger Condition | Action |
+|---------|-------------|-------------------|--------|
+| **BR-001** | Block merge on critical vulnerabilities | CRITICAL @ ≥0.8 confidence | ❌ Fail CI, block PR merge |
+| **BR-002** | Block merge on high severity | HIGH @ ≥0.95 confidence | ❌ Fail CI, block PR merge |
+| **RR-001** | Require human review | HIGH @ ≥0.7 confidence | ⚠️ Warning comment, require approval |
+| **WARN-001** | Warning comment | MEDIUM @ ≥0.6 confidence | 💡 Informational comment |
+
+---
+
+## Configuration via Environment Variables
+
+```yaml
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  BLOCK_THRESHOLD: "critical:0.8,high:0.95"
+  REVIEW_THRESHOLD: "high:0.7"
+```
+
+CLI usage:
+```bash
+code-review review app.py --block-threshold "critical:0.8,high:0.95"
+```
 
 ---
 

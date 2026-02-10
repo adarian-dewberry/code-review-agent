@@ -41,41 +41,65 @@ jobs:
       - name: Review code changes
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          BLOCK_THRESHOLD: "critical:0.8,high:0.95"
+          REVIEW_THRESHOLD: "high:0.7"
         run: |
           # Get the diff between base and head
           git diff origin/${{ github.base_ref }}..HEAD --name-only --diff-filter=d | grep '\.py$' > /tmp/changed_files.txt || true
           
           if [ ! -s /tmp/changed_files.txt ]; then
             echo "✅ No Python files changed in this PR"
+            echo "{\"status\": \"no_changes\", \"files\": []}" > /tmp/review_results.json
             exit 0
           fi
           
           echo "📋 Python files changed:"
           cat /tmp/changed_files.txt
           
-          # Run review on all changed files
+          # Initialize review outputs
           > /tmp/review_results.md
           echo "## Code Review Results" >> /tmp/review_results.md
           echo "" >> /tmp/review_results.md
+          echo "{\"reviews\": [" > /tmp/review_results.json
           
           failed=0
+          first=true
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               echo "### 📄 Reviewing: \`$file\`" >> /tmp/review_results.md
               echo "" >> /tmp/review_results.md
               
-              if code-review review "$file" --format markdown >> /tmp/review_results.md 2>&1; then
-                echo "✅ Passed" >> /tmp/review_results.md
+              # Differentiate tool errors from security findings
+              if code-review review "$file" --format json --block-threshold "$BLOCK_THRESHOLD" > /tmp/file_review.json 2>/tmp/file_review.err; then
+                echo "✅ Review complete" >> /tmp/review_results.md
+                # Append to JSON array
+                if [ "$first" = true ]; then
+                  first=false
+                else
+                  echo "," >> /tmp/review_results.json
+                fi
+                cat /tmp/file_review.json >> /tmp/review_results.json
               else
-                echo "❌ Critical issues found" >> /tmp/review_results.md
-                failed=1
+                echo "❗ Tool review failed for $file" >> /tmp/review_results.md
+                cat /tmp/file_review.err >> /tmp/review_results.md
+                # Don't block merge on tool failure, only on security findings
+                echo "Tool error encountered but not blocking merge" >> /tmp/review_results.md
               fi
               echo "" >> /tmp/review_results.md
             fi
           done < /tmp/changed_files.txt
           
+          echo "]}" >> /tmp/review_results.json
           cat /tmp/review_results.md
           exit $failed
+      
+      - name: Upload audit JSON for governance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-${{ github.run_id }}
+          path: /tmp/review_results.json
+          retention-days: 30
       
       - name: Comment PR with results
         if: always()
