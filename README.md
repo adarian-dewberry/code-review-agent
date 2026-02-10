@@ -11,7 +11,33 @@ pinned: false
 license: mit
 ---
 
-# AI Security Code Review Agent
+<div align="center">
+
+# 🐺 Frankie - AI Security Code Review Agent
+
+### *Catch security flaws before they ship*
+
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Gradio 5.x](https://img.shields.io/badge/gradio-5.x-orange.svg)](https://gradio.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![HuggingFace Space](https://img.shields.io/badge/%F0%9F%A4%97-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
+
+**Multi-pass security review • OWASP 2025 mapping • Blast radius analysis • Audit-ready JSON**
+
+[🚀 Live Demo](https://huggingface.co/spaces/adarian-dewberry/code-review-agent) • [📖 Documentation](USAGE.md) • [🛡️ Policies](POLICIES.md) • [📋 Changelog](CHANGELOG.md)
+
+---
+
+</div>
+
+## 🎯 Key Features
+
+- **Multi-Pass Security Analysis** – Three-stage review (summary → detailed findings → fixes) with confidence scoring
+- **OWASP 2025 Alignment** – Findings mapped to OWASP Top 10 and CWE categories for compliance tracking
+- **Blast Radius Analysis** – Impact assessment showing which systems/data could be affected by each vulnerability
+- **Audit-Ready JSON** – Structured decision records with 30-day retention for governance and compliance
+- **Frankie the Wolf** – Interactive mascot that guides you through reviews with real-time status updates
+- **AI-Assisted Coding Friendly** – Built specifically for developers using GitHub Copilot and Claude
 
 ## What This Project Is
 
@@ -72,6 +98,24 @@ To review your own code, replace the example file with the path to your file. Yo
 
 **Web demo:** https://huggingface.co/spaces/adarian-dewberry/code-review-agent
 
+## 🛠️ Tech Stack
+
+**Frontend & UI**
+- Gradio 5.x – Interactive web interface with custom CSS/JS
+- Custom animations – Frankie mascot state machine with CSS transitions
+
+**AI & Analysis**
+- Anthropic Claude Sonnet 4 – Multi-pass security analysis with structured outputs
+- Pydantic 2.0 – Schema validation and type safety for findings
+
+**CI/CD & Governance**
+- GitHub Actions – Automated security reviews with configurable thresholds
+- JSON artifact retention – 30-day audit trail with structured decision records
+
+**Infrastructure**
+- HuggingFace Spaces – Live demo deployment with Python 3.10
+- Docker support – Containerized deployment with health checks
+
 ## Features
 
 - AI-assisted security code review with plain-language explanations
@@ -104,16 +148,35 @@ Use it to **support** conversations about risk, not replace professional judgmen
 
 This project is guided by a few simple principles. It should be inclusive by default and usable by developers at different skill levels. It should focus on improving outcomes, not assigning blame. It should produce outputs that are explainable, reviewable, and reusable. It should reflect how people actually build software today, especially with AI in the loop.
 
+## 🔧 Technical Challenges & Solutions
+
+**Challenge 1: Making Frankie Visible Across Platforms**
+- **Problem:** Fixed overlay positioning broke mobile layouts and felt intrusive
+- **Solution:** Refactored to inline container with CSS state machine, `display: block` inline override, and flex-based centering
+- **Result:** Smooth animations work across desktop/mobile, 2-second auto-hide for better UX
+
+**Challenge 2: Enterprise-Ready Governance Without Security Theater**
+- **Problem:** Most security tools either lack audit trails or overwhelm users with false positives
+- **Solution:** Configurable thresholds (`BLOCK_THRESHOLD`, `REVIEW_THRESHOLD`), tool error vs security finding differentiation, structured JSON artifacts
+- **Result:** Teams can tune sensitivity, CI doesn't block on tool failures, governance teams get 30-day audit history
+
+**Challenge 3: Balancing AI Confidence with Developer Trust**
+- **Problem:** AI can be confidently wrong; users need to understand reasoning without wading through jargon
+- **Solution:** Three-pass review architecture (summary → detailed → fixes), confidence scores with clear thresholds, plain-language explanations with OWASP mapping
+- **Result:** Developers understand *why* something is flagged, security teams can trace decisions back to standards
+
 ## Documentation
 
 Additional documentation is available in the `docs` directory, including configuration options, output schema details, benchmark methodology, and development notes.
 
 | Document | Description |
 |----------|-------------|
-| [USAGE.md](USAGE.md) | CLI usage, configuration, common workflows |
-| [API.md](API.md) | API endpoints and integration |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Docker, HF Spaces, environment setup |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
+| [USAGE.md](USAGE.md) | **CLI Reference** – Commands, flags, output formats, and common workflows for local use |
+| [POLICIES.md](POLICIES.md) | **Governance Rules** – BR/RR/WARN policies with confidence thresholds and CI integration examples |
+| [CHANGELOG.md](CHANGELOG.md) | **Release History** – Version notes from v1.0.0 including Frankie system, governance features |
+| [API.md](API.md) | **Integration Guide** – REST endpoints, authentication, webhook examples for CI pipelines |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | **Infrastructure** – Docker Compose, HuggingFace Spaces, environment variables, health checks |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | **Development Guide** – How to contribute detection logic, tests, examples, or documentation |
 
 ## Contributing
 
