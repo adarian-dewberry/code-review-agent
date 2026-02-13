@@ -16,9 +16,9 @@ for the full text.
 
 Created by **Adarian Dewberry**
 
-- GitHub: [dewberryadarian](https://github.com/dewberryadarian)
+- GitHub: [adarian-dewberry](https://github.com/adarian-dewberry)
 - Hugging Face: [adarian-dewberry](https://huggingface.co/adarian-dewberry)
-- Email: adarian@adariandewberry.com
+- Email: hello@adariandewberry.ai
 
 ---
 
@@ -29,7 +29,7 @@ Code Review Agent uses the following open-source libraries:
 | Library | License | Purpose |
 |---------|---------|---------|
 | [Gradio](https://gradio.app) | Apache 2.0 | Web interface |
-| [OpenAI Python](https://github.com/openai/openai-python) | MIT | API client |
+| [Anthropic Python](https://github.com/anthropics/anthropic-sdk-python) | MIT | API client |
 | [Python](https://python.org) | PSF | Runtime |
 
 For a complete list of dependencies, see [requirements.txt](requirements.txt).
@@ -78,7 +78,7 @@ If you use this software in research or publications, please cite:
   author = {Dewberry, Adarian},
   title = {Code Review Agent},
   year = {2025},
-  url = {https://github.com/dewberryadarian/code-review-agent},
+  url = {https://github.com/adarian-dewberry/code-review-agent},
   version = {0.2.2}
 }
 ```

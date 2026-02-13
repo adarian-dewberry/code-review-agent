@@ -1,12 +1,12 @@
 # Deployment Guide
 
-This document covers deployment options for Code Review Agent.
+This document covers deployment options for Frankie (Code Review Agent).
 
 ---
 
 ## Quick start
 
-The fastest way to try Code Review Agent is through the hosted
+The fastest way to try Frankie is through the hosted
 Hugging Face Space:
 
 👉 [adarian-dewberry-code-review-agent.hf.space](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
@@ -20,12 +20,12 @@ For private or production use, continue below.
 ### Prerequisites
 
 - Python 3.10 or later
-- An OpenAI API key (or compatible provider)
+- An Anthropic API key
 
 ### Setup
 
 ```bash
-git clone https://github.com/dewberryadarian/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 
 python -m venv venv
@@ -40,8 +40,7 @@ pip install -r requirements.txt
 Create a `.env` file or export these directly:
 
 ```bash
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4.1-mini
+ANTHROPIC_API_KEY=your_api_key_here
 RATE_LIMIT_REQUESTS=10
 RATE_LIMIT_WINDOW=60
 ```
@@ -68,8 +67,7 @@ docker build -t code-review-agent .
 
 ```bash
 docker run -p 7860:7860 \
-  -e OPENAI_API_KEY=sk-... \
-  -e OPENAI_MODEL=gpt-4.1-mini \
+  -e ANTHROPIC_API_KEY=your_api_key_here \
   code-review-agent
 ```
 
@@ -83,8 +81,7 @@ services:
     ports:
       - "7860:7860"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=gpt-4.1-mini
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - RATE_LIMIT_REQUESTS=10
       - RATE_LIMIT_WINDOW=60
     restart: unless-stopped
@@ -100,7 +97,7 @@ docker-compose up -d
 
 ## Hugging Face Spaces
 
-Code Review Agent is designed to run on Hugging Face Spaces.
+Frankie is designed to run on Hugging Face Spaces.
 
 ### Deploy your own Space
 
@@ -110,15 +107,14 @@ Code Review Agent is designed to run on Hugging Face Spaces.
 2. Go to Settings > Repository secrets
 
 3. Add your secrets:
-   - `OPENAI_API_KEY` (required)
-   - `OPENAI_MODEL` (optional, defaults to gpt-4.1-mini)
+  - `ANTHROPIC_API_KEY` (required)
 
 4. The Space will rebuild automatically
 
 ### Hardware requirements
 
 The default CPU tier works well. GPU is not required since
-inference happens through the OpenAI API.
+inference happens through the Anthropic API.
 
 | Tier | Notes |
 |------|-------|
@@ -133,14 +129,12 @@ inference happens through the OpenAI API.
 
 | Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | Your OpenAI API key |
+| `ANTHROPIC_API_KEY` | Your Anthropic API key |
 
 ### Optional
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_MODEL` | `gpt-4.1-mini` | Model to use for analysis |
-| `OPENAI_API_BASE` | (OpenAI default) | Custom API endpoint |
 | `RATE_LIMIT_REQUESTS` | `10` | Max requests per window |
 | `RATE_LIMIT_WINDOW` | `60` | Window size in seconds |
 | `ENABLE_CACHE` | `true` | Enable response caching |
@@ -202,11 +196,11 @@ jobs:
 
       - name: Review code
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           pip install -r requirements.txt
           for file in ${{ steps.changed.outputs.files }}; do
-            python cli.py "$file" --ci-mode
+            frankie review "$file" --ci-mode
           done
 ```
 
@@ -218,9 +212,9 @@ security-review:
   image: python:3.10
   script:
     - pip install -r requirements.txt
-    - git diff --name-only origin/main...HEAD | xargs -I {} python cli.py {} --ci-mode
+    - git diff --name-only origin/main...HEAD | xargs -I {} frankie review {} --ci-mode
   variables:
-    OPENAI_API_KEY: $OPENAI_API_KEY
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
   only:
     - merge_requests
 ```
@@ -251,7 +245,7 @@ HEALTHCHECK --interval=30s --timeout=10s \
 
 ## Scaling
 
-Code Review Agent is stateless by default. You can run multiple
+Frankie is stateless by default. You can run multiple
 instances behind a load balancer.
 
 **Caching:** The built-in cache is per-instance. For shared caching
@@ -299,14 +293,14 @@ Logs follow structured JSON format when `LOG_FORMAT=json`:
 ### Common issues
 
 **"API key not configured"**  
-Set `OPENAI_API_KEY` in your environment or .env file.
+Set `ANTHROPIC_API_KEY` in your environment or .env file.
 
 **Timeout errors**  
 Increase `proxy_read_timeout` if behind a reverse proxy.
 LLM calls can take 10-30 seconds for large files.
 
-**Rate limited by OpenAI**  
-Reduce `RATE_LIMIT_REQUESTS` or upgrade your OpenAI plan.
+**Rate limited by Anthropic**  
+Reduce `RATE_LIMIT_REQUESTS` or upgrade your Anthropic plan.
 
 **Out of memory on HF Spaces**  
 Large files may exhaust memory. Consider the CPU Upgrade tier.

@@ -149,16 +149,16 @@ To run the evaluation yourself:
 
 ```bash
 # Clone the repository
-git clone https://github.com/dewberryadarian/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 
 # Set up environment
 pip install -r requirements.txt
-export OPENAI_API_KEY=sk-...
+export ANTHROPIC_API_KEY=your_api_key_here
 
 # Review each example
 for file in examples/*.py; do
-  python cli.py "$file" --sdl-mode
+  frankie review "$file"
 done
 ```
 

@@ -95,7 +95,7 @@ Code Review Agent does not:
 For maximum privacy, deploy Code Review Agent locally:
 
 ```bash
-git clone https://github.com/dewberryadarian/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 pip install -r requirements.txt
 python app.py
@@ -202,7 +202,7 @@ Last updated: 2025-06
 
 ## Questions
 
-For privacy questions, contact: privacy@adariandewberry.com
+For privacy questions, contact: hello@adariandewberry.ai
 
 ---
 

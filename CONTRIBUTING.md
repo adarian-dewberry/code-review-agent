@@ -19,7 +19,7 @@ right now, but thoughtful contributions are welcome.
 
 ```bash
 # Clone and set up
-git clone https://github.com/dewberryadarian/code-review-agent.git
+git clone https://github.com/adarian-dewberry/code-review-agent.git
 cd code-review-agent
 
 # Create virtual environment
@@ -106,7 +106,7 @@ When filing a bug, please include:
 
 ## Security issues
 
-For security vulnerabilities, please email security@adariandewberry.com
+For security vulnerabilities, please email hello@adariandewberry.ai
 instead of opening a public issue. See [SECURITY.md](SECURITY.md).
 
 ---

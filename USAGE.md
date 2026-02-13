@@ -1,13 +1,13 @@
 # Usage Guide
 
 This document covers CLI usage, configuration options, and common workflows
-for Code Review Agent.
+for Frankie (Code Review Agent).
 
 ---
 
 ## Web interface
 
-The easiest way to use Code Review Agent is through the web demo:
+The easiest way to use Frankie is through the web demo:
 
 https://huggingface.co/spaces/adarian-dewberry/code-review-agent
 
@@ -17,22 +17,24 @@ Paste your code, select review options, and click Analyze.
 
 ## CLI usage
 
+Use `frankie` (preferred). The legacy `code-review` command still works.
+
 ### Basic review
 
 ```bash
-code-review-agent review path/to/code.py
+frankie review path/to/code.py
 ```
 
 ### Review from stdin
 
 ```bash
-cat myfile.py | code-review-agent review --stdin
+cat myfile.py | frankie review --stdin
 ```
 
 ### Review git changes
 
 ```bash
-git diff main | code-review-agent review --stdin
+git diff main | frankie review --stdin
 ```
 
 ### CI/CD mode
@@ -40,7 +42,7 @@ git diff main | code-review-agent review --stdin
 Fail the build if critical issues are found:
 
 ```bash
-code-review-agent review --ci-mode path/to/code.py
+frankie review --ci-mode path/to/code.py
 ```
 
 ### SDL Multi-Agent mode
@@ -174,7 +176,7 @@ For best results, review focused files or diffs rather than entire codebases.
 ### Daily development
 
 1. Write or paste AI-generated code
-2. Run through Code Review Agent
+2. Run through Frankie
 3. Address critical findings before committing
 
 ### Pre-commit hook
@@ -184,8 +186,8 @@ For best results, review focused files or diffs rather than entire codebases.
 - repo: local
   hooks:
     - id: code-review
-      name: Code Review Agent
-      entry: code-review-agent review
+      name: Frankie
+      entry: frankie review
       language: system
       types: [python]
 ```
@@ -196,7 +198,7 @@ For best results, review focused files or diffs rather than entire codebases.
 # GitHub Actions example
 - name: Security Review
   run: |
-    code-review-agent review --ci-mode src/
+    frankie review --ci-mode src/
 ```
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed CI/CD setup.
