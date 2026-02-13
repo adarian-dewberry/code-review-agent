@@ -2,6 +2,8 @@
 
 Complete guide for contributing to Code Review Agent.
 
+> **New to the project?** Start with [HOMELAB_SETUP.md](HOMELAB_SETUP.md) for basic setup, then return here for development-specific tools.
+
 ## Table of Contents
 
 - [Setup](#setup)
@@ -37,7 +39,7 @@ pre-commit install
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.10+
 - Git
 - pip
 

@@ -6,52 +6,17 @@ This document covers deployment options for Frankie (Code Review Agent).
 
 ## Quick start
 
-The fastest way to try Frankie is through the hosted
-Hugging Face Space:
+The fastest way to try Frankie is through the hosted Hugging Face Space:
 
 👉 [adarian-dewberry-code-review-agent.hf.space](https://huggingface.co/spaces/adarian-dewberry/code-review-agent)
 
-For private or production use, continue below.
+For local testing and setup, see [HOMELAB_SETUP.md](HOMELAB_SETUP.md).
+
+For production deployments, continue below.
 
 ---
 
 ## Local development
-
-### Prerequisites
-
-- Python 3.10 or later
-- An Anthropic API key
-
-### Setup
-
-```bash
-git clone https://github.com/adarian-dewberry/code-review-agent.git
-cd code-review-agent
-
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # macOS/Linux
-
-pip install -r requirements.txt
-```
-
-### Environment variables
-
-Create a `.env` file or export these directly:
-
-```bash
-ANTHROPIC_API_KEY=your_api_key_here
-RATE_LIMIT_REQUESTS=10
-RATE_LIMIT_WINDOW=60
-```
-
-### Run
-
-```bash
-python app.py
-```
-
-Open `http://localhost:7860` in your browser.
 
 ---
 

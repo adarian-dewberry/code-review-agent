@@ -106,28 +106,9 @@ git diff | frankie review --stdin
 .\frankie.ps1 docker  # or docker-compose up
 ```
 
-For complete setup guides, see [HOMELAB_SETUP.md](HOMELAB_SETUP.md).
+👉 **For detailed setup guides:** [HOMELAB_SETUP.md](HOMELAB_SETUP.md) (Docker, local Python, platform-specific)
 
-Clone the repository:
-
-```bash
-git clone https://github.com/adarian-dewberry/code-review-agent.git
-cd code-review-agent
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the reviewer against an example file:
-
-```bash
-python main.py examples/vulnerable_example.py
-```
-
-To review your own code, replace the example file with the path to your file. You can also integrate the agent into scripts, CI workflows, or local review processes. Additional examples are available in the `examples` directory.
+See [examples/](examples/) for code review examples and integration patterns.
 
 **Web demo:** https://huggingface.co/spaces/adarian-dewberry/code-review-agent
 
