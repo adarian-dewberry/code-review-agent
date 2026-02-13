@@ -118,6 +118,7 @@ Could steal session data or perform actions as the user.
 - Markdown rendering uses safe mode (no raw HTML)
 - Content Security Policy headers restrict script execution
 - Gradio's built-in XSS protections
+- Application runs within a Docker container to provide isolation from the host file system.
 
 ---
 
@@ -256,7 +257,7 @@ This threat model is reviewed:
 - When new threat categories are identified
 - At least annually
 
-Last updated: 2025-06
+Last updated: 2026-02
 
 ---
 
