@@ -10,7 +10,7 @@ and what to expect from the process.
 If you discover a security issue in Code Review Agent, please
 report it privately rather than opening a public issue.
 
-**Email:** security@adariandewberry.com
+**Email:** hello@adariandewberry.ai
 
 **What to include:**
 
