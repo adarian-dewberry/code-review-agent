@@ -95,7 +95,7 @@ jobs:
       
       - name: Upload audit JSON for governance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-audit-${{ github.run_id }}
           path: /tmp/review_results.json
@@ -144,7 +144,7 @@ jobs:
           category: 'trivy-container'
       
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sbom-report-${{ github.run_id }}
           path: sbom.json
