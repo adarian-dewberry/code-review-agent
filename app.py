@@ -1284,9 +1284,31 @@ This code follows safe patterns based on the signals we checked.
             None,
         )
 
-    except Exception:
-        # Log full exception server-side, show generic message to users
-        logger.exception("Unexpected error during code review")
+    except (
+        anthropic.AuthenticationError,
+        anthropic.NotFoundError,
+        anthropic.APIConnectionError,
+        anthropic.RateLimitError,
+    ):
+        # Log API errors server-side for debugging
+        logger.exception("API error during code review")
+        return (
+            "<div class='error-banner error'><div class='error-icon'>🐛</div><div class='error-content'><h3>Service error</h3><p>The AI service encountered an issue. Try again in a moment.</p></div></div>",
+            "",
+            "",
+            None,
+        )
+    except (UnicodeDecodeError, ValueError) as e:
+        logger.error(f"Invalid code format: {type(e).__name__}")
+        return (
+            "<div class='error-banner error'><div class='error-icon'>📋</div><div class='error-content'><h3>Invalid input</h3><p>The code format couldn't be processed. Try a different code snippet.</p></div></div>",
+            "",
+            "",
+            None,
+        )
+    except Exception as e:
+        # Catch all unexpected exceptions but log safely
+        logger.exception(f"Unexpected error during code review: {type(e).__name__}")
         return (
             "<div class='error-banner error'><div class='error-icon'>🐛</div><div class='error-content'><h3>Something went wrong</h3><p>We hit an unexpected error. Try again, or <a href='https://github.com/adarian-dewberry/code-review-agent/issues' target='_blank'>report this</a> if it keeps happening.</p></div></div>",
             "",
@@ -3985,8 +4007,16 @@ with gr.Blocks(title="Code Review Agent", theme=APP_THEME, css=APP_CSS) as demo:
                 review_mode_val,
                 session_id,
             )
-        except Exception:
-            # Fallback demo output when API is unavailable
+        except (
+            anthropic.APIConnectionError,
+            anthropic.RateLimitError,
+            httpx.ConnectError,
+            httpx.TimeoutException,
+        ) as e:
+            # Log connection issues for debugging
+            logger.warning(
+                f"Review request failed ({type(e).__name__}): showing fallback demo"
+            )
             summ_result = """
             <div id="verdict_card_container" class="verdict_card">
                 <div class="verdict_header">

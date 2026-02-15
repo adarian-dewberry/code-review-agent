@@ -8,12 +8,15 @@ Usage:
 """
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
 from .agent import CodeReviewAgent
 from .config import Config
 from .models import ReviewRecommendation
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -90,7 +93,9 @@ Examples:
     elif args.file_path:
         file_path = Path(args.file_path)
         if not file_path.exists():
-            print(f"Error: File not found: {file_path}", file=sys.stderr)
+            # Generic error message to user, log details server-side
+            logger.warning(f"File not found: {file_path}")
+            print("Error: Could not read input file", file=sys.stderr)
             sys.exit(1)
         code = file_path.read_text()
     else:

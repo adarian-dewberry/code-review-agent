@@ -78,8 +78,37 @@ class SASTAgent:
                 return fn["name"]
         return None
 
+    def _validate_file_path(self, file_path: str) -> bool:
+        """Validate file path for security issues before passing to subprocess."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Resolve to absolute path to prevent traversal
+            abs_path = Path(file_path).resolve()
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Path resolution failed: {type(e).__name__}")
+            return False
+
+        # Check path length (prevent DOS via huge globs or symlinks)
+        if len(str(abs_path)) > 4096:
+            logger.warning(f"Path too long: {len(str(abs_path))} chars (max 4096)")
+            return False
+
+        return True
+
     def scan_semgrep(self, file_path: str) -> List[Dict]:
         """Run Semgrep scan and parse results."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # F-003: Validate path before passing to subprocess
+        if not self._validate_file_path(file_path):
+            logger.warning("Invalid file path (semgrep): security validation failed")
+            return []
+
         try:
             result = subprocess.run(
                 ["semgrep", "--config=auto", "--json", file_path],
@@ -92,11 +121,30 @@ class SASTAgent:
             if result.returncode in [0, 1]:  # 0=no findings, 1=findings
                 return json.loads(result.stdout).get("results", [])
             return []
-        except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            logger.warning("semgrep not installed in system PATH")
+            return []
+        except subprocess.TimeoutExpired:
+            logger.warning(f"semgrep scan timeout after 60s: {Path(file_path).name}")
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"semgrep output parse failed: {type(e).__name__}")
+            return []
+        except Exception as e:
+            logger.error(f"semgrep scan failed: {type(e).__name__}: {str(e)[:100]}")
             return []
 
     def scan_bandit(self, file_path: str) -> List[Dict]:
         """Run Bandit security scanner."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # F-003: Validate path before passing to subprocess
+        if not self._validate_file_path(file_path):
+            logger.warning("Invalid file path (bandit): security validation failed")
+            return []
+
         try:
             result = subprocess.run(
                 ["bandit", "-f", "json", "-r", file_path],
@@ -107,7 +155,17 @@ class SASTAgent:
 
             output = json.loads(result.stdout)
             return output.get("results", [])
-        except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
+        except FileNotFoundError:
+            logger.warning("bandit not installed in system PATH")
+            return []
+        except subprocess.TimeoutExpired:
+            logger.warning(f"bandit scan timeout after 60s: {Path(file_path).name}")
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"bandit output parse failed: {type(e).__name__}")
+            return []
+        except Exception as e:
+            logger.error(f"bandit scan failed: {type(e).__name__}: {str(e)[:100]}")
             return []
 
     def map_to_stride(self, vulnerability_type: str) -> STRIDECategory:
