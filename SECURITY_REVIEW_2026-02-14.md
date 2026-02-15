@@ -1,6 +1,8 @@
 # Security Code Review Report
 **Code Review Agent v1.0** | February 14, 2026
 
+This report is AI-assisted with human oversight but should be validated by users before production use.
+
 ---
 
 ## Executive Summary
