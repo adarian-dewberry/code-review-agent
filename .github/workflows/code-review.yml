@@ -95,7 +95,7 @@ jobs:
       
       - name: Upload audit JSON for governance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: security-audit-${{ github.run_id }}
           path: /tmp/review_results.json
@@ -138,13 +138,13 @@ jobs:
           output: 'sbom.json'
       
       - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-container'
       
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sbom-report-${{ github.run_id }}
           path: sbom.json
