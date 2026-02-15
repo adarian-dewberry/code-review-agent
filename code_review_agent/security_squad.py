@@ -98,6 +98,35 @@ class SASTAgent:
 
         return True
 
+    @staticmethod
+    def _set_subprocess_limits():
+        """Set resource limits for subprocess to prevent DOS.
+
+        Limits CPU time to 60s and memory to 1GB to protect against:
+        - Resource exhaustion attacks
+        - Runaway processes (semgrep/bandit hangs)
+        - Memory bloat from massive files
+
+        Note: Unix-only (Linux/macOS). Gracefully skips on Windows.
+        """
+        if os.name != "posix":
+            # Windows doesn't support resource limits; skip silently
+            return
+
+        try:
+            import resource
+
+            # Memory: 1GB soft limit, 1GB hard limit (prevents unbounded growth)
+            resource.setrlimit(resource.RLIMIT_AS, (1024**3, 1024**3))
+            # CPU: 60s soft limit, 65s hard limit (allows graceful shutdown)
+            resource.setrlimit(resource.RLIMIT_CPU, (60, 65))
+        except (ValueError, OSError, ImportError) as e:
+            # If resource limiting fails, continue anyway (better than crash)
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not set resource limits: {e}")
+
     def scan_semgrep(self, file_path: str) -> List[Dict]:
         """Run Semgrep scan and parse results."""
         import logging
@@ -110,12 +139,15 @@ class SASTAgent:
             return []
 
         try:
+            # Resource limits: preexec_fn prevents DOS via resource exhaustion
+            preexec_fn = self._set_subprocess_limits if os.name == "posix" else None
             result = subprocess.run(
                 ["semgrep", "--config=auto", "--json", file_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
                 env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                preexec_fn=preexec_fn,
             )
 
             if result.returncode in [0, 1]:  # 0=no findings, 1=findings
@@ -146,11 +178,14 @@ class SASTAgent:
             return []
 
         try:
+            # Resource limits: preexec_fn prevents DOS via resource exhaustion
+            preexec_fn = self._set_subprocess_limits if os.name == "posix" else None
             result = subprocess.run(
                 ["bandit", "-f", "json", "-r", file_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
+                preexec_fn=preexec_fn,
             )
 
             output = json.loads(result.stdout)

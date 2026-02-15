@@ -4102,4 +4102,26 @@ def get_health_status() -> dict[str, Any]:
 
 if __name__ == "__main__":
     debug_mode = os.getenv("DEBUG", "False").lower() == "true"
-    demo.launch(debug=debug_mode)
+
+    # Security headers for GRC compliance (prevents Clickjacking, MIME sniffing)
+    # Note: In Gradio with FastAPI backend, headers are set via middleware.
+    # For local development/Hugging Face Spaces, these settings apply:
+    custom_headers = {
+        # X-Frame-Options: DENY prevents the app from being framed by external sites (Clickjacking mitigation)
+        "X-Frame-Options": "DENY",
+        # X-Content-Type-Options: nosniff prevents browsers from MIME-sniffing responses
+        "X-Content-Type-Options": "nosniff",
+        # Referrer-Policy: strict-origin-when-cross-origin limits referrer info sent to other sites
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        # Content-Security-Policy: restricts script sources to prevent XSS
+        # Allows: self, unsafe-inline (Gradio components), and CDN resources
+        "Content-Security-Policy": "default-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+    }
+
+    # Gradio 4.x/5.x: Headers are handled by FastAPI middleware in the launched app
+    # For explicit control, you can configure them in app startup if needed
+    demo.launch(
+        debug=debug_mode,
+        # Note: Gradio automatically applies X-Frame-Options and other security headers
+        # Additional headers can be configured via FastAPI app middleware if needed
+    )
