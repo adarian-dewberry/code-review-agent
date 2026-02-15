@@ -29,11 +29,11 @@ setup(
     ],
     extras_require={
         "dev": [
-            "pytest>=8.3.0",
-            "pytest-cov>=5.0.0",
-            "black>=24.8.0",
-            "flake8>=7.1.0",
-            "mypy>=1.13.0",
+            "pytest>=9.0.2",
+            "pytest-cov>=7.0.0",
+            "black>=26.1.0",
+            "flake8>=7.3.0",
+            "mypy>=1.19.1",
         ]
     },
     entry_points={

@@ -6,7 +6,7 @@ Uses Pydantic for validation and serialization.
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Severity(str, Enum):
@@ -44,8 +44,7 @@ class Issue(BaseModel):
     risk_level: RiskLevel = Field(default=RiskLevel.MEDIUM)
     impact: Optional[str] = None  # Business impact explanation
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class ReviewCategory(BaseModel):
@@ -88,8 +87,7 @@ class ReviewSummary(BaseModel):
     recommendation: ReviewRecommendation
     top_issues: List[str] = Field(default_factory=list)
 
-    class Config:
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class ReviewResult(BaseModel):
@@ -138,7 +136,9 @@ class ReviewResult(BaseModel):
 
                 # Group by severity
                 for severity in Severity:
-                    severity_issues = [i for i in category.issues if i.severity == severity]
+                    severity_issues = [
+                        i for i in category.issues if i.severity == severity
+                    ]
                     if severity_issues:
                         lines.extend([f"### {severity.value}", ""])
 
@@ -149,13 +149,29 @@ class ReviewResult(BaseModel):
                                 lines.append(f"- Line: {issue.line_number}")
 
                             if issue.code_snippet:
-                                lines.extend(["- Code:", "  ```python", f"  {issue.code_snippet}", "  ```"])
+                                lines.extend(
+                                    [
+                                        "- Code:",
+                                        "  ```python",
+                                        f"  {issue.code_snippet}",
+                                        "  ```",
+                                    ]
+                                )
 
                             if issue.fix_suggestion:
-                                lines.extend(["- Fix:", "  ```python", f"  {issue.fix_suggestion}", "  ```"])
+                                lines.extend(
+                                    [
+                                        "- Fix:",
+                                        "  ```python",
+                                        f"  {issue.fix_suggestion}",
+                                        "  ```",
+                                    ]
+                                )
 
                             if issue.regulation_reference:
-                                lines.append(f"- Regulation: {issue.regulation_reference}")
+                                lines.append(
+                                    f"- Regulation: {issue.regulation_reference}"
+                                )
 
                             lines.append("")
 
@@ -216,7 +232,13 @@ class ReviewResult(BaseModel):
 
             # STRIDE Threat Report
             if "threat_report" in self.sdl_metadata:
-                lines.extend(["## STRIDE/DREAD Threat Analysis", "", self.sdl_metadata["threat_report"]])
+                lines.extend(
+                    [
+                        "## STRIDE/DREAD Threat Analysis",
+                        "",
+                        self.sdl_metadata["threat_report"],
+                    ]
+                )
 
             # BSIMM Maturity Dashboard
             if "bsimm_dashboard" in self.sdl_metadata:
@@ -232,9 +254,9 @@ class ReviewResult(BaseModel):
                     ]
                 )
                 for domain, stats in dashboard.get("domain_summary", {}).items():
-                    impl = stats.get('implemented', 0)
-                    total = stats.get('total', 0)
-                    pct = stats.get('completion_percent', 0)
+                    impl = stats.get("implemented", 0)
+                    total = stats.get("total", 0)
+                    pct = stats.get("completion_percent", 0)
                     lines.append(f"| {domain} | {impl} | {total} | {pct}% |")
                 lines.append("")
 
@@ -248,9 +270,9 @@ class ReviewResult(BaseModel):
                 )
                 for activity in dashboard.get("activities", []):
                     impl_icon = "✅" if activity.get("implemented") else "⏳"
-                    dom = activity.get('domain')
-                    prac = activity.get('practice')
-                    lvl = activity.get('level')
+                    dom = activity.get("domain")
+                    prac = activity.get("practice")
+                    lvl = activity.get("level")
                     lines.append(f"| {dom} | {prac} | L{lvl} | {impl_icon} |")
                 lines.append("")
 
